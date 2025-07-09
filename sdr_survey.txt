@@ -1,0 +1,2653 @@
+Dump of various SDR specs to sort through:
+
+also: is THAT Analog Thing relevant for this one?
+
+
+
+
+Store
+bladeRF@nuand.com
++1-855-466-8263
+Nuand
+bladeRF-wiphy
+bladeRF 2.0
+Support
+Blog
+Forums
+Shop
+nuand services
+bladeRF 2.0 micro
+bladeRF 2.0 micro
+
+
+Overview
+Features
+Software Support & Applications
+Specifications
+Products
+Overview
+bladeRF 2.0 micro
+The bladeRF 2.0 micro is the next-generation 2x2 MIMO, 47MHz to 6GHz frequency range, off-the-shelf USB 3.0 Software Defined Radio (SDR) that is easy and affordable for students and RF enthusiasts to explore wireless communications, yet provides a powerful waveform development platform expected by industry professionals.
+
+Support is available for Linux, macOS, and Windows. The bladeRF libraries, utilities, firmware, and platform HDL are released under open source licenses, and schematics are available online. The FPGA and USB 3.0 peripheral controller are programmable using vendor-supplied tools and SDKs that are available online, free of charge.
+
+
+
+Features
+RF Performance
+47 MHz to 6 GHz frequency range
+2x2 MIMO, 61.44 MHz sampling rate
+56 MHz filtered bandwidth (IBW)
+Automatic gain control (AGC)
+Automatic IQ and DC offset correction
+USB 3.0 SuperSpeed Support
+200 MHz ARM926EJ-S processor
+Fully bus-powered over USB 3.0
+External power 5V DC barrel with automatic switchover
+Altera Cyclone V FPGA
+49 kLE and 301 kLE variants available for custom signal processing and hardware accelerators
+Factory-calibrated VCTCXO
+Taming supported via 12-bit DAC or ADF4002 PLL
+Factory calibration of 38.4 MHz clock
+Software Support & Applications
+The bladeRF 2.0 micro features support for: GNU Radio via gr-osmosdr, Pothos via SoapySDR, SDRange, SDR Console, SDR # via sdrsharp-bladeRF, MathWorks MATLAB® & Simulink® via libbladeRF bindings.
+
+
+
+
+ 
+Made in USA
+NDAA Compliant
+RF Specifications	Min	Typ	Max	Unit
+ADC/DAC Sample Rate	0.521		61.44	MSPS
+ADC/DAC Resolution		12		bits
+RF Tuning Range (RX)	70		6000	MHZ
+RF Tuning Range (TX)	47		6000	MHz
+RF Bandwidth Filter	<0.2		56	MHz
+CW Output Power		+8		dBm
+FPGA Specifications	Min	Typ	Max	Unit
+Logic Elements	49 (xA4)		301 (xA9)	kLE
+Memory	3,383 (xA4)		13,917 (xA9)	kbits
+Variable-precision DSP blocks	66		342	
+Embedded 18x18 Multipliers	132		684	
+Physical Dimensions	Min	Typ	Max	Unit
+Dimensions		6.3 x 10.2 x 1.8		cm
+2.5 x 4.0 x 0.70		inches
+Weight		90 (0.2)		grams (lb)
+Operating Temperature	0		70	°C
+Products
+bladeRF 2.0 micro xA4
+bladeRF 2.0 micro xA4$540.00
+SKU: BRFM-XA4
+bladeRF 2.0 micro xA4, 47MHz to 6GHz frequency range, 61.44MHz sampling rate, 2×2 MIMO channels USB 3.0 SuperSpeed Software Defined Radio.
+
+1
+ Add to cart
+bladeRF 2.0 micro xA9
+bladeRF 2.0 micro xA9$860.00
+SKU: BRFM-XA9
+bladeRF 2.0 micro xA9, 47MHz to 6GHz frequency range, 61.44MHz sampling rate, 2×2 MIMO channels USB 3.0 SuperSpeed Software Defined Radio. The xA9 features the largest-in-class 301KLE Cyclone V FPGA, an essential component for hardware accelerators and HDL signal processing chains including FFTs, Turbo Decoders, transmit modulators/filters, and receive acquisition correlators for burst modems. The xA9’s 301KLE FPGA has vastly more room available in the FPGA than the xA4 for these sorts of applications. The bladeRF does not ship nor come with these (or any) accelerators or processing chains, they are entirely up to the end-customer to design or procure from other 3rd party suppliers.
+
+1
+ Add to cart
+bladeRF 2.0 micro case
+bladeRF 2.0 micro case$20.00
+SKU: BRFM-CASE
+A clear PolyCarbonate case for the bladeRF 2.0 micro.
+
+1
+ Add to cart
+BT-100 Bias-tee Power Amplifier
+BT-100 Bias-tee Power Amplifier$30.00
+SKU: BT-100
+Bias-tee powered Power Amplifier (TX) for the bladeRF 2.0 micro
+
+1
+ Add to cart
+BT-200 Bias-tee Low Noise Amplifier
+BT-200 Bias-tee Low Noise Amplifier$30.00
+SKU: BT-200
+Bias-tee powered Low Noise Amplifier (RX) for the bladeRF 2.0 micro
+
+1
+ Add to cart
+Tri-Band Antenna
+Tri-Band Antenna$25.00
+SKU: ANT-TRI
+Wideband and general purpose Tri-band Antenna.
+
+1
+ Add to cart
+All specifications subject to change at any time without notice. bladeRF is sold as test equipment and is expected for all intents and purposes to be used as such. Use of this device is at your own risk and discretion. Nuand LLC makes no warranty of any kind (whether express or implied) with regard to material presented on this page, and disclaims any and all warranties, including accuracy of this document, or the implied warranties of merchatability and fitness for use.
+Navigation
+Home
+Shop
+Careers
+Checkout
+Contact Us
+Privacy Policy
+Terms
+Help
+Support
+Calibration Data
+Windows Installers
+FPGA Images
+FX3 Firmware
+Frequently Asked Questions
+Quick links
+bladeRF-wiphy
+bladeRF 2.0 micro xA9
+bladeRF 2.0 micro xA4
+bladeRF x115
+bladeRF x40
+My Account
+Cart
+Contact Info
+Email: bladeRF@nuand.com
+IRC: #bladeRF on FreeNode
+Slack: Invite link
+Follow @NuandLLC
+© Nuand 2025. All rights reserved.
+bladerf@nuand.com
+Back to top
+
+
+
+Store
+bladeRF@nuand.com
++1-855-466-8263
+Nuand
+bladeRF-wiphy
+bladeRF 2.0
+Support
+Blog
+Forums
+Shop
+Nuand Shop
+bladeRF 2.0 micro xA4
+Home / Kits / bladeRF 2.0 micro xA4
+bladeRF 2.0 micro
+bladeRF 2.0 micro xA4
+$540.00
+
+bladeRF 2.0 micro xA4, 47MHz to 6GHz frequency range, 61.44MHz sampling rate, 2×2 MIMO channels USB 3.0 SuperSpeed Software Defined Radio.
+
+In stock - Usually ships out in 1 to 2 business days.
+
+Join our mailinglist for stock, and availability notifications:
+Your Email Address
+
+1
+Add to cart
+SKU: BRFM-XA4
+Categories: bladeRF 2.0 micro, Kits
+Description Additional information Product Enquiry
+Description
+ 
+Made in USA
+NDAA Compliant
+Kit contains:
+bladeRF xA4  (49KLE Cyclone V FPGA)
+USB 3.0 SS cable
+Optional accessories:
+Micro Enclosure
+BT-100 Bias-tee Power Amplifier (TX)
+BT-200 Bias-tee Low Noise Amplifier (RX)
+More Information:
+Product Datasheet
+Getting Started guide on bladeRF wiki
+EU Declaration
+bladeRF 2.0 micro Brief
+Schematics REV 1.4
+Schematics REV 1.3
+Mechanical DXF File
+Software Support and Additional Resources
+
+
+Description:
+The bladeRF 2.0 micro xA4 is the next generation Software Defined Radio (SDR) offering a frequency range of 47MHz to 6GHz, 61.44MHz sampling rate (capable of up to 122.88MHz), and 2×2 MIMO streaming. Packed into a small form factor, the bladeRF 2.0 micro was designed for high performance as well as mobile applications. Through libbladeRF the bladeRF 2.0 micro is compatible with GNURadio, GQRX, SDR-Radio, SDR#, gr-fosphor, SoapySDR, and more on Windows, Linux and macOS.
+
+The RF shield cap protects sensitive RF components from Electromagnetic Interference (EMI) and provides additional thermal dissipation, allowing the bladeRF 2.0 micro to operate in challenging environments.
+
+All of the RF SMA ports are capable of providing power over bias-tee circuitry to wideband amplifiers and pre-amps. Power to bias-tee peripherals is fully software controllable, providing maximal operational flexibility. Currently, the official bias-tee peripherals include the BT-100, a wideband power amplifier for TX, and the BT-200, a wideband low noise amplifier for RX.
+
+At the core of the bladeRF 2.0 micro is the latest generation Cyclone V FPGA from Intel (formerly Altera). The xA4 features a 49KLE FPGA of which about 32KLE are available and user programmable. Optionally, to accelerate modems in HDL and for additional FPGA space, consider the bladeRF xA9, which features the largest-in-class FPGA of any single SDR with 301KLE of which about 292KLE are available and user programmable.
+
+An advanced clocking architecture allows the bladeRF 2.0 micro to receive and provide its 38.4MHz fundamental clock from and to other devices. Additionally, an on-board PLL allows the bladeRF 2.0 micro to tame its VCTCXO to a 10MHz reference signal. The xA4 features a highly accurate and stable oscillator. The on-board DAC sets the frequency trim of the oscillator to a factory calibrated value.
+
+The Power Distribution Network (PDN) of the bladeRF 2.0 micro features an intricate combination of low noise and high efficiency switch mode and linear power regulators. While the bladeRF 2.0 micro can be run solely from USB bus power, an external power source can be supplied to ensure maximal linear performance of bias-tee peripherals. The PDN features an auto selection and hold-over circuitry to optimize power draw between USB bus and external DC power.
+
+The bladeRF 2.0 micro can run in headless without needing to be connected to a PC or SBC. The on-board flash is large enough to hold any size FPGA image for the xA4.
+
+Block Diagram:
+
+ 
+
+ 
+
+
+USB 3.0 Superspeed
+ 
+
+High speed, low latency and increased power delivery over a single cable: USB 3.0 Superspeed is the perfect interface for a wide bandwidth radio front end to modern computers. The Cypress FX3 microcontroller is the ideal solution with a powerful ARM9 processor and enough bandwidth to saturate the full duplex 5Gbps USB 3.0 link.
+
+Fully Programmable FPGA
+ 
+
+An Altera Cyclone V FPGA provides the interface between the FX3 and RF transceiver. This FPGA has single-cycle access embedded memory, hard 18×18 multipliers for dedicated DSP and many general logic elements ready to be programmed.
+
+
+
+Wideband RF Transceiver
+ 
+
+The Analog Devices AD9361 is a fully integrated, high performance RF transceiver. Made for next generation wireless protocols, this transceiver is capable of handling anything from simple FM audio to the latest 5G LTE standard to whatever the future may hold.
+
+Professional Quality
+ 
+
+The bladeRF’s design has been tested and verify to meet our very high standards. Every device is capable of effortlessly and faithfully transceiving even the highest order modulations. At peak RF performance, the bladeRF can occupy 2×2 56MHz of bandwidth over its operating frequency range without significant distortions and EVMs around 1%.
+
+
+You may also like…
+bladeRF 2.0 micro xA9
+bladeRF 2.0 micro xA9$860.00
+SKU: BRFM-XA9
+bladeRF 2.0 micro xA9, 47MHz to 6GHz frequency range, 61.44MHz sampling rate, 2×2 MIMO channels USB 3.0 SuperSpeed Software Defined Radio. The xA9 features the largest-in-class 301KLE Cyclone V FPGA, an essential component for hardware accelerators and HDL signal processing chains including FFTs, Turbo Decoders, transmit modulators/filters, and receive acquisition correlators for burst modems. The xA9’s 301KLE FPGA has vastly more room available in the FPGA than the x` for these sorts of applications. The bladeRF does not ship nor come with these (or any) accelerators or processing chains, they are entirely up to the end-customer to design or procure from other 3rd party suppliers.
+
+1
+Add to cart
+Related products
+bladeRF 2.0 micro case
+bladeRF 2.0 micro case$20.00
+SKU: BRFM-CASE
+A clear PolyCarbonate case for the bladeRF 2.0 micro.
+
+1
+Add to cart
+BT-100 Bias-tee Power Amplifier
+BT-100 Bias-tee Power Amplifier$30.00
+SKU: BT-100
+Bias-tee powered Power Amplifier (TX) for the bladeRF 2.0 micro
+
+1
+Add to cart
+BT-200 Bias-tee Low Noise Amplifier
+BT-200 Bias-tee Low Noise Amplifier$30.00
+SKU: BT-200
+Bias-tee powered Low Noise Amplifier (RX) for the bladeRF 2.0 micro
+
+1
+Add to cart
+Tri-Band Antenna
+Tri-Band Antenna$25.00
+SKU: ANT-TRI
+Wideband and general purpose Tri-band Antenna.
+
+1
+Add to cart
+All specifications subject to change at any time without notice. bladeRF is sold as test equipment and is expected for all intents and purposes to be used as such. Use of this device is at your own risk and discretion. Nuand LLC makes no warranty of any kind (whether express or implied) with regard to material presented on this page, and disclaims any and all warranties, including accuracy of this document, or the implied warranties of merchatability and fitness for use.
+Navigation
+Home
+Shop
+Careers
+Checkout
+Contact Us
+Privacy Policy
+Terms
+Help
+Support
+Calibration Data
+Windows Installers
+FPGA Images
+FX3 Firmware
+Frequently Asked Questions
+Quick links
+bladeRF-wiphy
+bladeRF 2.0 micro xA9
+bladeRF 2.0 micro xA4
+bladeRF x115
+bladeRF x40
+My Account
+Cart
+Contact Info
+Email: bladeRF@nuand.com
+IRC: #bladeRF on FreeNode
+Slack: Invite link
+Follow @NuandLLC
+© Nuand 2025. All rights reserved.
+bladerf@nuand.com
+Back to top
+Orders usually ship out in 1 to 2 business days.
+
+
+
+
+
+Store
+bladeRF@nuand.com
++1-855-466-8263
+Nuand
+bladeRF-wiphy
+bladeRF 2.0
+Support
+Blog
+Forums
+Shop
+Nuand Shop
+bladeRF 2.0 micro xA5
+Home / Kits / bladeRF 2.0 micro xA5
+bladeRF 2.0 micro
+bladeRF 2.0 micro xA5
+$670.00
+
+bladeRF 2.0 micro xA5, 47MHz to 6GHz frequency range, 61.44MHz sampling rate, 2×2 MIMO channels USB 3.0 SuperSpeed Software Defined Radio.
+
+Out of stock. Please look at the bladeRF 2.0 micro xA4 and xA9.
+
+Join the waitlist to be emailed when this product becomes available
+
+Enter your email address to join the waitlist for this product
+Email Address
+Join Waitlist
+SKU: BRFM-XA5
+Categories: bladeRF 2.0 micro, Kits
+Description Additional information Product Enquiry
+Description
+ 
+Made in USA
+NDAA Compliant
+NOTE: bladeRF 2.0 micro xA5 is out of stock. Please look at bladeRF 2.0 micro xA4 . 
+bladeRF micro xA5 was introduced as a temporary replacement for the bladeRF 2.0 micro xA4. Now that the bladeRF 2.0 micro xA4 is coming back in stock, there are currently no plans to manufacture more bladeRF 2.0 micro xA5.
+Kit contains:
+bladeRF xA5  (77KLE Cyclone V FPGA)
+USB 3.0 SS cable
+Optional accessories:
+Micro Enclosure
+BT-100 Bias-tee Power Amplifier (TX)
+BT-200 Bias-tee Low Noise Amplifier (RX)
+More Information:
+Product Datasheet
+Getting Started guide on bladeRF wiki
+EU Declaration
+bladeRF 2.0 micro Brief
+Schematics REV 1.4
+Schematics REV 1.3
+Mechanical DXF File
+Software Support and Additional Resources
+
+
+Description:
+The bladeRF 2.0 micro xA5 is the next generation Software Defined Radio (SDR) offering a frequency range of 47MHz to 6GHz, 61.44MHz sampling rate, and 2×2 MIMO streaming. Packed into a small form factor, the bladeRF 2.0 micro was designed for high performance as well as mobile applications. Through libbladeRF the bladeRF 2.0 micro is compatible with GNURadio, GQRX, SDR-Radio, SDR#, gr-fosphor, SoapySDR, and more on Windows, Linux and macOS.
+
+The RF shield cap protects sensitive RF components from Electromagnetic Interference (EMI) and provides additional thermal dissipation, allowing the bladeRF 2.0 micro to operate in challenging environments.
+
+All of the RF SMA ports are capable of providing power over bias-tee circuitry to wideband amplifiers and pre-amps. Power to bias-tee peripherals is fully software controllable, providing maximal operational flexibility. Currently, the official bias-tee peripherals include the BT-100, a wideband power amplifier for TX, and the BT-200, a wideband low noise amplifier for RX.
+
+At the core of the bladeRF 2.0 micro is the latest generation Cyclone V FPGA from Intel (formerly Altera). The xA5 features a 77KLE FPGA of which about 60KLE are available and user programmable. Optionally, to accelerate modems in HDL and for additional FPGA space, consider the bladeRF xA9, which features the largest-in-class FPGA of any single SDR with 301KLE of which about 292KLE are available and user programmable.
+
+An advanced clocking architecture allows the bladeRF 2.0 micro to receive and provide its 38.4MHz fundamental clock from and to other devices. Additionally, an on-board PLL allows the bladeRF 2.0 micro to tame its VCTCXO to a 10MHz reference signal. The xA5 features a highly accurate and stable oscillator. The on-board DAC sets the frequency trim of the oscillator to a factory calibrated value.
+
+The Power Distribution Network (PDN) of the bladeRF 2.0 micro features an intricate combination of low noise and high efficiency switch mode and linear power regulators. While the bladeRF 2.0 micro can be run solely from USB bus power, an external power source can be supplied to ensure maximal linear performance of bias-tee peripherals. The PDN features an auto selection and hold-over circuitry to optimize power draw between USB bus and external DC power.
+
+The bladeRF 2.0 micro can run in headless without needing to be connected to a PC or SBC. The on-board flash is large enough to hold any size FPGA image for the xA5.
+
+Block Diagram:
+
+ 
+
+ 
+
+
+USB 3.0 Superspeed
+ 
+
+High speed, low latency and increased power delivery over a single cable: USB 3.0 Superspeed is the perfect interface for a wide bandwidth radio front end to modern computers. The Cypress FX3 microcontroller is the ideal solution with a powerful ARM9 processor and enough bandwidth to saturate the full duplex 5Gbps USB 3.0 link.
+
+Fully Programmable FPGA
+ 
+
+An Altera Cyclone V FPGA provides the interface between the FX3 and RF transceiver. This FPGA has single-cycle access embedded memory, hard 18×18 multipliers for dedicated DSP and many general logic elements ready to be programmed.
+
+
+
+Wideband RF Transceiver
+ 
+
+The Analog Devices AD9361 is a fully integrated, high performance RF transceiver. Made for next generation wireless protocols, this transceiver is capable of handling anything from simple FM audio to the latest 5G LTE standard to whatever the future may hold.
+
+Professional Quality
+ 
+
+The bladeRF’s design has been tested and verify to meet our very high standards. Every device is capable of effortlessly and faithfully transceiving even the highest order modulations. At peak RF performance, the bladeRF can occupy 2×2 56MHz of bandwidth over its operating frequency range without significant distortions and EVMs around 1%.
+
+
+You may also like…
+bladeRF 2.0 micro xA9
+bladeRF 2.0 micro xA9$860.00
+SKU: BRFM-XA9
+bladeRF 2.0 micro xA9, 47MHz to 6GHz frequency range, 61.44MHz sampling rate, 2×2 MIMO channels USB 3.0 SuperSpeed Software Defined Radio. The xA9 features the largest-in-class 301KLE Cyclone V FPGA, an essential component for hardware accelerators and HDL signal processing chains including FFTs, Turbo Decoders, transmit modulators/filters, and receive acquisition correlators for burst modems. The xA9’s 301KLE FPGA has vastly more room available in the FPGA than the xA4 for these sorts of applications. The bladeRF does not ship nor come with these (or any) accelerators or processing chains, they are entirely up to the end-customer to design or procure from other 3rd party suppliers.
+
+1
+Add to cart
+Related products
+bladeRF 2.0 micro case
+bladeRF 2.0 micro case$20.00
+SKU: BRFM-CASE
+A clear PolyCarbonate case for the bladeRF 2.0 micro.
+
+1
+Add to cart
+BT-100 Bias-tee Power Amplifier
+BT-100 Bias-tee Power Amplifier$30.00
+SKU: BT-100
+Bias-tee powered Power Amplifier (TX) for the bladeRF 2.0 micro
+
+1
+Add to cart
+BT-200 Bias-tee Low Noise Amplifier
+BT-200 Bias-tee Low Noise Amplifier$30.00
+SKU: BT-200
+Bias-tee powered Low Noise Amplifier (RX) for the bladeRF 2.0 micro
+
+1
+Add to cart
+Tri-Band Antenna
+Tri-Band Antenna$25.00
+SKU: ANT-TRI
+Wideband and general purpose Tri-band Antenna.
+
+1
+Add to cart
+All specifications subject to change at any time without notice. bladeRF is sold as test equipment and is expected for all intents and purposes to be used as such. Use of this device is at your own risk and discretion. Nuand LLC makes no warranty of any kind (whether express or implied) with regard to material presented on this page, and disclaims any and all warranties, including accuracy of this document, or the implied warranties of merchatability and fitness for use.
+Navigation
+Home
+Shop
+Careers
+Checkout
+Contact Us
+Privacy Policy
+Terms
+Help
+Support
+Calibration Data
+Windows Installers
+FPGA Images
+FX3 Firmware
+Frequently Asked Questions
+Quick links
+bladeRF-wiphy
+bladeRF 2.0 micro xA9
+bladeRF 2.0 micro xA4
+bladeRF x115
+bladeRF x40
+My Account
+Cart
+Contact Info
+Email: bladeRF@nuand.com
+IRC: #bladeRF on FreeNode
+Slack: Invite link
+Follow @NuandLLC
+© Nuand 2025. All rights reserved.
+bladerf@nuand.com
+Back to top
+Orders usually ship out in 1 to 2 business days.
+
+
+
+
+
+
+Store
+bladeRF@nuand.com
++1-855-466-8263
+Nuand
+bladeRF-wiphy
+bladeRF 2.0
+Support
+Blog
+Forums
+Shop
+Nuand Shop
+bladeRF 2.0 micro xA9
+Home / Kits / bladeRF 2.0 micro xA9
+bladeRF 2.0 micro
+bladeRF 2.0 micro xA9
+$860.00
+
+bladeRF 2.0 micro xA9, 47MHz to 6GHz frequency range, 61.44MHz sampling rate, 2×2 MIMO channels USB 3.0 SuperSpeed Software Defined Radio. The xA9 features the largest-in-class 301KLE Cyclone V FPGA, an essential component for hardware accelerators and HDL signal processing chains including FFTs, Turbo Decoders, transmit modulators/filters, and receive acquisition correlators for burst modems. The xA9’s 301KLE FPGA has vastly more room available in the FPGA than the xA4 for these sorts of applications. The bladeRF does not ship nor come with these (or any) accelerators or processing chains, they are entirely up to the end-customer to design or procure from other 3rd party suppliers.
+
+In stock - Usually ships out in 1 to 2 business days.
+
+Join our mailinglist for stock, and availability notifications:
+Your Email Address
+
+1
+Add to cart
+SKU: BRFM-XA9
+Categories: bladeRF 2.0 micro, Kits
+Description Additional information Product Enquiry
+Description
+ 
+Made in USA
+NDAA Compliant
+Kit contains:
+bladeRF xA9  (301KLE Cyclone V FPGA)
+USB 3.0 SS cable
+Optional accessories:
+Micro Enclosure
+BT-100 Bias-tee Power Amplifier (TX)
+BT-200 Bias-tee Low Noise Amplifier (RX)
+More Information:
+Product Datasheet
+Getting Started guide on bladeRF wiki
+bladeRF-wiphy
+EU Declaration
+bladeRF 2.0 micro Brief
+Schematics REV 1.4
+Schematics REV 1.3
+Mechanical DXF File
+Software Support and Additional Resources
+
+
+Description:
+The bladeRF 2.0 micro xA9 is the next generation Software Defined Radio (SDR) offering a frequency range of 47MHz to 6GHz, 61.44MHz sampling rate (capable of up to 122.88MHz), and 2×2 MIMO streaming. Packed into a small form factor, the bladeRF 2.0 micro was designed for high performance as well as mobile applications. Through libbladeRF the bladeRF 2.0 micro is compatible with GNURadio, GQRX, SDR-Radio, SDR#, gr-fosphor, SoapySDR, and more on Windows, Linux and macOS.
+
+The RF shield cap protects sensitive RF components from Electromagnetic Interference (EMI) and provides additional thermal dissipation, allowing the bladeRF 2.0 micro to operate in challenging environments.
+
+All of the RF SMA ports are capable of providing power over bias-tee circuitry to wideband amplifiers and pre-amps. Power to bias-tee peripherals is fully software controllable, providing maximal operational flexibility. Currently, the official bias-tee peripherals include the BT-100, a wideband power amplifier for TX, and the BT-200, a wideband low noise amplifier for RX.
+
+At the core of the bladeRF 2.0 micro is the latest generation Cyclone V FPGA from Intel (formerly Altera). The xA9 features a 301KLE FPGA of which about 292KLE are available and user programmable. The largest-in-class FPGA is ideal for accelerating modems in HDL.
+
+An advanced clocking architecture allows the bladeRF 2.0 micro to receive and provide its 38.4MHz fundamental clock from and to other devices. Additionally, an on-board PLL allows the bladeRF 2.0 micro to tame its VCTCXO to a 10MHz reference signal. The xA9 features a highly accurate and stable oscillator. The on-board DAC sets the frequency trim of the oscillator to a factory calibrated value.
+
+The Power Distribution Network (PDN) of the bladeRF 2.0 micro features an intricate combination of low noise and high efficiency switch mode and linear power regulators. While the bladeRF 2.0 micro can be run solely from USB bus power, an external power source can be supplied to ensure maximal linear performance of bias-tee peripherals. The PDN features an auto selection and hold-over circuitry to optimize power draw between USB bus and external DC power.
+
+The bladeRF 2.0 micro can run in headless without needing to be connected to a PC or SBC. The on-board flash is large enough to hold any size FPGA image for the xA9.
+
+Block Diagram:
+
+ 
+
+ 
+
+
+USB 3.0 Superspeed
+ 
+
+High speed, low latency and increased power delivery over a single cable: USB 3.0 Superspeed is the perfect interface for a wide bandwidth radio front end to modern computers. The Cypress FX3 microcontroller is the ideal solution with a powerful ARM9 processor and enough bandwidth to saturate the full duplex 5Gbps USB 3.0 link.
+
+Fully Programmable FPGA
+ 
+
+An Altera Cyclone V FPGA provides the interface between the FX3 and RF transceiver. This FPGA has single-cycle access embedded memory, hard 18×18 multipliers for dedicated DSP and many general logic elements ready to be programmed.
+
+
+
+Wideband RF Transceiver
+ 
+
+The Analog Devices AD9361 is a fully integrated, high performance RF transceiver. Made for next generation wireless protocols, this transceiver is capable of handling anything from simple FM audio to the latest 5G LTE standard to whatever the future may hold.
+
+Professional Quality
+ 
+
+The bladeRF’s design has been tested and verify to meet our very high standards. Every device is capable of effortlessly and faithfully transceiving even the highest order modulations. At peak RF performance, the bladeRF can occupy 2×2 56MHz of bandwidth over its operating frequency range without significant distortions and EVMs around 1%.
+
+
+You may also like…
+bladeRF 2.0 micro xA4
+bladeRF 2.0 micro xA4$540.00
+SKU: BRFM-XA4
+bladeRF 2.0 micro xA4, 47MHz to 6GHz frequency range, 61.44MHz sampling rate, 2×2 MIMO channels USB 3.0 SuperSpeed Software Defined Radio.
+
+1
+Add to cart
+Related products
+bladeRF 2.0 micro case
+bladeRF 2.0 micro case$20.00
+SKU: BRFM-CASE
+A clear PolyCarbonate case for the bladeRF 2.0 micro.
+
+1
+Add to cart
+BT-100 Bias-tee Power Amplifier
+BT-100 Bias-tee Power Amplifier$30.00
+SKU: BT-100
+Bias-tee powered Power Amplifier (TX) for the bladeRF 2.0 micro
+
+1
+Add to cart
+BT-200 Bias-tee Low Noise Amplifier
+BT-200 Bias-tee Low Noise Amplifier$30.00
+SKU: BT-200
+Bias-tee powered Low Noise Amplifier (RX) for the bladeRF 2.0 micro
+
+1
+Add to cart
+Tri-Band Antenna
+Tri-Band Antenna$25.00
+SKU: ANT-TRI
+Wideband and general purpose Tri-band Antenna.
+
+1
+Add to cart
+All specifications subject to change at any time without notice. bladeRF is sold as test equipment and is expected for all intents and purposes to be used as such. Use of this device is at your own risk and discretion. Nuand LLC makes no warranty of any kind (whether express or implied) with regard to material presented on this page, and disclaims any and all warranties, including accuracy of this document, or the implied warranties of merchatability and fitness for use.
+Navigation
+Home
+Shop
+Careers
+Checkout
+Contact Us
+Privacy Policy
+Terms
+Help
+Support
+Calibration Data
+Windows Installers
+FPGA Images
+FX3 Firmware
+Frequently Asked Questions
+Quick links
+bladeRF-wiphy
+bladeRF 2.0 micro xA9
+bladeRF 2.0 micro xA4
+bladeRF x115
+bladeRF x40
+My Account
+Cart
+Contact Info
+Email: bladeRF@nuand.com
+IRC: #bladeRF on FreeNode
+Slack: Invite link
+Follow @NuandLLC
+© Nuand 2025. All rights reserved.
+bladerf@nuand.com
+Back to top
+Orders usually ship out in 1 to 2 business days.
+
+
+
+
+Store
+bladeRF@nuand.com
++1-855-466-8263
+Nuand
+bladeRF-wiphy
+bladeRF 2.0
+Support
+Blog
+Forums
+Shop
+bladeRF-wiphy
+bladeRF-wiphy
+bladeRF-wiphy is an open-source IEEE 802.11 compatible software defined radio VHDL modem
+
+If you like the bladeRF-wiphy project, please consider starring it on Github!
+
+Table Of Contents
+What is the bladeRF-wiphy project?
+Why write and run a modem on the FPGA of a software defined radio?
+How does WiFi work?
+How does the bladeRF-wiphy modem work?
+wlan_top:
+wlan_tx:
+wlan_rx:
+DSSS:
+Current status
+Features
+Mission
+Future
+Advanced features and inquiries
+Notes
+
+
+
+bladeRF-wiphy
+
+What is the bladeRF-wiphy project?
+The bladeRF-wiphy project is an open-source IEEE 802.11 compatible software defined radio VHDL modem. The modem is able to modulate and demodulate 802.11 packets (the protocol WiFi is based on), and run directly on the bladeRF 2.0 micro xA9’s FPGA.
+
+The bladeRF-wiphy coupled with Linux mac80211 allows the bladeRF 2.0 micro xA9 to become a software defined radio 802.11 access point! 802.11 packets (PDUs) are modulated and demodulated directly on the FPGA, so only 802.11 packets are transferred between the FPGA and libbladeRF.
+
+
+Packets come from the bladeRF-wiphy modem on the FPGA, enter libusb and libbladeRF to be parsed by bladeRF-linux-mac80211, and ultimately transferred over a kernel netlink socket.
+NOTE: While a JTAG adapter (USB-Blaster) can help with understanding the modem at run-time, a JTAG adapter is not necessary to run the RBFs linked below.
+
+For instructions on compiling, installing, and running bladeRF-wiphy, take a look at the bladeRF-wiphy instructions . To simulate bladeRF-wiphy take a look at the bladeRF-wiphy simulation guide.
+
+Why write and run a modem on the FPGA of a software defined radio?
+While implementing a modem in HDL is much harder than a modem written entirely in C or Python, HDL and FPGAs allow for one of the most crucial aspects of modem development: low latency and timing control.
+
+In IEEE 802.11, specifically there is a requirement that a receiving modem (be it a client STA, or access point AP) must acknowledge the successful reception of an incoming packet addressed to it by beginning to transmit an an ACK packet within 10 microseconds of the end of the incoming packet. It is impractical, or at times outright impossible to meet such narrow timing requirements with C and Python soft-modems because of the relatively high latency of data buses at bandwidths needed to stream raw IQ samples. Even high-speed buses such as PCIe and USB add too much latency if IQ samples have to be sent over a bus, processed by a CPU, and a response sent back over the same bus. This situation is less than ideal when compared to an HDL modem, where a developer has full deterministic and “clock-cycle precision” control over the latency and timing of signals in the modem. HDL modems also benefit from massive parallelization that can be achieved in FPGAs. The level of control and performance in this case makes HDL modems uniquely capable of handling the task of generating an ACK response within 10 microseconds.
+
+It is worth noting that lean HDL modems tend to utilize fixed point arithmetic in their DSP pipelines, which is in stark contrast to soft-modems written in C, Python, etc which mostly use floating point arithmetic to benefit from accelerators such as AVX (in CPUs) and GPGPUs. One example of such an accelerator toolbox is GNURadio Volk ( https://github.com/gnuradio/volk ). The main driving force behind the fixed point arithmetic in HDL modems is the comparatively massive logic resource utilization of floating point arithmetic in FPGAs.
+
+HDL modems may end up running on FPGAs or converted into ASICs, but early in the development process, HDL modems can be prototyped as soft-modems. MATLAB, GNURadio, and Python are popular choices for the first stage of design due to the standard flexibility of software development. Once the theoretical performance for modem is validated, the DSP algorithms developed in the previous step can be implemented again as floating point implementation. Afterwards, the floating point implementation can then be implemented again as fixed point arithmetic in a compiled language such as C. While this step is optional, having a fixed point implementation is useful because it can be compiled and validated quickly to ensure it behaves as well as the best theoretical modem designed in the previous step. The developer can then easily debug the difference between a “known good” fixed point implementation (the one written in C) and the HDL modem; this is known as having “bit level accurate” implementations. Ideally, in the development process this allows for fast iterations of the fixed point C implementation of the modem by allowing BER and PER curves to be quickly generated based on millions of simulated packets; tests can finish in just minutes. Simulating an HDL modem in its entirety to generate BER and PER curves is generally several orders of magnitude slower.
+
+How does WiFi work?
+What we call WiFi is a very tall stack of technologies that stretches from high layer protocols that use TCP and UDP (layer 4) like HTTP (Layer 7), down to a Medium Access Control (MAC) that coordinates access and authentication (roughly Layer 2), down to a modem (the Physical Layer, PHY), that translates between digital bits and analog RF signals (Layer 1); a modem that in no small part has to deal with and mitigated effects dictated by Maxwell’s and Schrodinger’s equations.
+
+The entire WiFi stack can be split up into two equally important parts, the PHY and the MAC. The PHY is essentially responsible for translating between digital packets (PDUs) and baseband IQ samples. Packets going in and out of the PHY are then processed by the MAC to establish link state, and higher level protocol functions (e.g. beaconing, authentication, association, and data passing).
+
+The PHY, as defined by the IEEE 802.11 specification, is generally an OFDM waveform consisting of subcarriers modulated either as BPSK, QPSK, 16-QAM, 64-QAM, or most recently 256-QAM. The PHY is responsible for modulation PDUs (packet data units, essentially an 802.11 frame) to raw baseband IQ samples, and demodulation raw baseband IQ samples to PDUs). The PHY’s transmit process is relatively straightforward, the PHY does not concern itself with the contents of the packet it is asked to transmit by the MAC. So with little to no modifications the PHY begins modulating the digital payload, the PDU, into raw IQ samples and awaits for an opportunity to transmit. On the receive side, the PHY is constantly analyzing signals and awaits the beginning of an 802.11 packet, in a process called acquisition. The 802.11 preamble, which is present at the very beginning of any IEEE 802.11 RF frame consists of 10 short training sequences and 2 long training sequences. The receiving PHY uses the training sequences to understand (estimate in DSP terminology) what happened to the signal as it was transmitted over the air. Multipath, fading, Doppler shifts (and consequently Doppler spreads) can greatly distort signals, however having a known preamble allows a receiver to both positively identify a packet as belonging to its protocol, and understand what it must do to undo the effects of the channel on the signal. For receiving 802.11 frames, the bladeRF-wiphy estimates acquisition, symbol timing, channel offset correction, and channel impulse response parameters. Most of the complex DSP and statistical theory applied in a modem (comprised of both RX and TX) is in the receiver. This is also why it is good practice to begin the design process with a transmitter.
+
+Once two 802.11 modems are able to exchange packets effectively, things quickly start resembling wired communications like Ethernet (IEEE 802.3). There is however a key difference with wireless communication, everything shares just one finite medium — the RF spectrum, which is readily accessible by anything within range. The 802.11 specification requires devices to be mindful of this, and the solution is relegated to the MAC. Essentially, the MAC in an 802.11 device maintains the state of the link by exchanging management frames. An access-point advertises its existence (and includes information for sleeping clients) in period beacon frames, a type of management frame. Conversely, a station (STA) that wants to connect to an AP, must go through the association process: optionally exchanging probe requests and responses with the AP, exchanging authentication management frames, and ultimately association management frames. Assuming an open SSID, as long as the STA occasionally transmits data to the AP or successfully receives packets by sending ACKs back to the AP, the link will remain established until either the AP or the STA exchange deauthentication (“deauth”) or disassociation management frames. While the link is established the AP and STA exchange 802.11 frames, which effectively is at the same layer as Ethernet.
+
+As a quick side note, Linux has an entirely open-source 802.11 MAC implementation known as mac80211 ( https://wireless.wiki.kernel.org/en/developers/documentation/mac80211 ). BSD systems also have their own implementation known as net80211 ( https://wiki.freebsd.org/WiFi ). On Linux, mac80211 is able to behave both as an AP and an STA. The mac80211 subsystem can be queried through the cfg80211 subsystem with familiar tools like iwconfig and the iw tools (iw, iwconfig, iwlist, etc).
+
+How does the bladeRF-wiphy modem work?
+The bladeRF-wiphy modem is organized into two major modules wlan_tx and wlan_rx (respectively the modulator and the demodulator), which are unified under wlan_top. The wlan_top module also implements queuing and deqeueing of packets, Distributed Coordination Function (DCF) and Acknowledgement (ACK) mechanisms.
+
+The names of the subsections below mostly correspond to modules found in the fpga/vhdl directory in bladeRF-wiphy.
+
+wlan_top:
+
+The wlan_top module instantiates the three core components of the bladeRF-wiphy IEEE 802.11 compatible modem, including the RX, TX, and DCF modules. The DCF module constantly determines if it is feasible for the current modem to transmit if it wanted to. Depending on the type of packet a transmitter intends to transmit, it will have to wait an amount of time dictated by either Short Interframe Space (SIFS) or DCF Interframe Space (DIFS). An IEEE 802.11 modem must respond with an Acknowledgement (ACK) frame for each received frame that is addressed to it. The hard limit defined as SIFS, requires that the transmission of the ACK frame begin with 10 microseconds of the end of the received frame. During the SIFS time, other IEEE 802.11 modems that received the original frame know to give the intended recipient time to generate an ACK packet. If however, the current modem wants to transmit because it has a data frame or management frame, it must wait an amount of time defined as DIFS before it can transmit. Initially, DIFS is between 20 and 50 microseconds but if the medium is inaccessible, the wait can grow exponentially to many milliseconds due to the exponential backoff algorithm. wlan_top’s RX state machine waits for decoded packets from wlan_rx and translates them into the standard packet_control_t interface for exchanging digital payloads through libbladeRF. In case the wlan_rx core determines it needs to send an ACK frame, it asserts ack_mac and ack_valid with the original transmitter’s MAC address that must receive an ACK packet. wlan_top’s TX state machine waits for the DCF to tell it when it can transmit. If there are any ACK packets, the TX state machine waits a SIFS amount of time prior to transmitting. If however, any other kind of data or management frame is meant to be transmitted, the TX state machine will wait for an amount of time set by DIFS.
+
+In case the modem does have something to transmit but the medium (the RF channel) is currently busy, the DCF implements an exponential backoff algorithm that successively waits up to twice as much as the previous waiting period to transmit. The idea behind exponential backoff is to avoid a thundering herd of contention between multiple transmitters, when many blocked transmitters simultaneously notice they can transmit due to the medium being usable again.
+This process is known as Carrier Sense Multiple Access / Collision Avoidance (CSMA/CA).
+
+wlan_tx:
+wlan_tx_controller:
+The wlan_tx_controller module is the primary of two main state machines in the transmit chain. Its primary purpose is to generate the preamble and await its completion, prior to starting the wlan_framer module. A standard 802.11 frame’s preamble consists of 10 Short Training Sequences (STS) followed by a 0.8 microseconds Cyclic Prefix (CP) for two 3.6 microsecond long Long Training Sequences (LTS). wlan_tx_controller asserts short_start to start the STSs, and awaits for long_done before asserting encoder_start to start the wlan_framer module. After wlan_framer is started, wlan_tx_controller waits for indication the packet has finished being modulated.
+
+wlan_framer:
+The wlan_framer module is primarily responsible for receiving PDU bytes and sending them to the modulator. wlan_framer receives control of the transmit chain right after preamble is finished being generated. The first symbol generated by wlan_framer is the SIGNAL symbol. The symbol is based on tx_vector, a metadata HDL signal that informs the modulator how long a PDU is and its intended transmission MCS. The SIGNAL symbol decodes to 3 bytes, these 3 bytes include fields that determine the length of the packet, and the modulation and coding scheme of the following OFDM symbols. It should be noted, the SIGNAL symbol is always modulated at 6Mbps rate.
+
+To put into perspective the end goal wlan_tx_controller and wlan_framer are trying to achieve in outputting, below is an illustration of a typical IEEE 802.11 burst. A typical burst includes the preamble (which is used by the receiver to estimate symbol timing, center frequency offset, and the channel impulse response), and data symbols (the first of which is the SIGNAL symbol, followed directly by symbols that encode the payload data). The waveforms in green which appear below the block diagrams are example IQ samples generated by wlan_tx.
+
+
+Putting it all together into one diagram:
+
+
+The wlan_framer state machine prepares enough bytes to generate one OFDM symbol at a time. After dispatching enough bytes, it waits for mod_done to be asserted so it can prepare the next symbol. wlan_framer appends a 32bit CRC at the end of the PDU using CRC polynomial:
+CRC:
+C
+R
+C
+P
+o
+l
+y
+n
+o
+m
+i
+a
+l
+=
+x
+32
++
+x
+26
++
+x
+23
++
+x
+22
++
+x
+16
++
+x
+12
++
+x
+11
++
+x
+10
++
+x
+8
++
+x
+7
++
+x
+5
++
+x
+4
++
+x
+2
++
+x
+1
++
+x
+0
+CRCPolynomial=x 
+32
+ +x 
+26
+ +x 
+23
+ +x 
+22
+ +x 
+16
+ +x 
+12
+ +x 
+11
+ +x 
+10
+ +x 
+8
+ +x 
+7
+ +x 
+5
+ +x 
+4
+ +x 
+2
+ +x 
+1
+ +x 
+0
+ 
+
+wlan_scrambler:
+Each PDU byte is scrambled by an XOR operation with the respective LFSR value. The wlan_scrambler module uses the wlan_lfsr module to generate the corresponding LFSR value for each PDU byte. The SIGNAL symbol is not scrambled. Each OFDM symbol requires a fixed number of bytes to be modulated, if the PDU is not long enough to fill the last symbol, wlan_scrambler creates trailing zeros to pad the last symbol until the modulator module has enough bytes to modulate it.
+
+wlan_encoder:
+The wlan_encoder module generates convolution encoder coded bits from the scrambled bytes that it receives from wlan_scrambler. wlan_encoder works on a per symbol basis number of bytes, similar to wlan_scrambler. A 2 code convolutional encoder will produce 2 coded bits for every uncoded bit it receives, giving it a “half rate”, r=1/2. IEEE 802.11 calls for a few more rates including r=2/3 and r=3/4, these rates are achieved by deterministically erasing coded bits, for example in the case of the r=3/4 rate, for every 3 uncoded bits presented to the encoder, 2 bits are punctured (or erased) and 4 are transmitted. As long as the transmitter and receiver are both aware of where the erasures happened, the receiver’s Viterbi decoder can be informed to ignore those missing coded bits. Removing coded bits, increases throughput (because effectively, redundancy is reduced) at the cost of decreased error correction. This is one reason why faster MCSs have higher encoding rates, the specification assumes there is already enough SNR to transmit a high order modulation like 64-QAM, so a lower error protecting rate is assumed to suffice.
+
+wlan_interleaver:
+To avoid grouped clusters of bit errors, interleaving is used to separate adjacent bits. In case some kind of channel impediment destroys part of an OFDM symbol, with interleaving, the coded bits are very likely to not be adjacent. This distribution of bit errors then allows the Viterbi decoder to potentially correct some bit errors over a portion of the trellis length. Bits are interleaved according to a pattern established in IEEE 802.11.
+
+wlan_modulator:
+The wlan_modulator module begins the process of converting digital bits into IQ samples by a process called modulation. wlan_modulator turns coded bits from wlan_interleaver into constellation points based on the corresponding modulation scheme for the packet. The IEEE 802.11 specification requires several modulations for OFDM rates, including BPSK, QPSK, 16-QAM, and 64-QAM. The coded bits sent to wlan_modulator are used as indexes in the constellation map for each respective modulation.
+
+The choice was made for IEEE 802.11 OFDM to have 48 data carrying subcarriers, and all subcarriers have the same modulation scheme. In the case of the 6Mbps rate, the subcarriers are BPSK modulated, meaning that each subcarrier only modulates 1 coded bit as BPSK. In this case wlan_modulator dequeues 1 bit per subcarrier, and uses that 1 coded bit as an index into the lookup table corresponding to the BPSK modulation, for example (-1 for 0-bit and +1 for 1-bit).
+Similarly, as another example, the 54 Mbps rate uses 64-QAM as its modulation, meaning 6 coded bits are necessary per subcarrier to index the constellation mapping for 64-QAM. With 48 data subcarriers, wlan_modulator needs 6 coded bits for each of the 48 data subcarriers for a total of 288 coded bits per OFDM symbol.
+
+wlan_ifft64:
+Once the wlan_modulator modulates coded bits into constellation points, the complex (having real and imaginary components) constellation points in IEEE 802.11 OFDM are turned into complex IQ samples by a simple inverse FFT. The inverse FFT is performed on the full 64 subcarriers (soon to be referred to as FFT bins), which includes 4 pilot tones, 48 data subcarriers, 1 DC bin, and 9 zero bins that help narrow IEEE 802.11 spectral side-lobes.
+
+
+wlan_sample_buffer:
+wlan_ifft64 generates the raw baseband IQ samples that get sent to an DAC for conversion to analog. IEEE 802.11 symbols are 4 microseconds long (assuming long guard intervals), but 64 IQ samples sampled out at 20MSPS is only 3.2 microseconds. The remaining 0.8 microseconds are used as a gap in between symbols to decrease Inter-Symbol Interference (ISI). The 0.8 microsecond gap which corresponds exactly to 16 IQ samples at 20MSPS is located at the beginning of each OFDM symbol period. The gap is however not left blank, instead the last 16 samples output by the inverse FFT are copied to the beginning of the OFDM symbol into the gap. The samples in the gap are called the Cyclic Prefix (CP). The phase is continuous between the end of the CP and the beginning of the 64 samples generated by the inverse FFT by virtue of the Fourier Transform being cyclic every 
+2
+∗
+p
+i
+2∗pi, in this case 
+2
+∗
+p
+i
+2∗pi is 64 samples.
+
+The wlan_sample_buffer module is also used to create a 32 sample (1.6 microsecond long Cyclic Prefix) for 2 back-to-back Long Training Sequence repetitions.
+
+wlan_tx_short:
+
+The wlan_tx_short module generates the 16 samples that defined the IEEE 802.11 Short Training Sequence. The STS phase is 8 microseconds long, and it is intended to help any receiver lock its automatic gain control (AGC), and gain a rough timing estimate of the packet; this topic is covered in the wlan_rx module.
+
+wlan_tx_long:
+The wlan_tx_long module generates the 64 samples defined as the IEEE 802.11 Long Training Sequence. The LTS phase is also 8 microseconds long. The sequence is intended for estimating center frequency offset, as well as reference for generating the initial equalizer parameters; this topic is covered in the wlan_rx module.
+
+wlan_rx:
+wlan_pll:
+To ensure the modem can process RX samples as quickly as it receives them, part of the wlan_rx module runs at 4 times the clock rate of the sample rate (20 MSPS). Most of the OFDM receiver effectively runs in an 80MHz clock domain and requires its own PLL because of this.
+
+wlan_agc:
+This module informs the rest of the modem when it is detecting a burst; a sequence of high energy IQ samples is usually indicative of a digital packet. This module is written to allow the bladeRF-wiphy modem to either control manual gain control or to interpret the signals from an AGC. In the case of the bladeRF 2.0 micro xA9, the AD9361’s physical control GPIO pin ( adi_ctrl_out(0) ) can be used to inform the modem when the AD9631 has locked to a new gain setting. This external signal clues in the modem about when the IQ samples are likely to be stable. The module also informs the rest of the modem when it assumes nothing else is transmitting and the medium is clear. A decision it reaches by comparing the IIR filtered values of 
+I
+2
++
+Q
+2
+I 
+2
+ +Q 
+2
+  against an empirically determined value. Essentially, even when nothing is transmitting, a receiver listening to silence will not see 0 energy due to the thermal noise (basically the I and Q samples do not go to 0) so determining the magnitude of the IQ vector that reflects “radio silence” had to be empirically determined. For additional information about this topic and implementing an AGC, take a look at the GRCon-18 presentation about implementing an 802.11 compatible AGC on the original bladeRF https://www.youtube.com/watch?v=rwmfSVXo8K8 .
+
+wlan_acquistion:
+
+The acquisition module looks and tries to identify if the current burst is an 802.11 packet by analyzing patterns that are indicative of the presence of the 10 repetitions of the standard 802.11 short training sequence (STS), a BPSK modulated signal. The acquisition module also uses information passed to it from the AGC about the start of burst, and whether gain settings have changed. In case the AGC changes after the first several samples are received, the bladeRF-wiphy modem then ignores the few samples before the gains have locked — those samples are likely to be highly distorted by clipping and of little practical value except for starting the burst counter. The acquisition module is the first module to feature a burst counter, a counter that counts the number of samples since the beginning of the burst. Effectively the counter gives the modem a sense of how far along in a burst it is. Remember, the bladeRF-wiphy does not store any samples, it requires something similar to a clock (in this case the burst counter) to determine how to interpret IQ samples. The acquisition module asserts the acquired signal based on the Schmidl&Cox OFDM synchronization technique but only if the synchronization value peaks within a time-frame roughly around 12 microseconds into the burst. The synchronization value is based on the similarity of the previous 16 samples, against the average value of the preceding two 16 sample buckets. The value effectively starts to decrease after the 10th repetition of the short training sequence (STS) is compared against the 8th and the 9th repetitions. The accurate estimation of the end of the 10th repetition of the short training sequence (STS) is important because the modem uses it as a reference for the start time of each subsequent OFDM symbol, including the long training sequence (LTS) repetitions that follow the STS repetitions. In DSP terminology, the modem has now achieved symbol timing recovery.
+
+To aid with fixed point arithmetic, the acquisition module calculates a value by which to scale the fixed point samples to ensure power normalization for the subsequent stages of the modem. If you are wondering why not just rely on the AGC, it is because the analog gain amplifiers controlled by the AGC can only do so much. It is up to the p_norm (power normalization) module to ensure the rest of the modem has power normalized samples.
+
+wlan_cfo_estimate:
+For example, when two separate physical 802.11 modems communicate, despite both of them intending to tune exactly to 2.412GHz, the two devices will likely tune to slightly different frequencies, likely on the order of a few hundreds or thousands of Hz. This is caused by impurities in quartz crystal oscillators used as references for Phase Locked Loops (PLL) and Local-Oscillators (LO). A quartz crystal oscillator’s error of a few parts per million at the typical frequency range of oscillators (10MHz to 40MHz) is propagated by the LO to the LO frequencies. As an example, a crystal’s tolerance (expressed in ppm) is propagated almost unaffected by the LO, meaning a 5ppm tolerance can be as much as 29kHz for an LO generating 5.8GHz. A DSP algorithm in the receiver has to then compensate for this. Fortunately, the CFO is easy to estimate by computing the phase difference between two subsequent identical OFDM symbols. The double repetition of the long training sequence found in the beginning of each 802.11 frame can be used to extract this CFO estimate.
+
+The wlan_cfo_estimate module’s main output is a signal called cfo_atan_average. The cfo_atan_average signal is a set of 64 moving average windows of CFO estimates (output of the atan2() CORDIC). The first estimate corresponds to the phase difference between the 1st sample of the first LTS and the 1st sample of the second LTS, and so on and so forth until the 64th sample of the first and second LTSs. wlan_rx_controller snapshots this free running value at the correct moment, more on this later. The CFO estimate can then be used to undo the CFO; the actual CFO correction happens within the wlan_fft module, more on this later.
+
+wlan_rx_controller:
+The RX controller module contains a simple state machine that stalls the OFDM decoding pipeline until the SIGNAL symbol of an 802.11 packet has been successfully decoded. The SIGNAL comes right after the long training sequence, and it is always encoded at essentially the 6Mbps OFDM Modulation Coding Scheme (MCS) rate. The SIGNAL field however contains a 4-bit field that indicates the MCS of the remainder of the packet. The RX controller waits for the Viterbi decoder to finish decoding the SIGNAL symbol before sending OFDM symbols after the SIGNAL symbol further down the receiver pipeline. The Viterbi decoder takes a deterministic amount of time to complete, so the FIFO buffers can be sized accurately.
+
+The RX controller maintains its own sample counter which it uses to calculate the appropriate time to snapshot and save cfo_atan_average, which is the CFO estimate provided by wlan_cfo_estimate. The optimal time to snapshot d_phase is when the moving average window in wlan_cfo_estimate is calculated based on samples at the tail end of the LTS. This effectively ensures the CFO is estimated on the LTS samples that are after the LTS’s Cyclic Prefix.
+
+The power normalization value calculated by wlan_acquistion is also snapshotted and saved as correction_p_mag. The RX controller inverts the CFO estimate to create a signal (correction_dphase) that can be used to compensate for the CFO, more on this later in wlan_fft.
+
+wlan_fft:
+At the core of an OFDM demodulator is an FFT that takes time domain samples and converts them into frequency domain bins that correspond to OFDM subcarriers. The frequency domain subcarrier is essentially a simple phasor that is modulated using a standard IEEE 802.11 modulation such as: BPSK, QPSK, 16-QAM, 64-QAM, 256-QAM, etc.
+
+To mitigate the effects of the center frequency offset (CFO), the receiver: estimates the CFO, inverts the CFO estimate to create a “correction phase”, and generates a complex tone based on the correction phase. Recall the wlan_rx_controller module computes and provides correction_dphase. The complex tone (
+e
+j
+w
+t
+)
+e 
+jwt
+ ) is then multiplied in the time domain with the baseband IQ samples prior to being fed into the FFT. The complex tone is called complex because it only has one spectral element located at w in the frequency domain. Essentially, a time domain multiplication of the baseband IQ samples with the complex tone is a frequency domain convolution that “frequency shifts” the time domain samples to where they would approximately be if no CFO existed. The wlan_fft module uses the symbol_start signal from wlan_rx_controller to: #1) select which baseband IQ samples to correct then send to the FFT and #2) start the numerically controlled oscillator (NCO) that generates the complex tone used to correct samples in step #1.
+
+For each OFDM symbol, which consists of 64 time domain IQ samples, the wlan_fft module outputs 64 “CFO corrected” frequency domain samples, each corresponding to a subcarrier.
+
+wlan_cfo_correction:
+Since the CFO correction is mostly handled by the wlan_fft module, this module performs the last correction step before equalization. The wlan_fft module scales samples using the power normalization value that was calculated by wlan_acquistion and snapshotted by wlan_rx_controller.
+
+wlan_equalizer:
+The wlan_equalizer module receives 64 power normalized “CFO corrected” frequency-domain samples per OFDM symbol. Before any demodulation can take place, one last reversible channel effect in particular has to be mitigated, and that is multipath. As an RF wave propagates, it reflects off walls, windows, surfaces, and essentially refracts around surfaces, culminating in multiple time-delayed copies of the original signal reaching a receiver. In effect, multipath is to wireless communication modems, as echoes or resonant rooms are to people speaking. In time-domain modulation techniques, methods like Least Squares (LS) equalization can be used to estimate a channel impulse response. This estimate is then used to create a filter that inverts (effectively, removes) the channel impulse response. With frequency domain techniques like OFDM, once received samples come out of the receiver’s FFT, there are no direct echoes to remove, instead multipath can be modeled as a per-subcarrier phase rotation and magnitude scaling. Put simply, multipath is modeled by a per-subcarrier phasor, or complex vector. The effects of multipath can then be modeled as a set of per-subcarrier complex vector multiplications.
+
+S
+r
+e
+c
+e
+i
+v
+e
+d
+=
+C
+c
+h
+a
+n
+n
+e
+l
+∗
+S
+t
+r
+a
+n
+s
+m
+i
+t
+t
+e
+d
+S 
+received
+​
+ =C 
+channel
+​
+ ∗S 
+transmitted
+​
+ 
+The effects of multipath are modeled and referred to as the channel impulse response (CIR). The CIR can be estimated by comparing each frequency-domain subcarrier bin (generated by FFT-ing received IQ samples) against the expected subcarrier’s value (defined by IEEE 802.11). The wlan_equalizer module takes a Zero Forcing approach by simply dividing the expected value by the frequency-domain bin computed from received IQ samples to produce an inverse channel impulse response.
+Essentially, if 
+S
+t
+r
+a
+n
+s
+m
+i
+t
+t
+e
+d
+S 
+transmitted
+​
+  is known (in 802.11 the constellation points of the LTS are defined), and 
+S
+r
+e
+c
+e
+i
+v
+e
+d
+S 
+received
+​
+  are the samples that come out of wlan_fft, the channel inverse estimate refered to as 
+(
+C
+c
+h
+a
+n
+n
+e
+l
+)
+−
+1
+(C 
+channel
+​
+ ) 
+−1
+  can be estimated simply by: 
+d
+f
+r
+a
+c
+S
+t
+r
+a
+n
+s
+m
+i
+t
+t
+e
+d
+S
+r
+e
+c
+e
+i
+v
+e
+d
+dfracS 
+transmitted
+​
+ S 
+received
+​
+ .
+
+wlan_rx_controller ensures the first set of 64 subcarrier samples that the wlan_equalizer module receives belong to the second LTS symbol. In the INITIAL_ESTIMATE state, the wlan_equalizer module generates its initial equalizer parameters. These initial parameters, 
+(
+C
+c
+h
+a
+n
+n
+e
+l
+)
+−
+1
+(C 
+channel
+​
+ ) 
+−1
+ , are estimated by dividing the ideal samples (constant “T2”) by the baseband samples (signal “in_sample”) that were actually received. The per-subcarrier equalizer parameters are saved, and are recalled to correct every subsequent OFDM symbol’s subcarrier samples. Each subcarrier sample is corrected by multiplying it with its corresponding equalization parameter:
+S
+e
+q
+u
+a
+l
+i
+z
+e
+r
+=
+S
+r
+e
+c
+e
+i
+v
+e
+d
+∗
+(
+C
+c
+h
+a
+n
+n
+e
+l
+)
+−
+1
+S 
+equalizer
+​
+ =S 
+received
+​
+ ∗(C 
+channel
+​
+ ) 
+−1
+ 
+
+wlan_equalizer outputs one fewer OFDM symbol than it receives because the first symbol (the second LTS) it receives is used to calculate the initial equalizer parameters. Subsequent OFDM symbols are equalized then output by the wlan_equalizer module.
+
+The wlan_equalizer module can also take a dfe_sample as an input parameter. This parameter is the constellation-clamped value it estimates it should have received. For example, if after equalization the resultant IQ sample is 0.9+j0.001, the binary soft decision module (wlan_bsd), will clamp it to +1 assuming a BPSK constellation. wlan_equalizer then calculates a new vector:
+(
+C
+c
+h
+a
+n
+n
+e
+l
+)
+−
+1
+n
+e
+x
+t
+=
+d
+f
+r
+a
+c
+h
+a
+t
+S
+t
+r
+a
+n
+s
+m
+i
+t
+t
+e
+d
+S
+r
+e
+c
+e
+i
+v
+e
+d
+=
+d
+f
+r
+a
+c
+c
+o
+n
+s
+t
+e
+l
+l
+a
+t
+i
+o
+n
+c
+l
+a
+m
+p
+(
+S
+r
+e
+c
+e
+i
+v
+e
+d
+)
+S
+r
+e
+c
+e
+i
+v
+e
+d
+.
+(C 
+channel
+​
+ ) 
+−1
+  
+next
+​
+ =dfrachatS 
+transmitted
+​
+ S 
+received
+​
+ =dfracconstellationclamp(S 
+received
+​
+ )S 
+received
+​
+ .
+
+To avoid rapid changes, the updated 
+(
+C
+c
+h
+a
+n
+n
+e
+l
+)
+−
+1
+(C 
+channel
+​
+ ) 
+−1
+  parameter can be weight-averaged with the previous value. This sort of equalization parameter updating, is known as Decision Feedback Equalization. It is useful for mitigating residual CFO, and for varying channel effects. The multipath induced channel impulse response estimate generally is not accurate for longer than the transmission time of its respective packet. However, fast moving objects (such as fan blades) can invalidate the initial equalizer parameter estimates before the packet is received. Those variations however, are much less pronounced between adjacent symbols, so the DFE equalizer can hopefully track the changing channel impulse response correctly.
+
+As a side note, time-domain (single carrier) waveforms frequently use Least Squares (LS) equalization to approximate time-domain filter parameters to mitigate multipath. Those time-domain filter parameters effectively are time-domain conversions (FFT) of the inverse channel impulse response, which is generally thought of in frequency-domain terms. If those same LS time-domain filter parameters would be converted to the frequency-domain by an FFT, they would likely look similar to the frequency-domain derived equalizer parameters.
+
+
+wlan_phase_correction:
+In OFDM IEEE 802.11, 4 equally spaced out subcarriers are reserved as pilot tones. These pilot tones are time-varying but deterministic, and can be anticipated by the received. The pilot tones are used by wlan_phase_correction to estimate and mitigate any residual CFO.
+When the wlan_phase_correction module receives an OFDM symbol, it extracts the pilot tones, and calculates a residual CFO estimate based on the difference in angle between the pilot tones’ expected and measured vectors. Ultimately, a single per-symbol phase correction vector is calculated and then applied to all subcarriers in the current OFDM symbol.
+
+wlan_demodulator:
+The wlan_demodulator module serves two purposes. Its primary task is to turn subcarrier baseband IQ samples into bits based on the modulation constellation point closest to the IQ sample. A lot of information can be lost if hard decisions are performed, as an example, with BPSK an IQ sample of 0.1+j0 would still be considered a +1, however it is a much weaker +1 than an IQ sample at 0.98+j0.03. To help the Viterbi decoder, wlan_demodulator produces a 3-bit certainty (or lack thereof) value for each bit it demodulates, this is called a Binary Soft Decision (BSD). The closer a demodulated BSD is to a decision boundary the less certain the decision is, and vice versa. It is important to keep in mind, constellation points are laid out in a way to minimize the Hamming distance between constellation points. For high order modulation schemes like 64-QAM, the 4 bits that comprise the constellation point are at different distances from decision boundaries, so each of the 4 binary soft decisions can have different certainty levels.
+
+
+Secondly, the wlan_demodulator module provides the constellation point closest to the IQ sample back to wlan_equalizer so that wlan_equalizer can update its equalizer parameters as described in the wlan_equalizer section.
+
+Ultimately, wlan_demodulator outputs the demodulated BSDs it calculates. The number of BSDs per symbol depends on the modulation scheme alone, a maximum number of 288 BSDs is output for MCSs using 64-QAM.
+
+wlan_deinterleaver:
+The demodulated BSDs are deinterleaved according to the IEEE 802.11 specification. IEEE 802.11 relies on interleaving to ensure that uncoded bits are not adjacent in frequency to avoid clusters of grouped bit errors. Viterbi decoder is generally not capable of handling adjacent groups of bit errors.
+
+wlan_depuncturer:
+The deinterleaved BSDs are rearranged to be passed to the Viterbi decoder. The wlan_depuncturer module reverses the puncturing that is done by the transmitter’s modulator. Puncturing is used in IEEE 802.11 to remove redundant bits at higher MCSs when a high SNR link decreases the need for error correction. More redundant bits (the ratio of coded to uncoded bits) decrease the rate “r” value of an MCS, which increases an MCS’s ability to correct errors.
+
+wlan_viterbi_decoder:
+The wlan_viterbi_decoder uses a Soft Viterbi Algorithm (SOVA) decoder. Due to common approachs such as traceback based Viterbi decoders, the decoded bits take a certain amount of clock cycles to be computed. The wlan_viterbi_decoder state machine flushes the Viterbi decoder when all relevant soft decisions have been provided, and waits for the decoded bits to become available. This lag is especially noticeable when decoding the SIGNAL symbol, or awaiting the final bytes of a PDU.
+
+wlan_descrambler:
+The wlan_descrambler module simply undoes the scrambling done by the transmitter’s scrambler. The SERVICE byte is always expected to be 0, so the descrambler finds a LFSR initializing value that meets the criteria. Each subsequent byte is descrambled with subsequent values of the LFSR.
+
+Scrambling is useful for avoiding transmitting similar IQ samples sequentially because of repeated values (or low entropy data) in PDUs, such as: strings of zero bytes in typical TCP and UDP headers, or ASCII characters that essentially only encode about 6 bits of entropy per byte. Similar IQ samples repeated sequentially can temporarily distort the PAPR limits, and cause issues for the transmitter.
+
+wlan_rx_framer:
+The wlan_rx_framer module is the final state machine in the wlan_rx module. Initially the wlan_rx_framer decodes the SIGNAL symbol and verifies its integrity by checking the parity bit. The SIGNAL field’s MCS and length fields are decoded and asserted to the rest of the wlan_rx subsystem. Subsequently, the module assembles bytes coming from the descrambler into a PDU. These bytes are then saved into a temporary packet FIFO. Ultimately, wlan_rx_framer calculates a packet’s CRC and verifies whether it matches the frame check sequence (FCS) in the received packet. If the CRC matches the FCS, the packet is assumed to have been successfully decoded, and the packet is marked as valid in the temporary packet FIFO. wlan_rx_framer also determines whether a packet is addressed to the current modem, and whether the 802.11 frame type and subtype require an acknowledge frame (ACK) to be sent to the original transmitter. In case an ACK is required, wlan_rx_framer sets the ack_mac (the MAC address of the intended recipient of the ACK) and asserts ack_valid. The ack_mac and ack_valid are then written into a FIFO buffer the wlan_top module uses to generate an ACK packet directly in HDL on the FPGA. This step is necessary to meet strict acknowledge timing requirements in IEEE 802.11.
+
+wlan_rx_packet_buffer:
+The wlan_rx_packet_buffer is a double buffered FIFO that allows packets to be stored as they are being received. If a packet is successfully decoded, wlan_rx_packet_buffer asserts buf_params_valid as valid to inform the rest of the modem that a valid packet is present. In case it is determined that a packet is not valid, because the FCS check failed or because the packet’s energy was lost, wlan_rx_packet_buffer is instructed to clear the temporary buffer. wlan_rx_packet_buffer receives packets both from the DSSS and OFDM modules.
+
+DSSS:
+wlan_dsss_rx:
+The IEEE 802.11 Direct-Sequence Spread Spectrum (DSSS) rates generally solely exist on IEEE channels 1 through 11, and are now referred to as legacy bitrates. However, despite the name, DSSS frames are still very popular even in 2020. The lowest DSSS bitrate is the 1Mbps rate. This rate occupies 22MHz of bandwidth, compared to the lowest OFDM rate, the 6Mbps rate, which occupies only 20MHz. This high level of redundancy makes DSSS frames inherently more resilient against bit and packet errors, of which there is a high potential in the 2.4GHz ISM band. The DSP algorithms for implementing DSSS rates are far simpler than those necessary for OFDM rates, however having one modem be able to decode both OFDM and DSSS rates requires some careful planning. The ideal lowest-common multiple for IEEE 802.11 DSSS rates sets the sample rate to either 11MSPS or 22MSPS. IEEE 802.11 OFDM rates however need a sample rate that is a multiple of 20MSPS. Due to the much higher resilient nature of DSSS rates, it then makes more sense to prioritize the performance of the OFDM rates, and use 20MSPS as the base sample rate for a combined IEEE 802.11 DSSS and OFDM modem.
+
+wlan_dsss_despreader:
+IEEE 802.11 DSSS packets consist of chips, which are spread-sprectrum modulated PDU bits. In DSSS, a single PDU bit is modulated then “spread out” into the many samples that define a chip. These chips have one particularly interesting property: a known chip sequence only has a high correlation value with its complex conjugate when the comparison window perfectly aligns the two chips. A slight time offset between a received DSSS chip and its known complex conjugate is enough for the correlation value to be very low. The correlation value is also very low when the complex conjugate of the known DSSS chip is correlated with noise and non-DSSS samples. The process of comparing correlation values between received IQ samples and complex conjugates of DSSS chips to find a chip is known as despreading. An IEEE 802.11 DSSS modem uses the preamble, called the Start of Frame Delimited (SFD), which consists of 144 alternating -1 and +1 chips to recover symbol timing.
+IEEE 802.11 DSSS uses a positive correlation to denote a ‘1’ bit, and uses a negative correlation to denote a ‘0’ bit. The bits are then concatenated, turned into bytes, and stored into a FIFO to recreate the PDU.
+
+If the system were sampling at 22MSPS, despreading the DSSS chips would be a simple mix of addition and subtraction of historical values dictated by the DSSS chip pattern. However, because the decision was made to sample at 20MSPS, the 22MSPS DSSS chip pattern has to be resampled to 20MSPS. This resampled chip is defined by the constant called “preamble” in wlan_dsss_despreader.
+
+wlan_dsss_despreader performs a full DSSS chip correlation on each incoming sample and the previous 19 samples.
+
+wlan_dsss_peak_finder:
+The wlan_dsss_peak_finder module is responsible for estimating symbol timing by finding which of the 20 possible time offsets (or bins) corresponds to the highest correlation magnitude. The bin index that is the mode (output signal “out_mode_bin”) is assumed to be the correct timing. It is then selected as the bin whose correlation output is used to reconstruct the PDU, bit by bit.
+
+wlan_dsss_demodulator:
+The IEEE 802.11 CCK rates use Differential Binary Phase Shift Key (DBPSK) to encode PDU bits. For N number of PDU bits, N+1 DBPSK chips are necessary. A PDU bit “0” is demodulated if the current chip is the same value as the previous chip, for example a -1 chip followed by a -1 chip. Conversely a PDU bit “1” is demodulated if the current chip is different (Differential) from the previous chip, for example a -1 chip is followed by a +1 chip.
+
+As these bits are received, the wlan_dsss_demodulator module descrambles the bits before outputting out_bits and out_valid.
+
+wlan_dsss_rx_framer:
+The wlan_dsss_rx_framer module initially waits for the appropriate moment to snapshot the bin index that is the mode. Once snapshotted it is provided as an estimate to the rest of the DSSS RX chain. Ultimately wlan_dsss_demodulator is responsible for concatenating descrambled bits from wlan_dsss_demodulator into PDU bytes, and ensuring the CRC in the packet header and the FCS in the packet match. PDU bytes are sent to a temporary buffer in wlan_rx_packet_buffer, until the packet’s FCS can be validated.
+
+Current status
+
+The HDL bladeRF-wiphy modem is a IEEE 802.11 compatible implementation. bladeRF-wiphy can currently only synthesize for the bladeRF 2.0 micro xA9. The bladeRF 2.0 micro xA4’s FPGA is too small to fit all parts of the DSSS RX, and OFDM RX and TX modems. The modem can be fully simulated in Modelsim.
+
+Features
+IEEE 802.11 compatible FPGA based PHY receiver and transmitter
+Compatible with bladeRF 2.0 micro xA9 (and bladeRF 2.0 micro xA9 THERMAL)
+Linux mac80211 MAC integration
+RX and TX monitor mode support
+Hardware Distributed Coordination Function (DCF) allows quick turn-around time ACKs
+High-performance equalizer – implements Zero Forcing (ZF) and optionally Decision Feedback Equalizer (DFE)
+Modulation schemes:
+DSSS – CCK
+OFDM – 20MHz (6Mbps, 9Mbps, 12Mbps, 18Mbps, 24Mbps, 36Mbps, 48Mbps, 54Mbps)
+
+Bandwidths:
+5MHz (useful for 802.11p)
+10MHz
+20MHz
+
+Modulation constellations:
+DSSS-CCK DBPSK
+OFDM-BPSK
+OFDM-QPSK
+OFDM-16-QAM
+OFDM-64-QAM
+
+Convolution encoder rates:
+r=1/2
+r=2/3
+r=3/4
+
+Mission
+The development goal of this project is to fill the gap of a single open-source modem project that can leverage Linux’s open-source mac80211.
+Hopefully the release of this open-source modem will provide developers and researchers with a single project solution to learn about OFDM, DSSS, 802.11, MACs.
+In the grand scheme of things, it is important that the open-source community has the tools necessary to transparently interact with technologies that are the basis of our modern communication methods.
+
+Future
+Currently many of the wireless protocols we use and depend on in our daily lives are opaque pieces of technology. Researchers and developers are unable to conduct experiments and critical research.
+While the modem currently works on the bladeRF, it is hoped that the bladeRF-wiphy project will be the beginning of a revolution in open-source communication and the basis of open-source chips. For a thriving community focusing on open-source chip development please take a look at the Google affiliated Skywater-PDK project.
+
+Advanced features and inquiries
+For inquiries regarding high performance demodulation, Crest Factor reduction, Digital Predistortion (DPD), Decision Feedback Equalization, re-modulation techniques, support and licensing, please contact wlan-sales@nuand.com .
+
+Please contact sales@nuand.com for details regarding an intensive 2 day training course on the full IEEE 802.11 stack covering everything between Schrodingers equations and HTTP, including: applied DSP and statistics, DSSS, OFDM, PHYs, MACs, Linux, mac80211.
+
+Notes
+The source code is released under the GPLv2 license on Github at https://github.com/Nuand/bladeRF-wiphy/ . To report bugs, feedback, and features requests please join the bladeRF Slack ( channel #bladeRF ).
+
+To contact us, support this effort, or contribute, please contact bladeRF@nuand.com or consider joining the #bladeRF channel in bladeRF Slack.
+
+All specifications subject to change at any time without notice. bladeRF is sold as test equipment and is expected for all intents and purposes to be used as such. Use of this device is at your own risk and discretion. Nuand LLC makes no warranty of any kind (whether express or implied) with regard to material presented on this page, and disclaims any and all warranties, including accuracy of this document, or the implied warranties of merchatability and fitness for use.
+Navigation
+Home
+Shop
+Careers
+Checkout
+Contact Us
+Privacy Policy
+Terms
+Help
+Support
+Calibration Data
+Windows Installers
+FPGA Images
+FX3 Firmware
+Frequently Asked Questions
+Quick links
+bladeRF-wiphy
+bladeRF 2.0 micro xA9
+bladeRF 2.0 micro xA4
+bladeRF x115
+bladeRF x40
+My Account
+Cart
+Contact Info
+Email: bladeRF@nuand.com
+IRC: #bladeRF on FreeNode
+Slack: Invite link
+Follow @NuandLLC
+© Nuand 2025. All rights reserved.
+bladerf@nuand.com
+Back to top
+
+
+
+
+
+Store
+bladeRF@nuand.com
++1-855-466-8263
+Nuand
+bladeRF-wiphy
+bladeRF 2.0
+Support
+Blog
+Forums
+Shop
+Nuand Support
+Support
+Getting Help
+Getting Started guide on bladeRF wiki
+Getting Started guide on bladeRF wiki
+Forums
+If you run into trouble or have questions, the Nuand forums are a great place to ask for help.
+Slack
+Nuand now has a community slack, which can be joined through the following invite link.
+The Nuand team can also be reached at bladeRF@nuand.com or via the web form on the contact page.
+
+Documentation
+bladeRF Product Brief
+libbladeRF API documentation
+An SDR-Based FRS Transceiver (PDF)
+GNU Radio flowgraph is available here
+
+Pre-built Binaries
+These pages provide pre-built FPGA bitstreams and FX3 firmware images.
+Be sure to check the releases page on GitHub for recommended host software, FPGA bitstream, and FX3 firmware version sets.
+
+FPGA bitstreams
+FX3 firmware
+
+Useful links
+Source code on GitHub
+bladeRF Wiki
+bladeRF VCTCXO factory calibration lookup
+SDR-Radio
+SDRAngel
+Airspy
+SRS-LTE
+OpenAirInterface (Ensure you use `develop' branch)
+SDR# Github
+SDR# precompiled binaries
+
+Experimental ioctl() gqrx source code tarball
+Experimental ioctl() gr-osmosdr source code tarball
+
+YateBTS
+To use the bladeRF 2.0 micro with YateBTS, please see Nuand's libbladeRF based YateBTS Release Candidate 3 (RC-3) link below:
+
+Before compiling Yate and YateBTS from the following tarballs, ensure libbladeRF (Github) is built from bladeRF commit hash 3a411c8. To fetch libbladeRF commit 3a411c8 try the following:
+$ git clone https://github.com/Nuand/bladeRF.git
+$ cd bladeRF
+$ git reset --hard 3a411c87c2416dc68030d5823d73ebf3f797a145
+$ ls
+Once fetched, continue following the rest of the building from source instructions, continuing at the Configure the build step.
+
+After libbladeRF is installed, download the latest RC Yate/YateBTS tarball, and follow the rest of the Github wiki instructions from step "Building and Installing Yate & YateBTS".
+Prior to starting yate in this step load the appropriate bladeRF device and size specific v0.11.1 FPGA RBF included in the tarball.
+
+Latest RC:
+Yate and YateBTS source code tarball with readme (v2.0) use v1.0 instructions (link above) RC-3 (LATEST)
+Previous RC releases:
+Yate and YateBTS source code tarball with readme (v2.0) use v1.0 instructions (link above) RC-2 (Use bladeRF commit hash 3a411c8)
+Yate and YateBTS source code tarball with readme (v2.0) use v1.0 instructions (link above) RC
+Yate and YateBTS source code tarball with readme (v2.0) use v1.0 instructions (link above)
+
+For Yate (from SVN) and YateBTS (from SVN) installation instructions (for v1.0 only), without needing libbladeRF fetch Yate and YateBTS from the Null SVN try these YateBTS installation instructions.
+Schematics
+bladeRF 1.0 (x40 and x115 devices)
+bladeRF 2.0 micro (xA4 and xA9 devices)
+XB-100 GPIO expansion board (pinout and connections)
+XB-200 transverter (filter designs)
+
+All specifications subject to change at any time without notice. bladeRF is sold as test equipment and is expected for all intents and purposes to be used as such. Use of this device is at your own risk and discretion. Nuand LLC makes no warranty of any kind (whether express or implied) with regard to material presented on this page, and disclaims any and all warranties, including accuracy of this document, or the implied warranties of merchatability and fitness for use.
+Navigation
+Home
+Shop
+Careers
+Checkout
+Contact Us
+Privacy Policy
+Terms
+Help
+Support
+Calibration Data
+Windows Installers
+FPGA Images
+FX3 Firmware
+Frequently Asked Questions
+Quick links
+bladeRF-wiphy
+bladeRF 2.0 micro xA9
+bladeRF 2.0 micro xA4
+bladeRF x115
+bladeRF x40
+My Account
+Cart
+Contact Info
+Email: bladeRF@nuand.com
+IRC: #bladeRF on FreeNode
+Slack: Invite link
+Follow @NuandLLC
+© Nuand 2025. All rights reserved.
+bladerf@nuand.com
+Back to top
+
+
+
+Lime Microsystems
+Shopping Cart
+Home
+SDR
+Networks
+Stories
+Support
+
+-----
+LimeSDR
+LimeSDR is a low cost, open source, apps-enabled (more on that later) software defined radio (SDR) platform that can be used to support just about any type of wireless communication standard.
+
+LimeSDR can send and receive UMTS, LTE, GSM, LoRa, Bluetooth, Zigbee, RFID, and Digital Broadcasting, to name but a few.
+
+While most SDRs have remained in the domain of RF and protocol experts, LimeSDR is usable by anyone familiar with the idea of an app store – it’s the first SDR to integrate with Snappy Ubuntu Core. This means you can easily download new LimeSDR apps from developers around the world. If you’re a developer yourself, you can share and/or sell your LimeSDR apps through Snappy Ubuntu Core as well.
+
+The LimeSDR platform gives system developers, inventors, and even students an intelligent and flexible device for manipulating wireless signals, so they can learn, experiment, and develop products and applications.
+
+From Radio Astronomy to Personal Telcos
+Here are just some of the applications that are possible with the LimeSDR:
+
+Radio astronomy
+RADAR
+2G to 4G cellular basestation
+Media streaming
+IoT gateway
+HAM radio
+Wireless keyboard and mice emulation and detection
+Tire pressure monitoring systems
+Aviation transponders
+Utility meters
+Drone command and control
+Test and measurement
+Many more…
+With state-of-the-art technical specs, fully open hardware and toolchain, and integration with Snappy Ubuntu Core’s app distribution platform, LimeSDR is limited only by our collective imagination.
+
+Features & Specifications
+RF Transceiver: Lime Microsystems LMS7002M MIMO FPRF (Datasheet)
+FPGA: Altera Cyclone IV EP4CE40F23 – also compatible with EP4CE30F23
+Memory: 256 MBytes DDR2 SDRAM
+USB 3.0 controller: Cypress USB 3.0 CYUSB3014-BZXC
+Oscillator: Rakon RPT7050A @30.72MHz (Datasheet)
+Continuous frequency range: 100 kHz – 3.8 GHz
+Bandwidth: 61.44 MHz
+RF connection: 10 U.FL connectors (6 RX, 4 TX)
+Power Output (CW): up to 10 dBm
+Multiplexing: 2×2 MIMO
+Power: micro USB connector or optional external power supply
+Status indicators: programmable LEDs
+Dimensions: 100 mm x 60 mm
+Free and Open Source
+Over the last three years, we’ve worked on numerous open source projects, all made available through Myriad-RF. This is no different, open source is central to LimeSDR:
+
+Board schematics: Altium project files available under CC BY 3.0 licence.
+Board layout: Altium project files available under CC BY 3.0 licence.
+Manufacturing: Gerbers, drill, and pick & place files are also available under CC BY 3.0 licence.
+FPGA: Altera Quartus project available under CC BY 3.0 licence.
+Host connectivity: Cypress FX3 USB 3.0 controller firmware sources available under Apache 2.0 licence.
+Host software: driver and GUI sources available under Apache 2.0 licence.
+Programming toolchain packages: GNU Radio, Pothos, SoapySDR, UHD.
+Documentation: transceiver datasheets are NDA-free.
+Downloadable apps: Snappy Ubuntu Core, licensing up to app developers.
+
+Follow Us
+
+GitHub
+Twitter
+LinkedIn
+YouTube
+Vimeo
+Technology
+
+Silicon
+IP
+Company
+
+About
+Contact
+Press
+Policies
+
+Privacy Policy
+Terms and Condtions
+© 2025 Lime Microsystems Ltd. All rights reserved. First Central 200, 6th Floor, 2 Lakeside Drive, London, NW10 7FQ, UK. Registered in England and Wales № 05380695.
+
+
+Lime Microsystems
+Shopping Cart
+Home
+SDR
+Networks
+Stories
+Support
+-----
+SDR
+LimeSDR is a disruptive radio access innovation platform allowing equipment manufacturers, wireless providers and operators to rapidly offer new products and services, and to compete in otherwise unprofitable business sectors.
+
+
+Over 16,000 LimeSDR Boards Shipped
+LimeSDR allows any device to be equipped with a software enabled radio, opening up the possibility of embedding IoT gateways, 4G and/or 5G small cells in everyday consumer products. Lime’s board level products are available in a variety of configurations, making them ideal for integration into products as varied as high capacity macro cell solutions or cost-optimized consumer premises equipment.
+
+Given their unique combination of industry leading performance and outstanding value for money, LimeSDR is also extremely popular with research, amateur radio, maker and enthusiast communities.
+
+The list of potential applications is endless and LimeSDR hardware has been used in Digital Video Broadcasting (DVB), radio astronomy, satcom, positioning and nuclear magnetic resonance (NMR) to name but a few.
+
+Radically Open
+LimeSDR design and manufacturing files, FPGA gateware, firmware, software and APIs are all open source and made freely available. This gives customers a level of flexibility which only open source can provide, enabling further SWaP-C optimisation with very high volumes, and customisation for other specific requirements.
+
+LimeSDR is supported via the MyriadRF open source community and in excess of 16,000 boards have been shipped to developers, labs and system builders across the globe.
+
+LimeSDR Mini 2.0
+LimeSDR Mini 2.0
+LimeSDR Mini 2.0 is a software defined radio with the same form factor as the original LimeSDR Mini, and the same LMS7002 RF transceiver, but a new more powerful FPGA - the Lattice ECP5.
+LimeSDR USB
+LimeSDR USB
+LimeSDR USB is a highly flexible 2x2 MIMO software-defined radio featuring a USB 3.0 interface.
+LimeSDR XTRX
+LimeSDR XTRX
+LimeSDR XTRX is high-performance software-defined radio (SDR) board in a compact Mini PCIe form factor.
+LimeSDR X3
+LimeSDR X3
+LimeSDR X3 is an advanced PCIe software-defined radio with three LMS7002M transceivers, which can simultaneously support 4G and 5G operation, plus adaptive digital pre-distortion.
+LimeRFE
+LimeRFE
+Lime RF Front-End (LimeRFE) is an open hardware RF front-end module with support circuitry to augment the LimeSDR family of boards and LimeNET Micro.
+Follow Us
+
+GitHub
+Twitter
+LinkedIn
+YouTube
+Vimeo
+Technology
+
+Silicon
+IP
+Company
+
+About
+Contact
+Press
+Policies
+
+Privacy Policy
+Terms and Condtions
+© 2025 Lime Microsystems Ltd. All rights reserved. First Central 200, 6th Floor, 2 Lakeside Drive, London, NW10 7FQ, UK. Registered in England and Wales № 05380695.
+
+
+Shortcuts menu
+Skip to
+Main content
+Keyboard shortcuts
+Search
+Alt
++
+/
+Cart
+Shift
++
+Alt
++
+C
+Home
+Shift
++
+Alt
++
+H
+Orders
+Shift
++
+Alt
++
+O
+
+Open/close shortcuts menu
+Shift
++
+Alt
++
+Z
+To move between items, use your keyboard's up or down arrows.
+.ca
+Deliver to Warren
+Victoria V8R 5G‌
+Electronics
+
+Electronics
+software defined radio
+EN
+
+Hello, Warren
+Account & Lists
+
+Returns
+& Orders
+21
+Cart
+All
+
+Rufus
+Amazon Business
+Buy Again
+Browsing History
+Warren's Store
+Gift Cards
+Kindle Books
+Books
+Customer Service
+Gift Ideas
+Best Sellers
+New Releases
+Home
+Deals Store
+Health & Household
+Computer & Video Games
+Prime
+Beauty & Personal Care
+Fashion
+Automotive
+Toys & Games
+Computers
+Home Improvement
+Sports & Outdoors
+Pet Supplies
+Baby
+Audible
+Electronics
+Sell
+Registry
+Coupons
+ElectronicsDealsBest SellersHandpickedTV & Home TheatreCamera & PhotoComputers & TabletsCell Phones & AccessoriesHeadphones & SpeakersCar ElectronicsMusical InstrumentsOffice & School SuppliesWearable TechnologySmart HomeAmazon Business
+Subtotal
+$1,108.97
+Part of your order qualifies for FREE Shipping (excludes remote locations). Choose this option at checkout.
+Details
+Go to cart
+[7500mAh] Battery for iPhone 6, (2024 New Version) Conqto New Upgraded High Capacity 0 Cycle Replacement Battery for iPhone 6 A1586,A1589,A1549 with Full Set Repair Tool Kit, Adhesive & Instructions
+$22.39
+
+Quantity is 1
+
+1
+
+Dayton Audio TT25-8 PUCK Tactile Transducer Mini Bass Shaker
+$34.95
+
+Only 1 left in stock.
+Quantity is 1
+
+1
+
+[Upgraded] FlexSolar 60W Portable Solar Panels Chargers QC3.0 USB-A USB-C DC5521 8mm Output Foldable IP65 Waterproof Power Emergency Camping for Small Power Station Generator Tablets Battery Packs
+Limited time
+$76.94
+
+Quantity is 1
+
+1
+
+FLYLINKTECH 5000A Jump Starter 12V Battery Pack, 18000mAh Portable Car Booster Jump Box for 9L Gas/8L Diesel Engines, 600-Lumen LED, 10-Safety Protections, QC3.0
+Limited time
+$67.99
+
+Quantity is 1
+
+1
+
+DBPOWER Jump Starter 4000A Peak 88.8Wh Portable Car Jump Starter (Up to All Gas/10L Diesel Engine) 12V Auto Battery Booster Pack with Smart Clamp Cables, Quick Charger, LED Light Jump Box
+$129.99
+
+Only 1 left in stock.
+Quantity is 1
+
+1
+
+GOOLOO GP2000 Jump Starter, 12V 2000A Portable Car Battery Charger(Up to 8.0L Gas, 6.0L Diesel Engines), SuperSafe Car Jumper Starter
+$89.99
+
+Quantity is 1
+
+1
+
+Dual PSU Power Supply 24 Pin Adapter Cable for ATX Motherboard 18AWG - 1FT
+$11.99
+
+Quantity is 1
+
+1
+
+axGear PCI-E 8-Pin to 2X 8 Pin / 6 Pin Dual Power Splitter Cable Extension Wire
+$7.99
+
+Quantity is 1
+
+1
+
+M.2 NVME to PCIe 3.0 x4 Adapter with Aluminum Heatsink Solution
+$12.99
+
+Quantity is 1
+
+1
+
+10Gtek SFP+ DAC Twinax Cable, Passive, Compatible with Cisco SFP-H10GB-CU2M, Ubiquiti UniFi, Meraki MA-CBL-TA-2M, Fortinet, Netgear, Mikrotik, ZTE Devices, and More, 2m(6.5ft)
+$24.99
+
+Quantity is 1
+
+1
+
+Genmitsu CNC 3018-PRO Router Kit GRBL Control 3 Axis Plastic Acrylic PCB PVC Wood Carving Milling Engraving Machine, XYZ Working Area 300x180x45mm
+$269.99
+
+Quantity is 1
+
+1
+
+Waterdrop Gravity Water Filter Straw, Camping Water Filtration System, Water Purifier Survival for Travel, Backpacking and Emergency Preparedness, 1.5 gal Bag, 0.1 Micron, 5 Stage Filtration
+Limited time
+$38.86
+
+Quantity is 1
+
+1
+
+Iatable Bubble Ball for Adults Water-Filled Balloon Ball Toy for Beach Garden Pool Party
+$11.99
+
+Quantity is 1
+
+1
+
+SINGOMON 8 Sets Large LED Balloons Light Up Balloons 36" Clear Bobo Balloon Helium Balloon with 3m Warm White LED String Lights for Propose Wedding Birthday Decorations(No Batteries)
+$18.99
+
+Quantity is 1
+
+1
+
+OSTENT Wired Shock Game Controller Compatible for Nintendo GameCube NGC Video Game Color Black
+$20.99
+
+Quantity is 1
+
+1
+
+KNOWSQT Wireless Keyboard and Mouse Combo, MilkTea 104 Keys Full-Sized 2.4 GHz Round Keycap Colorful Keyboards, USB Receiver Plug and Play, for Windows, Mac, PC, Laptop, Desktop
+$39.99
+
+Quantity is 1
+
+1
+
+DEANEEK Typewriter Style Mechanical Keyboard 87 Key Retro Punk Round Keycap LED Backlit USB Wired Gaming Keyboards with White LED Backlit, Round Keycaps for Windows/Mac/PC (Blue Switch-3)
+$29.99
+
+Quantity is 1
+
+1
+
+Mosptnspg Wired Quiet Membrane Keyboard,Full Size 104-Keys Retro Punk Typewriter White LED Backlit ，USB Ultra Slim Gaming Keyboard with ABS Round keycaps for Windows/PC/Laptop (Blue)
+$29.99
+
+Only 2 left in stock.
+Quantity is 1
+
+1
+
+KNOWSQT Wireless Keyboard and Mouse Combo, Blue 104 Keys Full-Sized 2.4 GHz Round Keycap Colorful Keyboards, USB Receiver Plug and Play, for Windows, Mac, PC, Laptop, Desktop
+$42.99
+
+Quantity is 1
+
+1
+
+MOSWAG USB Type C to 3.5mm Headphone Jack Adapter, Audio Adapter USB C to Aux Dongle Cable Cord for iPhone 15 Pro Max /15 Pro/15 Plus, Samsung Galaxy S23 S22 S21 Ultra, Pixel 7 6 5 4 and More
+$6.99
+
+Quantity is 1
+
+1
+
+GiGimundo AJM40C NVMe Enclosure 40Gbps-PCIe 3.0x4 Aluminum SSD Case with UASP Support for M.2 Drives up to 8TB - Thunderbolt 3/4 Compatible - M.2 NVMe Caddy for M-Key SSD 2280 - Silver
+$117.99
+
+Only 6 left in stock.
+Quantity is 1
+
+1
+
+1-24 of 342 results for "software defined radio"
+Sort by:
+Featured
+Sort by:Featured
+Results
+Check each product page for other buying options. Price and other details may vary based on product size and colour.
+RTL-SDR Blog V4 R828D RTL2832U 1PPM TCXO HF Bias Tee SMA Software Defined Radio with Dipole Antenna Kit
+RTL-SDR Blog
+V4 R828D RTL2832U 1PPM TCXO HF Bias Tee SMA Software Defined Radio with Dipole Antenna Kit
+4.44.4 out of 5 stars (1K)
+Price, product page$78.35
+$5.78 delivery Mon, Jul 7
+Add to cart
+More buying choices
+$69.95(1 new offer)
+Nooelec RTL-SDR v5 Bundle - NESDR Smart HF/VHF/UHF (100kHz-1.75GHz) Software Defined Radio. Premium RTLSDR w/ 0.5PPM TCXO,...
+NooElec
+RTL-SDR v5 Bundle - NESDR Smart HF/VHF/UHF (100kHz-1.75GHz) Software Defined Radio. Premium RTLSDR w/ 0.5PPM TCXO, SMA Input, Aluminum Enclosure & 3 Antennas. RTL2832U & R820T2-Based Radio
+4.14.1 out of 5 stars (3.5K)
+Save 6%
+Price, product page$65.95 Was: $69.95Was: $69.95
+Lowest price in 30 days
+FREE delivery Tue, Jul 8
+Or fastest delivery Sun, Jul 6
+ Small Business
+Add to cart
+Nooelec RTL-SDR v5 SDR - NESDR Smart HF/VHF/UHF (100kHz-1.75GHz) Software Defined Radio. Premium RTLSDR w/ 0.5PPM TCXO, SM...
+NooElec
+RTL-SDR v5 SDR - NESDR Smart HF/VHF/UHF (100kHz-1.75GHz) Software Defined Radio. Premium RTLSDR w/ 0.5PPM TCXO, SMA Input & Aluminum Enclosure. RTL2832U & R820T2 (R860)-Based Radio
+4.44.4 out of 5 stars (2.4K)
+Save 5%
+Price, product page$52.95 Was: $55.95Was: $55.95
+Lowest price in 30 days
+FREE delivery Tue, Jul 8
+Or fastest delivery Sun, Jul 6
+ Small Business
+Add to cart
+More results
+RTL-SDR Blog V4 R828D RTL2832U 1PPM TCXO SMA Software Defined Radio (Dongle Only)
+RTL-SDR Blog
+V4 R828D RTL2832U 1PPM TCXO SMA Software Defined Radio (Dongle Only)
+4.54.5 out of 5 stars (635)
+Price, product page$61.55
+$5.09 delivery Mon, Jul 7
+Add to cart
+More buying choices
+$54.95(2 new offers)
+New PortaPack H2 and Hack RF One SDR Software Defined Radio Assembled with 7 Antennas& USB Cable Built-in Rechargeable Bat...
+New PortaPack H2 and Hack RF One SDR Software Defined Radio Assembled with 7 Antennas& USB Cable Built-in Rechargeable Battery V1.8.0 Upgraded 3.2" LCD Screen SDR Radio Kit Plastic Shell
+Price, product page$239.00
+$24.99 delivery Jul 25 - Aug 15
+Add to cart
+RKUVPAE New PortaPack H2 and Hack R F One SDR Software Defined Radio 1MHz-6GHz Assembled with Antennas Built-in Rechargeab...
+RKUVPAE
+New PortaPack H2 and Hack R F One SDR Software Defined Radio 1MHz-6GHz Assembled with Antennas Built-in Rechargeable Battery
+Currently unavailable.
+See options
+RTL-SDR Blog V3 R860 RTL2832U 1PPM TCXO SMA Software Defined Radio (Dongle Only) (Black)
+RTL-SDR Blog
+V3 R860 RTL2832U 1PPM TCXO SMA Software Defined Radio (Dongle Only) (Black)
+4.54.5 out of 5 stars (2.8K)
+Price, product page$61.55
+$5.09 delivery Wed, Jul 9
+Add to cart
+More buying choices
+$54.95(2 new offers)
+NooElec NESDR Mini USB RTL-SDR & ADS-B Receiver Set, RTL2832U & R820T Tuner, MCX Input. Low-Cost Software Defined Radio Co...
+NooElec
+NESDR Mini USB RTL-SDR & ADS-B Receiver Set, RTL2832U & R820T Tuner, MCX Input. Low-Cost Software Defined Radio Compatible with Many SDR Software Packages. R820T Tuner & ESD-Safe Antenna Input
+4.14.1 out of 5 stars (1.7K)
+Price, product page$50.95
+FREE delivery Tue, Jul 8
+Or fastest delivery Sun, Jul 6
+ Small Business
+Add to cart
+RTL-SDR Blog V3 R860 RTL2832U 1PPM TCXO HF Bias Tee SMA Software Defined Radio with Dipole Antenna Kit
+RTL-SDR Blog
+V3 R860 RTL2832U 1PPM TCXO HF Bias Tee SMA Software Defined Radio with Dipole Antenna Kit
+4.44.4 out of 5 stars (6.1K)
+Price, product page$100.62
+Save 5% on any 5
+FREE delivery Jul 11 - 16
+Add to cart
+Get it faster
+Price, product page$110.77
+FREE delivery Jul 8 - 10
+Nooelec NESDR Smart HF Bundle: 100kHz-1.7GHz Software Defined Radio Set for HF/UHF/VHF Including RTL-SDR, Assembled Ham It...
+NooElec
+NESDR Smart HF Bundle: 100kHz-1.7GHz Software Defined Radio Set for HF/UHF/VHF Including RTL-SDR, Assembled Ham It Up Upconverter, Balun, Adapters & Cables
+4.24.2 out of 5 stars (915)
+Price, product page$155.95
+FREE delivery Tue, Jul 8
+Or fastest delivery Sun, Jul 6
+ Small Business
+Add to cart
+Nooelec GOES Weather Satellite RTL-SDR Bundle - Includes NESDR SMArTee XTR Software Defined Radio, & Everything Else Neede...
+NooElec
+GOES Weather Satellite RTL-SDR Bundle - Includes NESDR SMArTee XTR Software Defined Radio, & Everything Else Needed to Receive LRIT, HRIT & HRPT Satellite Weather Images Directly from Space!
+4.64.6 out of 5 stars (92)
+Price, product page$259.95
+FREE delivery Tue, Jul 8
+Only 7 left in stock.
+ Small Business
+Add to cart
+NooElec NESDR Nano 3 - Premium Tiny RTL-SDR w/Aluminum Enclosure, 0.5PPM TCXO, SMA & MCX Input & Custom Heatsink. RTL2832U...
+NooElec
+NESDR Nano 3 - Premium Tiny RTL-SDR w/Aluminum Enclosure, 0.5PPM TCXO, SMA & MCX Input & Custom Heatsink. RTL2832U & R820T2-Based Software Defined Radio
+4.14.1 out of 5 stars (130)
+Price, product page$60.95
+FREE delivery Tue, Jul 8
+Or fastest delivery Sun, Jul 6
+Only 10 left in stock.
+ Small Business
+Add to cart
+Nooelec NESDR Smart XTR HF Bundle: 300Hz-2.3GHz Software Defined Radio Set for LF/HF/UHF/VHF. Includes NESDR Smart XTR RT...
+NooElec
+NESDR Smart XTR HF Bundle: 300Hz-2.3GHz Software Defined Radio Set for LF/HF/UHF/VHF. Includes NESDR Smart XTR RTL-SDR, Ham It Up Plus v2 Upconverter, 3 Antennas, Balun, Adapters
+4.24.2 out of 5 stars (220)
+Price, product page$175.95
+FREE delivery Tue, Jul 8
+Or fastest delivery Sun, Jul 6
+ Small Business
+Add to cart
+4.3 Inch Touch Screen Radio Receiver, FM MW SSB CW HAM Shortwave Radio with 192kHz Spectrum, Excellent Reception
+4.3 Inch Touch Screen Radio Receiver, FM MW SSB CW HAM Shortwave Radio with 192kHz Spectrum, Excellent Reception
+2.92.9 out of 5 stars (4)
+Price, product page$127.10
+Save 15% at checkout
+FREE delivery Jul 16 - 28
+Or fastest delivery Jul 10 - 14
+Add to cart
+NESDR SMArTee v2 SDR - Premium RTL-SDR w/Integrated Bias Tee, Aluminum Enclosure, 0.5PPM TCXO, SMA Input. RTL2832U & R820T...
+NESDR SMArTee v2 SDR - Premium RTL-SDR w/Integrated Bias Tee, Aluminum Enclosure, 0.5PPM TCXO, SMA Input. RTL2832U & R820T2-Based Software Defined Radio
+4.44.4 out of 5 stars (357)
+Price, product page$46.95
+FREE delivery Tue, Jul 8
+Or fastest delivery Sun, Jul 6
+ Small Business
+Add to cart
+Nooelec NESDR Mini 2+ 0.5PPM TCXO RTL-SDR & ADS-B USB Receiver Set w/Antenna, Mount & Female SMA Adapter. RTL2832U & R820T...
+NooElec
+NESDR Mini 2+ 0.5PPM TCXO RTL-SDR & ADS-B USB Receiver Set w/Antenna, Mount & Female SMA Adapter. RTL2832U & R820T2 Tuner. Low-Cost Software Defined Radio for Windows, Mac OS & Linux
+4.34.3 out of 5 stars (1K)
+Price, product page$56.95
+FREE delivery Tue, Jul 8
+Or fastest delivery Sun, Jul 6
+Only 9 left in stock.
+ Small Business
+Add to cart
+NooElec NESDR Nano 2+ Tiny Black RTL-SDR USB Set (RTL2832U + R820T2) with Ultra-Low Phase Noise 0.5PPM TCXO & MCX Antenna....
+NooElec
+NESDR Nano 2+ Tiny Black RTL-SDR USB Set (RTL2832U + R820T2) with Ultra-Low Phase Noise 0.5PPM TCXO & MCX Antenna. Software Defined Radio, DVB-T and ADS-B Compatible, ESD Safe
+4.34.3 out of 5 stars (321)
+Price, product page$56.95
+FREE delivery Tue, Jul 8
+Or fastest delivery Mon, Jul 7
+ Small Business
+Add to cart
+NooElec NESDR SMArTee XTR Bundle - Premium RTL-SDR w/Extended Tuning Range, Aluminum Enclosure, Bias Tee, 0.5PPM TCXO, SMA...
+NooElec
+NESDR SMArTee XTR Bundle - Premium RTL-SDR w/Extended Tuning Range, Aluminum Enclosure, Bias Tee, 0.5PPM TCXO, SMA Input & 3 Antennas. RTL2832U & E4000-Based Software Defined Radio
+4.34.3 out of 5 stars (187)
+Price, product page$83.95
+FREE delivery Tue, Jul 8
+Or fastest delivery Sun, Jul 6
+ Small Business
+Add to cart
+NooElec NESDR Smart XTR Bundle - Premium RTL-SDR w/Extended Tuning Range, Aluminum Enclosure, 0.5PPM TCXO, SMA Input & 3 A...
+NooElec
+NESDR Smart XTR Bundle - Premium RTL-SDR w/Extended Tuning Range, Aluminum Enclosure, 0.5PPM TCXO, SMA Input & 3 Antennas. RTL2832U & E4000-Based Software Defined Radio
+4.04.0 out of 5 stars (266)
+Price, product page$83.95
+FREE delivery Tue, Jul 8
+Or fastest delivery Sun, Jul 6
+ Small Business
+Add to cart
+NooElec NESDR SMArTee XTR SDR - Premium RTL-SDR w/Extended Tuning Range, Aluminum Enclosure, Bias Tee, 0.5PPM TCXO, SMA In...
+NooElec
+NESDR SMArTee XTR SDR - Premium RTL-SDR w/Extended Tuning Range, Aluminum Enclosure, Bias Tee, 0.5PPM TCXO, SMA Input. RTL2832U & E4000-Based Software Defined Radio
+4.34.3 out of 5 stars (335)
+Price, product page$69.95
+FREE delivery Tue, Jul 8
+Or fastest delivery Sun, Jul 6
+ Small Business
+Add to cart
+Nooelec Ham It Down 3GHz Downconverter - Extends The Frequency of Your RTL-SDR or Radio to 3.1GHz! Receive UHF & L-Band Tr...
+NooElec
+Ham It Down 3GHz Downconverter - Extends The Frequency of Your RTL-SDR or Radio to 3.1GHz! Receive UHF & L-Band Transmissions with Ease. TCXO, SMA Connectivity & Multiple Power Options
+4.44.4 out of 5 stars (20)
+Price, product page$121.95
+FREE delivery Tue, Jul 8
+Or fastest delivery Sun, Jul 6
+Only 7 left in stock.
+ Small Business
+Add to cart
+Nooelec GSG SDR Complete Bundle - Genuine 1MHz-6GHz Great Scott Gadgets Software Defined Radio (SDR) with 0.5PPM, ANT500 &...
+NooElec
+GSG SDR Complete Bundle - Genuine 1MHz-6GHz Great Scott Gadgets Software Defined Radio (SDR) with 0.5PPM, ANT500 & SMA Antenna Adapter Bundle
+3.93.9 out of 5 stars (19)
+Price, product page$529.95
+FREE delivery Tue, Jul 8
+Or fastest delivery Sun, Jul 6
+ Small Business
+Add to cart
+Simplified Software Defined Radio Receiving Module 12bit Receiver Kit 10MHz Bandwidth Receiving Module
+Simplified Software Defined Radio Receiving Module 12bit Receiver Kit 10MHz Bandwidth Receiving Module
+5.05.0 out of 5 stars (3)
+Price, product page$33.91
+FREE delivery Tue, Jul 8 on $35 of items shipped by Amazon
+Or fastest delivery Sun, Jul 6
+Only 5 left in stock.
+Add to cart
+Nooelec Lana - Ultra Low-Noise Amplifier (LNA) Module for RF & Software Defined Radio (SDR) with Enclosure & Accessories. ...
+NooElec
+Lana - Ultra Low-Noise Amplifier (LNA) Module for RF & Software Defined Radio (SDR) with Enclosure & Accessories. Wideband 20MHz-4000MHz Frequency Capability with Bias Tee & USB Power Options
+4.34.3 out of 5 stars (654)
+Price, product page$47.95
+FREE delivery Tue, Jul 8
+Or fastest delivery Tomorrow, Jul 5
+ Small Business
+Add to cart
+Previous12315Next
+Need help?
+Visit the help section or contact us
+Go back to the filtering menu
+Skip to the main search results
+Eligible for Free Shipping
+FREE Shipping
+Customer Reviews
+4 Stars & Up
+Price
+$19
+–
+$1,950+
+
+
+Go
+Up to $90
+$90 to $100
+$100 to $250
+$250 to $350
+$350 & Above
+Deals & Discounts
+All Discounts
+Brands
+
+NooElec
+Department
+ Any Department
+Electronics
+Accessories & Supplies
+Camera, Photo & Video
+Car & Vehicle Electronics
+Cell Phones & Accessories
+Computers & Accessories
+eBook Readers & Accessories
+GPS & Navigation
+GPS, Finders & Accessories
+Headphones, Earbuds & Accessories
+Home Audio
+Household Batteries, Chargers & Power Supplies
+Office Electronics
+Portable Audio & Video
+Power Accessories
+Radio Communication
+Security & Surveillance
+Tablets
+Telephones & Accessories
+Televisions & Video
+Wearable Technology
+Seller
+
+AURSINC
+
+Fastmedia ship USA
+See more
+Availability
+
+Include Out of Stock
+Back to top
+Get to Know Us
+Careers
+Amazon and Our Planet
+Modern Slavery Statement
+Investor Relations
+Press Releases
+Amazon Science
+Make Money with Us
+Sell on Amazon
+Supply to Amazon
+Become an Affiliate
+Protect & Build Your Brand
+Sell on Amazon Handmade
+Advertise Your Products
+Independently Publish with Us
+Host an Amazon Hub
+Amazon Payment Products
+Amazon.ca Rewards Mastercard
+Shop with Points
+Reload Your Balance
+Amazon Currency Converter
+Gift Cards
+Amazon Cash
+Let Us Help You
+Shipping Rates & Policies
+Amazon Prime
+Returns Are Easy
+Manage your Content and Devices
+Recalls and Product Safety Alerts
+Registry & Gift List
+Customer Service
+ 
+English  Canada
+Amazon Music
+Stream millions
+of songs
+Amazon Advertising
+Find, attract and engage customers
+Amazon Business
+Everything for
+your business
+AbeBooks
+Books, art
+& collectables
+Amazon Drive
+Cloud storage
+from Amazon
+Amazon Web Services
+Scalable Cloud
+Computing Services
+Goodreads
+Book reviews
+& recommendations
+IMDb
+Movies, TV
+& Celebrities
+Amazon Photos
+Unlimited Photo Storage
+Free With Prime
+Shopbop
+Designer
+Fashion Brands
+Amazon Resale
+Great Deals on
+Quality Used Products
+Whole Foods Market
+We Believe in
+Real Food
+Amazon Renewed
+Like-new products
+you can trust
+Blink
+Smart Security
+for Every Home
+ 
+Conditions of Use
+Privacy Notice
+Cookies Notice
+Interest-Based Ads
+© 1996-2025, Amazon.com, Inc. or its affiliates
+Amazon.com.ca ULC | 40 King Street W 47th Floor, Toronto, Ontario, Canada, M5H 3Y2 |1-877-586-3230
+
+
+
+
+Also:
+RTL-SDR Blog V4 Software Defined Radio (SDR) - R828D/RTL2832U 1PPM Low Noise, Plug & Play with Antenna, USB-Powered for Amateur Radio, Spectrum Monitoring & Surveillance (Black), Amateur Radio Receiver, No Display Receiver, Highquality Circuitry, Signal Monitoring, Portable Receiver, Durable Construction, USB Radio, Tech Professionals
+Sold by
+KeTans
+CA$88.44
+
+
+<div class="root-child"><div class="a_b search-header-fixed" style="transform: translateY(0px);"><div class="g_h"><div class="bp_bq"><span>Best matches<svg viewBox="0 0 1024 1024" class="icon-svg" style="font-size:12px"><path d="M517.056 630.826667l296.661333-316.437334 46.677334 43.776-320 341.333334a32 32 0 0 1-46.677334 0l-320-341.333334 46.677334-43.776L517.056 630.826667z"></path></svg></span></div><svg viewBox="0 0 1024 1024" class="icon-svg bn_bo" style="font-size:24px"><path d="M277.333333 554.666667a85.333333 85.333333 0 0 1 85.333334 85.333333v128a85.333333 85.333333 0 0 1-85.333334 85.333333H149.333333a85.333333 85.333333 0 0 1-85.333333-85.333333v-128a85.333333 85.333333 0 0 1 85.333333-85.333333h128z m645.333334 192a37.333333 37.333333 0 0 1 0 74.666666h-437.333334a37.333333 37.333333 0 0 1 0-74.666666h437.333334zM277.333333 618.666667H149.333333a21.333333 21.333333 0 0 0-21.184 18.837333L128 640v128a21.333333 21.333333 0 0 0 18.837333 21.184L149.333333 789.333333h128a21.333333 21.333333 0 0 0 21.184-18.837333L298.666667 768v-128a21.333333 21.333333 0 0 0-18.837334-21.184L277.333333 618.666667z m645.333334-42.666667a37.333333 37.333333 0 0 1 0 74.666667h-437.333334a37.333333 37.333333 0 0 1 0-74.666667h437.333334zM277.333333 149.333333a85.333333 85.333333 0 0 1 85.333334 85.333334v128a85.333333 85.333333 0 0 1-85.333334 85.333333H149.333333a85.333333 85.333333 0 0 1-85.333333-85.333333v-128a85.333333 85.333333 0 0 1 85.333333-85.333334h128z m645.333334 192a37.333333 37.333333 0 0 1 0 74.666667h-437.333334a37.333333 37.333333 0 0 1 0-74.666667h437.333334zM277.333333 213.333333H149.333333a21.333333 21.333333 0 0 0-21.184 18.837334L128 234.666667v128a21.333333 21.333333 0 0 0 18.837333 21.184L149.333333 384h128a21.333333 21.333333 0 0 0 21.184-18.837333L298.666667 362.666667v-128a21.333333 21.333333 0 0 0-18.837334-21.184L277.333333 213.333333z m645.333334-42.666666a37.333333 37.333333 0 0 1 0 74.666666h-437.333334a37.333333 37.333333 0 0 1 0-74.666666h437.333334z"></path></svg><span class="as_i g_i"></span><span class="bg_bh"><svg viewBox="0 0 1024 1024" class="icon-svg" style="font-size:24px"><path d="M881.066667 312.661333c16.426667-16.618667 25.6-38.912 25.6-62.186666V199.104c0-33.493333-27.306667-60.437333-60.842667-60.437333H199.509333C166.016 138.666667 138.666667 165.632 138.666667 199.104v51.370667c0 23.253333 9.216 45.568 25.6 62.186666l262.421333 265.536V853.333333h64V551.914667L209.813333 267.690667a24.469333 24.469333 0 0 1-7.146666-17.216V202.666667h640v47.786666c0 6.442667-2.538667 12.586667-7.125334 17.237334L554.666667 551.914667V853.333333h64V578.197333l262.4-265.536z" fill="#333333" data-darkreader-inline-fill="" style="--darkreader-inline-fill: var(--darkreader-text-333333, #c8c3bc);"></path></svg>filter</span></div><div class="al_h"><span class="al_am"><span>Sale</span></span><span class="al_am"><span>Free shipping</span></span></div></div><div class="a_c" style="height: 76px;"></div><div class="at_au" data-tticheck="true"><div class="at_aw"><div class="fm_fn"><a class="fm_h at_az" href="//www.aliexpress.com/item/1005007244084682.html?browser_id=15514b770562449aa0c5d1c705b6dca0&amp;aff_platform=msite&amp;m_page_id=wltvibdrslicauzg197d7d4106a22d84dcca39fe09&amp;gclid=&amp;pdp_ext_f=%7B%22order%22%3A%2257%22%2C%22eval%22%3A%221%22%7D&amp;pdp_npi=4%40dis%21CAD%2179.80%2176.38%21%21%21411.76%21394.11%21%402103010e17516726887271002e9ab5%2112000045654990758%21sea%21CA%21929712299%21X&amp;algo_pvid=e1816938-359f-4419-89eb-1e002c3761ad" target="" rel="follow"><div class="fm_a1 at_a1" style="padding-bottom:100%"><img class="fm_ba product-img" src="//ae-pic-a1.aliexpress-media.com/kf/Sc5b5148dc0a34b66b462314f64d2afc1D.jpg_480x480q75.jpg_.avif" alt="RTL-SDR Blog RTL SDR V4 R828D RTL2832U 1PPM TCXO SMA RTLSDR Software Defined Radio (Dongle Only)" aria-hidden="true"><img src="https://ae01.alicdn.com/kf/S082ae95bce89462b9548a1d53f222ab4p/72x72.png" id="dsa-eye"></div><div class="fm_y"><div class="fm_a0"><div class="fm_fs"><span style="font-size: 12px; color: rgb(253, 56, 79); --darkreader-inline-color: var(--darkreader-text-fd384f, #fd4157);" data-darkreader-inline-color="">C$</span><span style="font-size: 20px; color: rgb(253, 56, 79); --darkreader-inline-color: var(--darkreader-text-fd384f, #fd4157);" data-darkreader-inline-color="">76</span><span style="font-size: 12px; color: rgb(253, 56, 79); --darkreader-inline-color: var(--darkreader-text-fd384f, #fd4157);" data-darkreader-inline-color="">.</span><span style="font-size: 12px; color: rgb(253, 56, 79); --darkreader-inline-color: var(--darkreader-text-fd384f, #fd4157);" data-darkreader-inline-color="">38</span></div><div class="fm_ft"><span style="text-decoration: line-through; color: rgb(153, 153, 153); --darkreader-inline-color: var(--darkreader-text-999999, #a8a095);" data-darkreader-inline-color="">C$79.8</span></div></div><div class="fm_fw"><div><img aria-hidden="true" class="jl_jp" src="https://ae01.alicdn.com/kf/S0f1bc1aeb2ab4de98568b86f99bcd0991/42x60.png" height="15" width="10.5"><span class="jl_jn" style="color: rgb(253, 56, 79); --darkreader-inline-color: var(--darkreader-text-fd384f, #fd4157);" data-darkreader-inline-color="">Sale · -4% Now</span></div></div><div class="fm_fv"><div class="jl_jm"><img aria-hidden="true" class="jl_jo" src="https://ae01.alicdn.com/kf/S1887a285b60743859ac7bdbfca5e0896Z/154x64.png" height="15" width="36.09375"></div><div class="jl_jm"><img aria-hidden="true" class="jl_jo" src="https://ae01.alicdn.com/kf/Sb6a0486896c44dd8b19b117646c39e36J/116x64.png" height="15" width="27.1875"></div></div><div class="fm_fh"><span class="fm_e4">57 sold</span><img aria-hidden="true" class="fm_e5" src="https://ae01.alicdn.com/kf/S567d6bf538214abf95c1e5825c7e6a05t/48x48.png" height="11" width="11"><span class="fm_fi">5</span></div><div title="RTL-SDR Blog RTL SDR V4 R828D RTL2832U 1PPM TCXO SMA RTLSDR Software Defined Radio (Dongle Only)" class="fm_v"><h1 class="fm_e8">RTL-SDR Blog RTL SDR V4 R828D RTL2832U 1PPM TCXO SMA RTLSDR Software Defined Radio (Dongle Only)<!-- --> </h1></div><div class="fm_fu"><div><img aria-hidden="true" class="jl_jp" src="https://ae01.alicdn.com/kf/S48cec483fac04ff9b5d824a4760f021ff/48x48.png" height="15" width="15"><span class="jl_jn" style="color: rgb(0, 153, 102); --darkreader-inline-color: var(--darkreader-text-009966, #61ffca);" data-darkreader-inline-color="">Free shipping over C$10</span></div></div></div></a></div><div class="fm_fn"><a class="fm_h at_az" href="//www.aliexpress.com/item/1005006888180625.html?browser_id=15514b770562449aa0c5d1c705b6dca0&amp;aff_platform=msite&amp;m_page_id=wltvibdrslicauzg197d7d4106a22d84dcca39fe09&amp;gclid=&amp;pdp_ext_f=%7B%22order%22%3A%2225%22%2C%22eval%22%3A%221%22%7D&amp;pdp_npi=4%40dis%21CAD%2185.66%2181.38%21%21%21442.00%21419.92%21%402103010e17516726887271002e9ab5%2112000038625228259%21sea%21CA%21929712299%21X&amp;algo_pvid=e1816938-359f-4419-89eb-1e002c3761ad" target="" rel="follow"><div class="fm_a1 at_a1" style="padding-bottom:100%"><img class="fm_ba product-img" src="//ae-pic-a1.aliexpress-media.com/kf/S36a17106a69a4fd19ca6e84c19bf117dc.jpg_480x480q75.jpg_.avif" alt="RTL-SDR Blog RTL SDR V4 R828D RTL2832U 1PPM TCXO SMA RTLSDR Software Defined Radio with Multipurpose Dipole Antenna" aria-hidden="true" title="" style=""><img src="https://ae01.alicdn.com/kf/S082ae95bce89462b9548a1d53f222ab4p/72x72.png" id="dsa-eye"></div><div class="fm_y"><div class="fm_a0"><div class="fm_fs"><span style="font-size: 12px; color: rgb(253, 56, 79); --darkreader-inline-color: var(--darkreader-text-fd384f, #fd4157);" data-darkreader-inline-color="">C$</span><span style="font-size: 20px; color: rgb(253, 56, 79); --darkreader-inline-color: var(--darkreader-text-fd384f, #fd4157);" data-darkreader-inline-color="">81</span><span style="font-size: 12px; color: rgb(253, 56, 79); --darkreader-inline-color: var(--darkreader-text-fd384f, #fd4157);" data-darkreader-inline-color="">.</span><span style="font-size: 12px; color: rgb(253, 56, 79); --darkreader-inline-color: var(--darkreader-text-fd384f, #fd4157);" data-darkreader-inline-color="">38</span></div><div class="fm_ft"><span style="text-decoration: line-through; color: rgb(153, 153, 153); --darkreader-inline-color: var(--darkreader-text-999999, #a8a095);" data-darkreader-inline-color="">C$85.66</span></div></div><div class="fm_fw"><div><img aria-hidden="true" class="jl_jp" src="https://ae01.alicdn.com/kf/S0f1bc1aeb2ab4de98568b86f99bcd0991/42x60.png" height="15" width="10.5"><span class="jl_jn" style="color: rgb(253, 56, 79); --darkreader-inline-color: var(--darkreader-text-fd384f, #fd4157);" data-darkreader-inline-color="">Sale · -4% Now</span></div></div><div class="fm_fv"><div class="jl_jm"><img aria-hidden="true" class="jl_jo" src="https://ae01.alicdn.com/kf/Sb6a0486896c44dd8b19b117646c39e36J/116x64.png" height="15" width="27.1875"></div></div><div class="fm_fh"><span class="fm_e4">25 sold</span><img aria-hidden="true" class="fm_e5" src="https://ae01.alicdn.com/kf/S567d6bf538214abf95c1e5825c7e6a05t/48x48.png" height="11" width="11"><span class="fm_fi">3.8</span></div><div title="RTL-SDR Blog RTL SDR V4 R828D RTL2832U 1PPM TCXO SMA RTLSDR Software Defined Radio with Multipurpose Dipole Antenna" class="fm_v"><h1 class="fm_e8">RTL-SDR Blog RTL SDR V4 R828D RTL2832U 1PPM TCXO SMA RTLSDR Software Defined Radio with Multipurpose Dipole Antenna<!-- --> </h1></div></div></a></div><div class="fm_fn"><a class="fm_h at_az" href="//www.aliexpress.com/item/1005005165734650.html?browser_id=15514b770562449aa0c5d1c705b6dca0&amp;aff_platform=msite&amp;m_page_id=wltvibdrslicauzg197d7d4106a22d84dcca39fe09&amp;gclid=&amp;pdp_ext_f=%7B%22order%22%3A%2252%22%2C%22eval%22%3A%221%22%7D&amp;pdp_npi=4%40dis%21CAD%21387.69%21228.30%21%21%212000.49%211178.02%21%402103010e17516726887271002e9ab5%2112000031941178283%21sea%21CA%21929712299%21X&amp;algo_pvid=e1816938-359f-4419-89eb-1e002c3761ad" target="" rel="follow"><div class="fm_a1 at_a1" style="padding-bottom:100%"><img class="fm_ba product-img" src="//ae-pic-a1.aliexpress-media.com/kf/S8c727854f003443b8e3bd797be5a007b0.jpg_480x480q75.jpg_.avif" alt="Software defined radio SDR AD9363 AD9361 ZYNQ7020 ADI Pluto communication experiment platform" aria-hidden="true"><img src="https://ae01.alicdn.com/kf/S082ae95bce89462b9548a1d53f222ab4p/72x72.png" id="dsa-eye"></div><div class="fm_y"><div class="fm_a0"><div class="fm_fs"><span style="font-size:12px;decimal_point:.;comma_style:,;currency-symbol:C$;show-decimal:true;symbol_position:left">C$</span><span style="font-size:20px;decimal_point:.;comma_style:,;currency-symbol:C$;show-decimal:true;symbol_position:left">228</span><span style="font-size:12px;decimal_point:.;comma_style:,;currency-symbol:C$;show-decimal:true;symbol_position:left">.</span><span style="font-size:12px;decimal_point:.;comma_style:,;currency-symbol:C$;show-decimal:true;symbol_position:left">3</span></div><div class="fm_ft"></div></div><div class="fm_fw"><div><span class="jl_bx jl_jn" style="color: rgb(253, 56, 79); --darkreader-inline-color: var(--darkreader-text-fd384f, #fd4157);" data-darkreader-inline-color="">Save C$159.39</span></div></div><div class="fm_fv"><div class="jl_jm"><img aria-hidden="true" class="jl_jo" src="https://ae01.alicdn.com/kf/S1d50c4213f414d6785730b502cbaa432q/184x64.jpg" height="15" width="43.125"></div></div><div class="fm_fh"><span class="fm_e4">52 sold</span><img aria-hidden="true" class="fm_e5" src="https://ae01.alicdn.com/kf/S567d6bf538214abf95c1e5825c7e6a05t/48x48.png" height="11" width="11"><span class="fm_fi">5</span></div><div title="Software defined radio SDR AD9363 AD9361 ZYNQ7020 ADI Pluto communication experiment platform" class="fm_v"><h1 class="fm_e8">Software defined radio SDR AD9363 AD9361 ZYNQ7020 ADI Pluto communication experiment platform<!-- --> </h1></div></div></a></div><div data-spm="seo-silkbag"><a class="bw_am" href="https://www.aliexpress.com/w/wholesale-radio-controlled.html"><span class="bw_bx">radio controlled</span><span class="comet-icon comet-icon-chevronright32 bw_by"><svg viewBox="0 0 1024 1024" width="1em" height="1em" fill="currentColor" aria-hidden="false" focusable="false" data-darkreader-inline-fill="" style="--darkreader-inline-fill: currentColor;"><path d="M414.08 254.08a48 48 0 0 1 64.224-3.328l3.648 3.296 201.376 201.376a80 80 0 0 1 3.872 108.96l-3.872 4.16-201.376 201.408a48 48 0 0 1-71.2-64.256l3.296-3.648L604.16 512l-190.08-190.08a48 48 0 0 1-3.296-64.224l3.296-3.648z"></path></svg></span></a><a class="bw_am" href="https://www.aliexpress.com/w/wholesale-speaker-radio.html"><span class="bw_bx">speaker radio</span><span class="comet-icon comet-icon-chevronright32 bw_by"><svg viewBox="0 0 1024 1024" width="1em" height="1em" fill="currentColor" aria-hidden="false" focusable="false" data-darkreader-inline-fill="" style="--darkreader-inline-fill: currentColor;"><path d="M414.08 254.08a48 48 0 0 1 64.224-3.328l3.648 3.296 201.376 201.376a80 80 0 0 1 3.872 108.96l-3.872 4.16-201.376 201.408a48 48 0 0 1-71.2-64.256l3.296-3.648L604.16 512l-190.08-190.08a48 48 0 0 1-3.296-64.224l3.296-3.648z"></path></svg></span></a><a class="bw_am" href="https://www.aliexpress.com/w/wholesale-radio-for-internet.html"><span class="bw_bx">radio for internet</span><span class="comet-icon comet-icon-chevronright32 bw_by"><svg viewBox="0 0 1024 1024" width="1em" height="1em" fill="currentColor" aria-hidden="false" focusable="false" data-darkreader-inline-fill="" style="--darkreader-inline-fill: currentColor;"><path d="M414.08 254.08a48 48 0 0 1 64.224-3.328l3.648 3.296 201.376 201.376a80 80 0 0 1 3.872 108.96l-3.872 4.16-201.376 201.408a48 48 0 0 1-71.2-64.256l3.296-3.648L604.16 512l-190.08-190.08a48 48 0 0 1-3.296-64.224l3.296-3.648z"></path></svg></span></a><a class="bw_am" href="https://www.aliexpress.com/w/wholesale-solar-powered-radios.html"><span class="bw_bx">solar powered radios</span><span class="comet-icon comet-icon-chevronright32 bw_by"><svg viewBox="0 0 1024 1024" width="1em" height="1em" fill="currentColor" aria-hidden="false" focusable="false" data-darkreader-inline-fill="" style="--darkreader-inline-fill: currentColor;"><path d="M414.08 254.08a48 48 0 0 1 64.224-3.328l3.648 3.296 201.376 201.376a80 80 0 0 1 3.872 108.96l-3.872 4.16-201.376 201.408a48 48 0 0 1-71.2-64.256l3.296-3.648L604.16 512l-190.08-190.08a48 48 0 0 1-3.296-64.224l3.296-3.648z"></path></svg></span></a><a class="bw_am" href="https://www.aliexpress.com/w/wholesale-aircraft-radio.html"><span class="bw_bx">aircraft radio</span><span class="comet-icon comet-icon-chevronright32 bw_by"><svg viewBox="0 0 1024 1024" width="1em" height="1em" fill="currentColor" aria-hidden="false" focusable="false" data-darkreader-inline-fill="" style="--darkreader-inline-fill: currentColor;"><path d="M414.08 254.08a48 48 0 0 1 64.224-3.328l3.648 3.296 201.376 201.376a80 80 0 0 1 3.872 108.96l-3.872 4.16-201.376 201.408a48 48 0 0 1-71.2-64.256l3.296-3.648L604.16 512l-190.08-190.08a48 48 0 0 1-3.296-64.224l3.296-3.648z"></path></svg></span></a><a class="bw_am" href="https://www.aliexpress.com/w/wholesale-rtl-sdr-software-defined-radio.html"><span class="bw_bx">rtl sdr software defined radio</span><span class="comet-icon comet-icon-chevronright32 bw_by"><svg viewBox="0 0 1024 1024" width="1em" height="1em" fill="currentColor" aria-hidden="false" focusable="false" data-darkreader-inline-fill="" style="--darkreader-inline-fill: currentColor;"><path d="M414.08 254.08a48 48 0 0 1 64.224-3.328l3.648 3.296 201.376 201.376a80 80 0 0 1 3.872 108.96l-3.872 4.16-201.376 201.408a48 48 0 0 1-71.2-64.256l3.296-3.648L604.16 512l-190.08-190.08a48 48 0 0 1-3.296-64.224l3.296-3.648z"></path></svg></span></a></div><div class="lazy-load" style="width:220px;height:220px"></div><div class="lazy-load" style="width:220px;height:220px"></div><div class="lazy-load" style="width:220px;height:220px"></div><div class="lazy-load" style="width:220px;height:220px"></div><div class="lazy-load" style="width:220px;height:220px"></div><div class="lazy-load" style="width:220px;height:220px"></div><div class="lazy-load" style="width:220px;height:220px"></div></div><div class="at_ax"><div class="fm_fn"><a class="fm_h at_az" href="//www.aliexpress.com/item/1005009404363537.html?browser_id=15514b770562449aa0c5d1c705b6dca0&amp;aff_platform=msite&amp;m_page_id=wltvibdrslicauzg197d7d4106a22d84dcca39fe09&amp;gclid=&amp;pdp_ext_f=%7B%22order%22%3A%22-1%22%2C%22eval%22%3A%221%22%7D&amp;pdp_npi=4%40dis%21CAD%21349.14%21251.38%21%21%211801.55%211297.11%21%402103010e17516726887271002e9ab5%2112000048995949135%21sea%21CA%21929712299%21X&amp;algo_pvid=e1816938-359f-4419-89eb-1e002c3761ad&amp;search_p4p_id=2025070416444810246769792732250003156897_1" target="" rel="nofollow"><div class="fm_a1 at_a1" style="padding-bottom:100%"><img class="fm_ba product-img" src="//ae-pic-a1.aliexpress-media.com/kf/Sc1ada30983b24cb0a2e721f6ccdf75f4v.png_480x480.png_.avif" alt="R4 Software all modules lighting design software dmx interface Window New version support update D4 usb dognle R4 dongle" aria-hidden="true"><span class="fm_fp" style="position: absolute; top: 8px; color: rgb(255, 255, 255); padding: 2px 5px; background: rgba(0, 0, 0, 0.2); border-radius: 4px; right: 8px; --darkreader-inline-color: var(--darkreader-text-ffffff, #e8e6e3); --darkreader-inline-bgimage: initial; --darkreader-inline-bgcolor: var(--darkreader-background-00000033, rgba(0, 0, 0, 0.2));" data-darkreader-inline-color="" data-darkreader-inline-bgimage="" data-darkreader-inline-bgcolor="">Ad</span><img src="https://ae01.alicdn.com/kf/S082ae95bce89462b9548a1d53f222ab4p/72x72.png" id="dsa-eye"></div><div class="fm_y"><div class="fm_a0"><div class="fm_fs"><span style="font-size:12px;decimal_point:.;comma_style:,;currency-symbol:C$;show-decimal:true;symbol_position:left">C$</span><span style="font-size:20px;decimal_point:.;comma_style:,;currency-symbol:C$;show-decimal:true;symbol_position:left">251</span><span style="font-size:12px;decimal_point:.;comma_style:,;currency-symbol:C$;show-decimal:true;symbol_position:left">.</span><span style="font-size:12px;decimal_point:.;comma_style:,;currency-symbol:C$;show-decimal:true;symbol_position:left">38</span></div><div class="fm_ft"></div></div><div title="R4 Software all modules lighting design software dmx interface Window New version support update D4 usb dognle R4 dongle" class="fm_v"><h1 class="fm_e8">R4 Software all modules lighting design software dmx interface Window New version support update D4 usb dognle R4 dongle<!-- --> </h1></div></div></a></div><div class="fm_fn"><a class="fm_h at_az" href="//www.aliexpress.com/item/1005009303780626.html?browser_id=15514b770562449aa0c5d1c705b6dca0&amp;aff_platform=msite&amp;m_page_id=wltvibdrslicauzg197d7d4106a22d84dcca39fe09&amp;gclid=&amp;pdp_ext_f=%7B%22order%22%3A%22-1%22%2C%22eval%22%3A%221%22%7D&amp;pdp_npi=4%40dis%21CAD%21123.87%21117.68%21%21%21639.16%21607.22%21%402103010e17516726887271002e9ab5%2112000048679076311%21sea%21CA%21929712299%21X&amp;algo_pvid=e1816938-359f-4419-89eb-1e002c3761ad" target="" rel="nofollow"><div class="fm_a1 at_a1" style="padding-bottom:100%"><img class="fm_ba product-img" src="//ae-pic-a1.aliexpress-media.com/kf/Sa4a53a23cf92474d87885aeecebe573a3.jpg_480x480q75.jpg_.avif" alt="Cirket H4 Open Source Software Defined Radio Development Board" aria-hidden="true"><img src="https://ae01.alicdn.com/kf/S082ae95bce89462b9548a1d53f222ab4p/72x72.png" id="dsa-eye"></div><div class="fm_y"><div class="fm_a0"><div class="fm_fs"><span style="font-size:12px;decimal_point:.;comma_style:,;currency-symbol:C$;show-decimal:true;symbol_position:left">C$</span><span style="font-size:20px;decimal_point:.;comma_style:,;currency-symbol:C$;show-decimal:true;symbol_position:left">117</span><span style="font-size:12px;decimal_point:.;comma_style:,;currency-symbol:C$;show-decimal:true;symbol_position:left">.</span><span style="font-size:12px;decimal_point:.;comma_style:,;currency-symbol:C$;show-decimal:true;symbol_position:left">68</span></div><div class="fm_ft"></div></div><div class="fm_fw"><div><span class="jl_bx jl_jn" style="color: rgb(253, 56, 79); --darkreader-inline-color: var(--darkreader-text-fd384f, #fd4157);" data-darkreader-inline-color="">Extra 5% off with coins</span></div></div><div title="Cirket H4 Open Source Software Defined Radio Development Board" class="fm_v"><h1 class="fm_e8">Cirket H4 Open Source Software Defined Radio Development Board<!-- --> </h1></div></div></a></div><div class="fm_fn"><a class="fm_h at_az" href="//www.aliexpress.com/item/1005008149026264.html?browser_id=15514b770562449aa0c5d1c705b6dca0&amp;aff_platform=msite&amp;m_page_id=wltvibdrslicauzg197d7d4106a22d84dcca39fe09&amp;gclid=&amp;pdp_ext_f=%7B%22order%22%3A%2235%22%2C%22eval%22%3A%221%22%7D&amp;pdp_npi=4%40dis%21CAD%21299.38%21155.68%21%21%211544.79%21803.30%21%402103010e17516726887271002e9ab5%2112000043996177156%21sea%21CA%21929712299%21X&amp;algo_pvid=e1816938-359f-4419-89eb-1e002c3761ad&amp;search_p4p_id=2025070416444810246769792732250003156897_2" target="" rel="follow"><div class="fm_a1 at_a1" style="padding-bottom:100%"><img class="fm_ba product-img" src="//ae-pic-a1.aliexpress-media.com/kf/S9ed791207dff4b0fbb941e88be36336f9.jpg_480x480q75.jpg_.avif" alt="Ultimate version Beyond 5.5 Software USB Dongle" aria-hidden="true"><span class="fm_fp" style="position: absolute; top: 8px; color: rgb(255, 255, 255); padding: 2px 5px; background: rgba(0, 0, 0, 0.2); border-radius: 4px; right: 8px; --darkreader-inline-color: var(--darkreader-text-ffffff, #e8e6e3); --darkreader-inline-bgimage: initial; --darkreader-inline-bgcolor: var(--darkreader-background-00000033, rgba(0, 0, 0, 0.2));" data-darkreader-inline-color="" data-darkreader-inline-bgimage="" data-darkreader-inline-bgcolor="">Ad</span><img src="https://ae01.alicdn.com/kf/S082ae95bce89462b9548a1d53f222ab4p/72x72.png" id="dsa-eye"></div><div class="fm_y"><div class="fm_a0"><div class="fm_fs"><span style="font-size:12px;decimal_point:.;comma_style:,;currency-symbol:C$;show-decimal:true;symbol_position:left">C$</span><span style="font-size:20px;decimal_point:.;comma_style:,;currency-symbol:C$;show-decimal:true;symbol_position:left">155</span><span style="font-size:12px;decimal_point:.;comma_style:,;currency-symbol:C$;show-decimal:true;symbol_position:left">.</span><span style="font-size:12px;decimal_point:.;comma_style:,;currency-symbol:C$;show-decimal:true;symbol_position:left">68</span></div><div class="fm_ft"></div></div><div class="fm_fh"><span class="fm_e4">35 sold</span><img aria-hidden="true" class="fm_e5" src="https://ae01.alicdn.com/kf/S567d6bf538214abf95c1e5825c7e6a05t/48x48.png" height="11" width="11"><span class="fm_fi">5</span></div><div title="Ultimate version Beyond 5.5 Software USB Dongle" class="fm_v"><h1 class="fm_e8">Ultimate version Beyond 5.5 Software USB Dongle<!-- --> </h1></div></div></a></div><div class="fm_fn"><a class="fm_h at_az" href="//www.aliexpress.com/item/1005006604391995.html?browser_id=15514b770562449aa0c5d1c705b6dca0&amp;aff_platform=msite&amp;m_page_id=wltvibdrslicauzg197d7d4106a22d84dcca39fe09&amp;gclid=&amp;pdp_ext_f=%7B%22order%22%3A%223%22%2C%22eval%22%3A%221%22%7D&amp;pdp_npi=4%40dis%21CAD%2131.36%2129.79%21%21%21161.82%21153.72%21%402103010e17516726887271002e9ab5%2112000037795277159%21sea%21CA%21929712299%21X&amp;algo_pvid=e1816938-359f-4419-89eb-1e002c3761ad" target="" rel="follow"><div class="lazy-load" style="height: 190px;"></div><div class="fm_y"><div class="fm_a0"><div class="fm_fs"><span style="font-size: 12px; color: rgb(253, 56, 79); --darkreader-inline-color: var(--darkreader-text-fd384f, #fd4157);" data-darkreader-inline-color="">C$</span><span style="font-size: 20px; color: rgb(253, 56, 79); --darkreader-inline-color: var(--darkreader-text-fd384f, #fd4157);" data-darkreader-inline-color="">29</span><span style="font-size: 12px; color: rgb(253, 56, 79); --darkreader-inline-color: var(--darkreader-text-fd384f, #fd4157);" data-darkreader-inline-color="">.</span><span style="font-size: 12px; color: rgb(253, 56, 79); --darkreader-inline-color: var(--darkreader-text-fd384f, #fd4157);" data-darkreader-inline-color="">79</span></div><div class="fm_ft"><span style="text-decoration: line-through; color: rgb(153, 153, 153); --darkreader-inline-color: var(--darkreader-text-999999, #a8a095);" data-darkreader-inline-color="">C$31.36</span></div></div><div class="fm_fw"><div><img aria-hidden="true" class="jl_jp" src="https://ae01.alicdn.com/kf/S0f1bc1aeb2ab4de98568b86f99bcd0991/42x60.png" height="15" width="10.5"><span class="jl_jn" style="color: rgb(253, 56, 79); --darkreader-inline-color: var(--darkreader-text-fd384f, #fd4157);" data-darkreader-inline-color="">Sale · -5% Now</span></div></div><div class="fm_fv"><div class="jl_jm"><img aria-hidden="true" class="jl_jo" src="https://ae01.alicdn.com/kf/Sb6a0486896c44dd8b19b117646c39e36J/116x64.png" height="15" width="27.1875"></div></div><div class="fm_fh"><span class="fm_e4">3 sold</span><img aria-hidden="true" class="fm_e5" src="https://ae01.alicdn.com/kf/S567d6bf538214abf95c1e5825c7e6a05t/48x48.png" height="11" width="11"><span class="fm_fi">5</span></div><div title="USB2.0 RTL SDR 0.5 PPM TCXO RTL2832U R860  TV Tuner Stick AM FM NFM DSB LSB SW Software Defined Radio SDR TV Scanner Receiver" class="fm_v"><h1 class="fm_e8">USB2.0 RTL SDR 0.5 PPM TCXO RTL2832U R860  TV Tuner Stick AM FM NFM DSB LSB SW Software Defined Radio SDR TV Scanner Receiver </h1></div></div></a></div><div class="lazy-load" style="width:220px;height:220px"></div><div class="lazy-load" style="width:220px;height:220px"></div><div class="lazy-load" style="width:220px;height:220px"></div><div class="lazy-load" style="width:220px;height:220px"></div><div class="lazy-load" style="width:220px;height:220px"></div></div></div><div class="u_h"><p class="u_v">Buy The Best Software Defined Radio At A Great Price With Free Shipping On AliExpress!</p><div class="u_w u_x"><div class="u_y">The relatedinformation of software defined radio: There is a wide variety of software definedradio items you can buy, such as sdvr sdvr, sdvr radio, sdvr dvr and dvr radio.There is no better way to find what you want. You can find products of softwareradio items at low prices and enjoy great discounts when you shop for softwareradio items during the big sale. Please don't forget to pay attention to promotions and preferential activities, which can help you save more expenses to buy other more products you are interested in. You can get more selections and also make better selections by reading the reviews others have left. If you are not satisfied with the product, you can return it or exchange it within the time limit, no additional fee, and enjoy a fast refund service. Security at its finest! AliExpress guarantees a secure online shopping experience. Cozy up with your favorite software defined radio item and enjoy the time alone. Find more deals on software defined radio item online and shop safe with AliExpress. Refer to each seller's review of item to find trusted sellers easily. You can get a bunch of other information of item on quality, price and tips that other shoppers have found helpful. There you will find plenty of useful and helpful information about item and even tips to making your shopping experience an amazing one! Reading reviews on item help to make safe purchases. Reading reviews from fellow buyers on popular item before purchasing!
+ 
+Are you worried about price or quality?Please do not worry! AliExpress always guarantees low prices and high quality. We are confident to make such a promise! If you are not satisfied, you can return the product with in the specified time and return it for free (for details, please refer to the terms of service of each merchant). We have faster mail and parcel delivery services to ensure that you can get your favorite software defined radio items the first time! In terms of quality, AliExpress has been strictly controlling to ensure that merchants provide high-quality products so that consumers can buy the software defined radio items! In terms of price, we also guarantee the low price as always, so that consumers can get the greatest discount! If you have any dissatisfaction or comments on our services, prices, and products, yo can contact our customer service at any time to reflect.
+ 
+Now you can shop for it and enjoy a good deal on AliExpress! Simply browse an extensive selection of the best software defined radio items and filter by best match or price to find one that suits you! Don't forget that there are a lot of activities and coupons in AliExpress. Please confirm these preferential activities before purchasing to make sure you can buy the most satisfying products at the most favorable price. On AliExpress, there are many discount seasons, such as annual 11.11 and mid-season discounts. Commodity prices will be more favorable during these times and there are other promotional activities waiting for you!
+
+See more details about <a href="https://www.aliexpress.com/w/wholesale-software defined radio.html" target="_blank">software defined radio</a> in AliExpress Video Page.
+
+</div><span class="u_z">more<!-- --> <svg viewBox="0 0 1024 1024" class="icon-svg"><path d="M517.056 630.826667l296.661333-316.437334 46.677334 43.776-320 341.333334a32 32 0 0 1-46.677334 0l-320-341.333334 46.677334-43.776L517.056 630.826667z"></path></svg></span></div></div></div>
+
+
+
+
+
+Skip to main contentTurn off continuous scrolling
+Accessibility help
+Accessibility feedback
+
+Go to Google Home
+Ettus SDR
+
+
+Search
+Nearby
+Deals
+For you
+Refine results
+
+Used
+On sale
+Sort by
+Price: low to high
+Price: high to low
+Category
+Radios
+Satellite Receivers
+Development Boards & Kits
+Integrated Circuits
+See more
+Stores
+DigiKey Canada
+eBay
+Nooelec
+DX Engineering
+See more
+Price
+Under $300
+$300 - $700
+$700 - $1,500
+Over $1,500
+$
+Min
+$
+Max
+Go
+Brand
+HQ
+Etón
+National Instruments
+Yaesu
+See more
+Radios
+Satellite Receivers
+
+Used
+Development Boards & Kits
+Integrated Circuits
+On sale
+Printed Circuit Boards
+Power Adapters & Chargers
+Wireless
+Ham Radios
+Network Adapters
+Software
+Cable Adapters
+Under $300
+
+Digilent Ettus USRP B200 1x1 70MHz-6GHz SDR/Cognitive Radio
+$2,017.58
+(US$1,483)
+
+Jensen Tools
+ & more
+Get it by Jul 16 (Free)
+30-day returns
+
+Digilent Ettus USRP B205m-i ENC at TestEquity
+$2,223.02
+(US$1,634)
+
+TestEquity
+Get it by Jul 15 (Free)
+30-day returns
+
+Digilent Ettus USRP N210 SDR/Cognitive Radio 6002-410-026
+$5,595.00
+
+future-micro.ca
+
+Ettus USRP B205mini-i 1x1 USB Software Defined Radio/Cognitive Radio Platform
+$1,944.12
+(US$1,429)
+
+TEquipment
+ & more
+30-day returns
+5.0(1)
+
+Digilent, Inc. 6002-410-023 ETTUS USRP B200: 1X1, 70MHZ-6GHZ
+$2,059.69
+
+DigiKey Canada
+Get it by Tue (Free)
+30-day returns
+
+Digilent Ettus USRP B210 at TestEquity
+$2,945.43
+(US$2,165)
+
+TestEquity
+Get it by Jul 15 (Free)
+30-day returns
+
+Ettus USRP B200 Radio
+$775.47
+(US$570)
+
+eBay - outstar
+ & more
+
+Digilent Ettus USRP B200m
+$1,866.57
+(US$1,372)
+
+Jensen Tools
+Get it by Jul 16 (Free)
+30-day returns
+
+Digilent Ettus USRP B200m - Ettus USRP B200mini: 1x1, 70MHz-6GHz SDR/Cognitive Radio - Board Only | TEquipment
+$1,866.57
+(US$1,372)
+
+TEquipment
+30-day returns
+5.0(1)
+
+Digilent Ettus USRP B200m ENC
+$1,955.00
+(US$1,437)
+
+Techni-Tool
+Get it by Jul 15 (Free)
+30-day returns
+
+Digilent Ettus USRP B210 ENC at TestEquity
+$3,159.02
+(US$2,322)
+
+TestEquity
+Get it by Jul 15 (Free)
+30-day returns
+
+Digilent Ettus USRP B200m ENC - Ettus USRP B200mini: 1x1, 70MHz-6GHz SDR/Cognitive Radio with Enclosure Kit | TEquipment
+$1,955.00
+(US$1,437)
+
+TEquipment
+30-day returns
+
+Ni Ettus Research Usrp B210 Sdr 2 X 2, 70 Mhz To 6 Ghz Motherboard
+$2,176.69
+Pre-owned
+
+eBay
+
+Digilent Ettus USRP B205m-i ENC - Ettus USRP B205mini-i: 1x1, 70MHz-6GHz SDR/Cognitive Radio with Enclosure | TEquipment
+$2,223.02
+(US$1,634)
+
+TEquipment
+30-day returns
+
+Ni Ettus Usrp X300 Sdr Platform (kintex7-325t Fpga 2 Ch 10gige & Pcie
+$14,105.17
+(US$10,368)
+
+eBay - hamradioss
+
+Digilent Ettus USRP B210 ENC - Ettus USRP B210: 2x2, 70MHz-6GHz SDR/Cognitive Radio with Enclusure | TEquipment
+$3,159.02
+(US$2,322)
+
+TEquipment
+30-day returns
+5.0(1)
+
+NooElec NESDR Nano 2 Plus Tiny Black rtl-SDR USB Set
+$56.95
+
+Amazon CA
+ & more
+Free delivery
+
+Ni Ettus Usrp X300 Sdr Platform (kintex7-325t Fpga 2 Ch 10gige And
+$14,847.54
+(US$10,914)
+
+eBay - thanksbuyer
+
+Digilent Ettus USRP B210 - ENC Ettus USRP B210: 2x2, 70MHz-6GHz SDR/Cognitive Radio (Board Only) | TEquipment
+$2,945.43
+(US$2,165)
+
+TEquipment
+30-day returns
+
+Usrp X410
+$47,902.40
+
+Testforce Systems
+Get it by Jul 14 (Free)
+
+Yaesu FTDX10 HF/6M SDR Transceiver FTDX-10
+$2,040.64
+(US$1,500)
+
+DX Engineering
+ & more
+10-day returns
+4.9(198)
+
+70mhz-6ghz B210 Rf Development Board Open-source Sdr For Usrp Ettus
+$1,116.35
+(US$821)
+
+eBay - thanksbuyer
+
+Récepteur radio Malachite SDR V2.4 DSP2 10 kHz-380 MHz et 404 MHz-2 GHz
+$911.45
+
+Amazon CA
+ & more
+Free delivery
+
+B200 50mhz-6ghz Sdr Development Board Platform Replace For Ettus B200
+$689.83
+(US$507)
+
+eBay - outstandingdeal_us
+
+Nooelec NESDR Smart V5 Bundle
+$65.23
+(US$48)
+
+Nooelec
+ & more
+Free delivery on $136+
+30-day returns
+
+Nooelec FlyCatcher Casque RTL-SDR Raspberry Pi haute performance double canal pour suivi des vols et surveillance de l'aviation ADS-B 1090 MHz et
+$144.95
+
+Amazon CA
+ & more
+Free delivery
+
+Original Usrp E310 Kit 70mhz-6ghz Sdr Platform 2x2 Mimo For Ni Ettus
+$9,693.66
+(US$7,125)
+
+eBay - fibersplicer
+
+Hq Pour Rtl-Sdr Blog Rtl Sdr V3 0.1mhz-1.7ghz Rtl-Sdr V3 Rtl2832u 1ppm Tcxo Hf Biast Sma Définition De Logiciel
+$43.23
+
+Walmart.ca
+Free delivery
+
+rtl-SDR V4 Radio Antenna Kit
+$73.45
+
+Amazon CA
+4.8(45)
+
+Software Radio Sdr Rf Development Board Usrp Replace For Ettus
+$887.89
+(US$653)
+
+eBay - diyradios
+
+Usrp E320
+$12,208.00
+
+Testforce Systems
+Get it by Jul 14 (Free)
+
+B200-mini-i Software Radio Sdr Rf Development Board For Ettus
+$848.73
+(US$624)
+
+eBay - pincei_us
+
+NESDR SMArTee v2 SDR – RTL-SDR de qualité supérieure avec tee de polarisation intégré
+$46.95
+
+Amazon CA
+Free delivery
+18% OFF
+
+RTL5CH Five Channel SDR Receiver 24MHz to 1.7GHz USB Powered Advanced Direction Finding Low Noise
+$1,082.39
+$1,332
+
+USA.Banggood
+ & more
+
+B200 Scale-down Version Sdr Rf Development Board Replace For Ettus
+$779.67
+(US$573)
+
+eBay - outstandingdeal_us
+
+Mdhpklaur Récepteur Radio SDR Malachite V5 1.10D Firmware Radio Multifonctionnel Pratique Portable Radio à ondes courtes
+$341.53
+
+Amazon CA
+Free delivery
+
+B200 Scale-down Sdr Rf Development Board Usrp Replace For Ettus
+$736.70
+(US$542)
+
+eBay - topcyberdays
+
+XIEGU X6200 Transceiver SDR HF ham radio + 50MHz + FT8 + RX VHF AM
+$1,169.99
+
+dxcanada.ca
+LOW PRICE
+
+Analog Devices AD9364 Software Defined Radio Development Kit
+$550.30
+Usually $460
+
+Microchip USA
+ & more
+
+B200 Sdr Usrp Board Compatible With Uhd For Ettus Replace For
+$739.28
+(US$543)
+
+eBay - hamgeek_us
+More results
+
+
+

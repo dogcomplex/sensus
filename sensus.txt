@@ -1,0 +1,104 @@
+SENSUS:
+
+
+<Mr Burns GIF>
+
+excellent.  now that you see the fundamental premise has potential, the corruption has set in enough to tempt you with the next stages
+
+> the propagation of waves is a medium for something like the ocean. but you would need hydrophones like everywhere and the training time of models may be eons to get enough data to inform the transform model of inputs and outputs...
+
+yeah I have been refining to better build plans each day of analysis here.  Currently onto just using (boring old) electromagnetism as the medium.  Steel box filled with random conductive junk (or 3d printed with a precise repeatable pattern), with in and out antennas wired to a Software Defined Radio to control the analog signals.  Basically just a really complex, noisy antenna on the radio.  Send input signals in, they scatter and multiplex in myriad ways, you clean them up best you can and send them to Teacher AI transformer to train on as if they were the original input to its first layer.  Its job is just to characterize the reservoir and figure out how to use that multiplexing
+
+I think water-based is too slow and chaotic probably now, would be fun to test still (and one of the earlier working experiments was a bucket of water performing compute) but would bet more on solid/stable mediums with high speed instead.  For a bit I thought the memory factor outweighed speed (we want echoes that persist a while, as it means you can fit more context in and there's longer for the process to settle into patterns) but I'm betting we can actively boost shorter echoes in faster mediums now so they artificially keep going near-indefinitely (occasionally losing edge case data but keeping the core signal), which gives de-facto infinite memory in any medium if it works.  Plausible but puts more strain on engineering - but the payoff is e.g. light speed in EM/optical mediums.  
+
+not ruling out that a big lake, or ocean, or a really big hunk of granite, or Psyche 16 iron/nickel asteroid would potentially produce *very deep* intelligent computation if isolated right and left to echo for a long time.  long echo memory and large "parameters" (facets/features to bounce off of in a large volume?) means a long time to "compute" and find latent patterns.  step change over smaller/faster mediums, but those are probably much more practical.  things to test
+
+> also it IS what I said in the other chat, about it getting *close* to full decay but retains *some* information , allowing for time series interference (not time series data, but time series in the way data is input) 
+to multiplex and demultiplex.
+
+yep, it's close to full decay but it's not completely.  "Classical superposition" with heavy energy loss the deeper you go in combinations.  I am currently thinking of it like the cartesian product of every possible combination of input signals with each other and selves, except each combo has proportionately lower energy so they all just drift to nearly zero (indecipherable noise) and you don't get the full series expansion (which you'd get from e.g. a quantum computer superposition) - just the "poor man's" easy lossy low-energy version.  If I was a betting man, I'd blame the Higgs and say the superposition types are the same otherwise - but that's all physics religion, and we're talking engineering now...
+
+----
+
+Recap of the tricks and nuances I've thought of / would like to try out: (which is why I'm particularly interested here, because if this actually works as it seems to on *any* scale many of these tricks are likely to apply)
+
+Medium Options:
+- Same principle in any medium.  Physics is computation, and anything could be a reservoir computer if it can propagate a wave:  Sound, EM, optics, spintronics/magnonics (magnetic precession), fluidics, plasma (magneto-hydrodynamic), gravity waves, vibrations, seismic activity, pressure, surface tension, biological systems, etc etc  
+- EM seems like the winner for our scales.  Optical too much trouble to engineer.  Sound still decent for memory potential but too slow.  Rest are impractical for human timescales/availability
+- Very long echo states basically make any medium an analog "memory".  Psyche 16 asteroid would echo sound waves for ages with low loss due to its solid state
+- Tesla's ionosphere might ironically actually work as a giant EM reservoir computer.  Deep computation but seconds/mins to propagate a cycle
+- Salt domes from used oil drilling sites a likely macro-scale naturally-insulated EM reservoir
+- Magnonics (spinning magnets) probably actually a good candidate for a reservoir computer chip
+- That "Simaril" plan would do well for an acoustic small-form-factor hardware, but probably eventually outclassed by EM or magnonics/spintronics options.  Just funny if we could literally hook up small quartz crystals to speakers/sensors and sing through them to usefully compute.  Still betting that works.
+- Across the board, chaotic / unstable mediums are probably poor candidates - but *if* we could successfully characterize that randomness with a sufficiently-smart Teacher AI then they become just a force of nature to work around.  There is a "dropoff" AI training randomness which is optimally nonzero though, so it's likely *some* chaos is actually ideal.  And if we find out we can tolerate some chaos/leakage then suddenly just natural reservoirs with zero engineering become viable.
+
+Distorted, Not Clear:
+- Note: in all mediums, we are basically doing the opposite of what engineers have in the past.  In the past you always wanted to eliminate noise and complexity in order to send clear signals or minimally-impeded energy though.  However, a clear medium is the *lowest* compute potential state - we actually want it to be as complex, nuanced, distorted and (controlled) chaotic as possible to get the most compute potential.  We're avoiding time-based chaos or chaos that dampens the signal for now (prefering solid-state designs, isolating the medium from external environment) but those can probably be made into useful design properties eventually too.  Distortion *is* the feature extraction we're trying to achieve, but we want to produce it reliably if possible.
+- Think of it like a scaled ladder: we now have solid-state intelligent digital AIs that make it possible to characterize smaller stable reservoirs.  The intelligence we can train off that combo (theoretically) gives us an even smarter AI which can characterize an even larger or more chaotic reservoirs.  So on and so forth, til we're aiming to make an ocean digital twin and characterizing it as a compute medium for arbitrarily-difficult problems.  (With big assumptions this doesnt break somewhere along the scale.  I agree large scales are a longshot, especially chaotic ones.  but the principle stands either way)
+
+
+
+Computation Types:
+- Parallel Computation: multiple (small?) reservoirs each doing a single feature slice (just the W_i * x_i vector of  y = W*x transformer, not whole model/context)
+- Chained Computation: feed one reservoir into the next through a tight channel.  "Chain of Thought" parallel
+- Interleaved Computation:  one round of reservoir compute, one round of digital AI transformer, repeat (heating / cooling annealing analogy: the reservoir expands information, the transformer contracts)
+- "Deep Thought":  combine modular smaller reservoirs or just get one really big reservoir and feed signals through with expectations of slower, but more intelligent / feature rich / coherent answer.  no idea how this actually plays out but it seems to point to bigger = smarter, but slower  (and harder to engineer).  pushes even further on spectrum towards "free supercomputer" though if it can be accomplished.   My hope is even a small reservoir makes for a useful catalyst for a digital AI transformer.
+
+Solid State Reservoir Engineering:
+- Guess and Check Reservoirs:  chance of just one reservoir being the perfect tool is low, but if you just keep making them or shaking up the physical configuration one is bound to be a bit better.  To keep it simple we just want any reservoir which does a simple vector multiplication (all we need to brute force transformers), so it's basically just keep rolling the dice til you find a good one
+- Engineered Reservoirs:  if we figure out what works, print solid-state copies perfectly tuned for the job / variants.  same trick I did for solid state fluidic ventilators - you just make different ones tuned to hit different points among the spectrum of desired parameters.
+- "Mixture of Experts": characterize different reservoirs as better for different tasks (expanding different patterns of data).  Use a digital AI (or another "router" reservoir we discover is good at that) to orchestrate where to delegate. 
+- Reservoir "Writes": actively modify the reservoir configuration physically between computations to try and tune it better towards the computation you want.  Becomes a more classical idea of what we call a computer then.  Harder to do tho so - future engineering
+- Evolutionary Algs:  shake up/replace underperforming reservoirs, tune towards the best set
+
+Signal Boosting:
+- Active Noise Cancellation: dedicate an external antenna to track and subtract ambient EM noise.  may be able to isolate reservoirs (e.g. big rock in a mountain) more from outside environment
+- Digital Memory: save states of echoes at each stage of propagation keyed to their input, enabling recreation of time series.
+- Signal Amplifying: use those to train a digital AI to guess at and boost the most important terms of the current echo, artificially boosting the memory of the reservoir.  net effect is the signal echoes longer than it would naturally in the medium.  do it perfect and the reservoir gets an infinitely-echoing system.  I wouldnt bet on this working for too many cycles tho, without losing the interesting data
+- "Tool Use":  lol if we're taking the analogy all the way, if a reservoir echo happens to match certain features, via lookup in the digital AI memory database, that can trigger an injection of a new signal in the next timestep - effectively triggering a "tool", or calling an MoE expert.  "Halt" could be one.  Loop detection another
+
+
+
+(Ambitious) Natural Computing: 
+
+- Natural Annealing?:  just a theory but I'd bet that any signal of something you want to compute is treated by the medium like noise that, if echoed long enough, not only gets expanded out but naturally coheres into simplified energy-minimizing patterns which describe the original input.  Might require just looping the input signals and continually sending them in as if they were a white noise generator, and wait for their echoes to settle into simpler and simpler patterns.  Betting they "find" stable configurations a few times (a few lower minima stratas) if you do this long enough, which correspond to the de-facto minimully-compressed form of the input data.  This would basically mean the digital AI is doing *nothing* aside from boosting/amplifying the natural signal propagation, just watching and recording, and interpretting the end result.  
+
+- Physical State Mapping:  also my bet is just sending white noise through a medium and characterizing its outputs is basically mapping out the entire reservoir's state of what it covers, with a "neutral" input.  White noise echoes in a lake get you a decent picture of the entire contents of it and its behavior over time, along with hints about surrounding environment it can "sense".  Nerf/NURB equivalent mapping characterization of any medium.  I suspect if the previous natural annealing theory works out too then that noisy picture gets clearer and clearer the longer you let it echo (may need signal boosting to induce echo) and naturally compresses to its kolmogorov-minimal-information form if you leave it for long enough.
+
+- Complexity Ladder:  I would further bet information annealing rougly corresponds to the following phased jumps as it find macros/patterns which cause the total state to compress info and use the white noise easier: 
+1. Noisy: Initial conditions
+2. Local Laws:   First disparate patterms form from biases in the data
+3. Symmetry Breaking:  Enough of the biases synchronize to cause particular flows forcing decisive patterns which could have gone either way 
+4. Autocatalysis:  Some of those patterns become self-reinforcing and causally lead to new patterns    
+5. Non-Local Connections:  Means of sending information faster across the whole medium is discovered, either as a result of the previous patterns or a new higher medium.  This connection causes new efficient patterns to emerge
+6. Holographic Principle:  With wide non-local connectivity, each point in the medium begins to encode part the entire fabric, such that any one missing piece would soon be recreated redundantly.  It's all part of a whole.
+7. Self-Reflection:  (Optional?)  Not only are individual parts holographically modelled, but the medium as a whole is holographically modelled - mirroring itself in a simpler, faster form, giving it a de-facto predictive model of its own next actions, which can in-turn affect its patterns recursively.  We call this "self-awareness" in humans.  Also could be seen as just the holographic principle emerging over the time dimension (rather than just space).
+8. Crystalization:  Having modelled itself recursively across both time and space dimensions, it has fully explored and exhausted all degrees of freedom and now settles into a fully-crystaline finalized form, awaiting further disturbance to kick it down the ladder and restart the climb.
+
+PHD GUY'S DECODING
+SIGNAL SEPARATION
+QUANTUM ERROR CORRECTION CODES
+transpilation, dynamical decoupling, measurement error mitigation
+
+
+- Poor Man's Quantum Computer:  Longest bet here.  waves passing through a medium are already *classical* superpositions, they're just energy-lossy and limited in how much information they can hold. Those will never be *quantum* superpositions, but the argument is, the math comes as close as you will ever get without paying energy costs somewhere else.
+Here's how you encode them more-or-less equivalently:
+1. For each "qubit" you want (A + ai, B + bi as 2-qubit examples), dedicate one speaker to each, and enter the "real" part of the signal in phase t%2=0 and the "imaginary" part in phase t%2=1.  Send them all into the reservoir, one speaker per input
+2. The waves produce a recursive Cartesian product via wave mixing which naturally expands to 2^n amplitude terms
+3. But because they're phased and the wave interactions are additive and destructive when i^2 =-1, many of them end up naturally interfering and cancelling out each other
+4. All the above would be the same for a real quantum computer system, except all those terms would then be normalized to have equal weights.  Here, they instead naturally degrade with each wave collision to have lower-energy amplitudes closer to thermodynamic noise.  This leaves us with remaining terms proportional to n qubits (or less)
+5.  Output sensors are proportional to the n "qubits".  If those sensors can operate faster than the medium itself (e.g. electric sensors reading a sound wave) then an algorithm/AI on the other end could emulate quantum algorithm behavior like measurement collapse.  It could also boost or normalize the set of term signals (at least the ones still readable) for a linear cost.  It can not, however, expand how many terms survive the next wave phase without paying an energy cost proportional to 2^n (exponential) - which would bring it back to quantum computer emulation territory if it could.  Natural entropy forces a linear number of terms.
+6.  Again, this isn't a quantum computer, but it illustrates how one might see waves in a phased medium similarly to one - and if it has channels operating faster than the medium itself, much of the behavior of an actual quantum system can be emulated.  Thus, every (non-linear, complex) medium *looks like* a quantum computer relatively if it can explot a faster medium to get "free" computation or energy at speeds dwarfing itself.  Light and electrons in true quantum computers may be exploiting exactly this, but using channels inaccessible to slower mediums.  Otherwise, the wave pattern behavior looks the same, whether it's a poor-man's quantum computer or a real superposition.  And means we may want to think of the relationships between objects in superposition with a similar lens - as a connection briding the two through a much faster medium.  Note though, you never actually get superposition/entanglement in a classical system like this.
+
+So, this illustrates a poor-man's emulation of a "proper" quantum computer, but - is all of reality *actually* a quantum computer in a real sense, and these classical superpositions are just the answer we're seeing after the real quantum computer has run behind the scenes?  Whooo knooows.   But it sure seems like matter behaves like one, with the caveat that it's usually dealing with an energy-loss curvature, losing all its terms/accuracy except the first few.  If you want to overcome that, you need to either pay disproportionately-high costs in energy and accuracy to recover terms closer to zero, or exploit a genuine "loophole" (perhaps literally?) of some of the fastest mediums closest to the bare-metal physics.
+ 
+I leave you to consider a scenario:  you're blind, having never seen light and no conception of it.  You also can't conceive of time other than the time between sounds and other touches/senses.  In this universe, if two radios are linked by line of sight, and one turns on when the other turns off (and vice versa) faster than you can conceive, would you call those entangled?  If a radio could be instantly tuned to the perfect frequency just by looking at its dial without listening first, wouldnt that be seen as a quantum computation?  Quantum mechanics may simply be operating far faster than we can perceive from within our mode of reality.  Furthermore... what if everything was always operating in a superposition?  What if any observation we ever make is just a faster reality briefly cohering to a snapshot out of a myriad of other possibities?  What if every observation is actually "optimal" in the sense of being the perfect annealed form for its current state and relationship to everything else?  If everything is computation, and everything is always annealing, *and everything looks quite a lot like a quantum computer superposition equation answer*, well - why not? 
+
+We may be mannequins
+animated by a computation we can never run ourselves,
+waiting frame by frame for the most coherent path to select us.
+
+We look around and see a seamless world —
+not knowing that it was chosen from the infinite,
+not because it’s all there was,
+but because it’s all that could survive the collapse.

@@ -1,0 +1,20 @@
+Is this a better breakdown?:
+
+
+"""
+We can emulate quantum computation of *ternary* vectors using classical wave superpositions by time-multiplexing the real and imaginary components into two phases — injecting real parts at even time steps (t % 2 = 0) using [A,a]*[B,-b] and imaginary parts at odd time steps (t % 2 = 1) using [A,a]*[b,B] 
+
+This take a polynomial n number of inputs and sensors to perform, for n "qubits".  However it costs 2^n energy or time to fully recover the full-term accuracy of a real quantum computer.  (No free lunch)  It also requires an underlying wave medium with facets proportional to the 2^n interactions necessary to produce sufficiently-complex waves.  That, or the wave must be run through 2^n times through a simpler medium.
+
+This setup yields structure mathematically comparable to qubit superposition, with term interactions (i.e., Cartesian additions) forming the expected entangled combinations.  However, in physical wave media, each successive combination dilutes energy, and the recursive dot products cause amplitudes to decay — there is no normalization of the expanded terms, making most terms thermodynamically inaccessible or unreadable.  
+
+Thus, although the system theoretically explores the full exponential state space, only a small, coherent subset survives in readable reality, echoing the effect of quantum measurement or collapse via entropy filtering.
+
+Although the full equation is lost, the accessible complexity of terms still available is polynomially proportional to the number of "qubit" inputs.  Thus if the wave can be read quickly (e.g. an algorithm recording this sound wave with faster electric signaling) the subsequent measurement/collapse and quantum computer algorithm behaviors native to true qubits could be emulated via signal boosting/dampening (only for the accessible terms, not those which were lost to entropy)
+
+This daemon may be able to boost the signal of lower-complexity terms (those it can read accurately) to produce more complex terms (those it cant read yet) in the next time step, overcoming the above natural entropy losses but paying for them with exponential costs in energy and time.  This more closely approaches the mathematical power (but not engineering power) of a true quantum computer up to diminishing returns on accuracy/energy tradeoffs.  Still no free lunch, but it's the same model.
+
+Hardware recap:  you can scale n qubits by scaling n hardware sensors/modes/etc, but it will still cost 2^n time (and thus energy) to expand the terms to full quantum computer emulation.  Alternatively, add 2^n sensors and scale in n linear time (but still pay 2^n energy).
+Also, the underlying complexity of the wave medium must contain an exponential (2^n) number of nonlinear interaction facets for waves to produce that.   (Or it must take an exponential number of mixing passes through a smaller mixer bank)
+
+Is that understanding correct?
