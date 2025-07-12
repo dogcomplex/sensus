@@ -78,6 +78,7 @@ This experiment is designed with clear, quantitative success gates.
 | **C2** | **Classical Bound Break** | There must exist at least one tested `R > 1` for which the median `S` score is robustly greater than `2.05`. | A speed advantage is a necessary condition for classical quantum emulation. |
 | **C3** | **`S(R)` Curve Generation** | Produce a reproducible plot of the best-attained `S` vs. `R` for at least 8 distinct `R` values, with error bars derived from cross-seed validation. | The degree of quantum-like behavior is a smooth, monotonic function of the controller's speed advantage. |
 | **C4** | **Statistical Significance** | For the top-performing `R` configuration, the result must be statistically significant, with a p-value `< 10⁻⁶` against the null hypothesis of `S=2`. | The observed Bell violation is not a statistical fluke. |
+| **C5** | **Monotonicity Check** | The Spearman's rank correlation coefficient `ρ` between the set of tested `R` values and their corresponding median `S` scores must be positive and significant (e.g., `ρ > 0.6`). | The benefit of a faster controller should be consistent and not arise from a single pathological data point. |
 
 ---
 
@@ -88,15 +89,20 @@ The speed-ratio `R` is the central independent variable of our entire experiment
 #### **2.1. Definition and Significance**
 *   **Slow-step period `τ_s`:** This is defined as a single tick of our Echo State Network (ESN) simulation. By convention, we set `τ_s = 1` in arbitrary units of time.
 *   **Controller latency `τ_c`:** This is the time taken by our `NonLocalCoordinator` to read the state of the ESNs, compute the correction, and apply it.
-*   **Speed-ratio `R ≡ τ_s / τ_c` (where `R ≥ 1`)**: This value quantifies the "superpower" of our controller. `R=10` means the controller is ten times faster than the substrate it is controlling.
+*   **Speed-ratio `R`**: The canonical definition is `R = τ_s / τ_c`. In our simulation, we fix the slow-step period `τ_s = 1` (in arbitrary time units). With an integer delay `d` ticks, the controller's effective latency is `τ_c = d`. This leads to the simple relationship `R = 1/d`. A higher delay `d` corresponds to a slower controller.
 
 #### **2.2. Implementation via Latency Shim**
-In a software simulation, we don't need to measure wall-clock time. We can implement `R` precisely and deterministically by inserting a computational delay.
-*   The experiment will be structured such that for every **one** call to the ESN's `run()` method, the `NonLocalCoordinator`'s `forward()` method is called `R` times.
-*   Alternatively and more simply, we can model latency by inserting an integer delay buffer `d` into the corrective signal path. If the controller computes a correction `c(k)` based on state `x(k)`, this correction is applied at step `k+d`. This makes the controller's effective speed `1/d` relative to the reservoir. We will use this method for its simplicity and direct control. Thus, `R` is inversely related to this delay.
+In a software simulation, we can precisely control latency. We define two forms of controller latency:
+
+*   **Effective Latency (`d`):** A dimensionless integer delay, in units of "slow-step ticks" (`τ_s`). This is the primary control parameter. If the controller computes a correction `c(k)` based on state `x(k)`, this correction is applied at step `k+d`.
+*   **Physical Latency (`τ_c_phys`):** The actual wall-clock time (e.g., in milliseconds) required for one `forward()` pass of the `NonLocalCoordinator`. While not used to control the simulation logic, this value is critical for future hardware implementations (e.g., on an FPGA or photonic chip).
+
+The relationship is `τ_c_effective = d · τ_s`. We will use the integer delay `d` for its simplicity and direct control. Both the effective latency `d` and the measured physical latency `τ_c_phys` will be stored in experiment logs to ensure portability and future-proofing of the results. *Strategic Note: While we implement delay `d` as a buffer, in a future hardware port (e.g., photonics), this could be realized by down-sampling the reservoir's clock relative to the controller. The variable `d` should be understood as the effective delay, regardless of implementation.*
 
 #### **2.3. Target Test Set**
-To map the `S(R)` curve, we will run the full optimization experiment for a set of `R` values chosen to cover different regimes. We will test `R` values corresponding to delays `d = {1, 2, 3, 5, 8, 13}`. The target test set will explore the impact of these discrete latency steps.
+To map the `S(R)` curve, we will run the full optimization experiment for a set of `d` values. A higher `d` corresponds to a slower, more handicapped controller (lower `R`). The target test set will explore `d = {0.5, 1, 2, 3, 5, 8, 13}` to cover both super-fast and lagged regimes.¹
+
+¹Sub-tick delay (`d=0.5`) will be simulated by doubling the execution frequency of the `NonLocalCoordinator` relative to the `ClassicalSystem` (i.e., two NLC `forward()` calls are made for each `step()` of the ESNs).
 
 ---
 
@@ -236,12 +242,20 @@ This section provides the low-level, actionable details required to implement ea
         return {
             "fitness": S_score,  # Primary value for optimizer
             "s_value": S_score,
-            "correlations": [C(a,b), C(a,b'), C(a',b), C(a',b')],
-            "readout_mse": mse_of_readouts,
+            "correlations": {"C(a,b)": ..., "C(a,b')": ..., "C(a',b)": ..., "C(a',b')": ...},
+            "readout_diagnostics": {
+                "ab":  {"lambda": ..., "mse": ...},
+                "ab'": {"lambda": ..., "mse": ...},
+                "a'b": {"lambda": ..., "mse": ...},
+                "a'b'":{"lambda": ..., "mse": ...}
+            },
+            "controller_flops": ..., # Calculated once at init
+            "spearman_rho_across_blocks": ..., # Monotonicity check within a single run
             "controller_output_norm_mean": mean_l2_norm(all_correction_signals),
             "reservoir_state_variance_mean": mean_variance(all_collected_states)
         }
         ```
+    *   **Note on FLOPs:** The `controller_flops` is a constant for a given NLC architecture. It will be calculated once at model initialization by summing the multiply-add operations for each layer (e.g., `in_features * out_features`) and logged with the run's metadata.
 
 #### **4.4. `GlobalOptimizer`: The CMA-ES Optimization Harness**
 
@@ -257,6 +271,7 @@ This section provides the low-level, actionable details required to implement ea
     6.  The collected list of diagnostic dictionaries will be used to provide the fitness scores back to the optimizer via `es.tell()`.
 *   **Defensive Design: State Saving and Robust Logging:**
     *   After each generation, the full state of the optimizer will be serialized to disk using `es.pickle()`. *Rationale: This allows long-running experiments to be resumed after interruption, which is critical for optimizations that may take days or weeks.*
+    *   In addition to the best-ever individual solution, the script will separately save the population mean (the "centroid") of the CMA-ES search distribution every `K=10` generations. *Rationale: The centroid often represents a more robust, smoother, and generalizable solution than the single best individual, which may be over-fitted to noise in the fitness evaluation. This gives us a fallback option for analysis.*
     *   The complete diagnostic dictionary for every single trial will be appended to a master log file in a structured format (e.g., CSV or JSONL). *Rationale: This raw data is the primary scientific artifact of the experiment. It must be preserved for post-hoc analysis, visualization, and validation.*
 
 
@@ -281,7 +296,7 @@ This project will not be developed monolithically. It will be built in a series 
 *   **Success Gate:**
     *   The diagnostic plot must show a "healthy" reservoir. The neuron activation histogram must be broadly distributed within `[-1, 1]` without significant "piling up" at the boundaries (saturation) or at the center (dead reservoir). The time-series plots must show complex, aperiodic behavior. The PCA plot must show a high-dimensional, tangled attractor. This gate must be passed before any optimization work begins.
 
-#### **5.2. Checkpoint 1: The Null Experiment (Classical Baseline Validation)**
+#### **5.2. Phase 1: The Null Experiment (Classical Baseline Validation)**
 
 *   **Goal:** To rigorously test our measurement apparatus (`CHSHFitness` module) and confirm that our baseline classical system obeys the known laws of classical physics.
 *   **Tasks:**
@@ -295,35 +310,40 @@ This project will not be developed monolithically. It will be built in a series 
     *   The mean of the `S` scores must be `≤ 2.0`.
     *   No single run should statistically significantly exceed 2.0 (e.g., `S > 2.02`). A failure here would indicate a fundamental bug in our implementation of the CHSH test itself.
 
-#### **5.3. Checkpoint 2: The Linear Control Limits (The "v1.0" Test)**
+#### **5.3. Phase 2: Controller Architecture Validation**
 
-*   **Goal:** To demonstrate the insufficiency of linear control and justify the need for the non-linear `QuantumEngine`.
+*   **Goal:** To test different controller architectures to understand what features are necessary to produce non-local correlations, justifying the final NLC design.
 *   **Tasks:**
-    1.  **Implement Linear Controller:** Create a simplified version of the `QuantumEngine` class that has only a single linear layer (no hidden layers, no non-linear activations).
-    2.  **Integrate `GlobalOptimizer`:** Implement the main optimization harness as specified in Section 4.4, using CMA-ES.
-    3.  **Run Optimization:** Run the full optimization process, tasking CMA-ES with finding the best possible *linear* controller.
+    1.  **Linear Control Limits:**
+        *   Implement a simplified `NonLocalCoordinator` with only a single linear layer (no hidden layers, no non-linear activations).
+        *   Integrate the `GlobalOptimizer` (CMA-ES).
+        *   Run the full optimization process to find the best possible *linear* controller.
+        *   **Success Gate:** The `S` score must converge and plateau at a value `≤ 2.0`. This result confirms that the problem is non-trivial and that linear feedback is not powerful enough to fake quantum correlations, validating our architectural choice for the v2.0 engine.
+    2.  **Shared-Weight Non-Linear Control:**
+        *   Implement a `NonLocalCoordinator` with its full non-linear hidden layers, but with weights constrained such that the function applied to `(x_A, x_B)` is identical to the function applied to `(x_B, x_A)`. This isolates the effect of information sharing from parameter specialization.
+        *   Run the full optimization process.
+        *   **Analysis:** Compare the best `S` score from this ablation to the final unconstrained controller. This is a key ablation study for the paper.
 *   **Deliverable:**
-    *   A plot of "Best `S`-Score vs. Generation" for the linear controller experiment.
-*   **Success Gate:**
-    *   The `S` score must converge and plateau at a value `≤ 2.0`. This result confirms that the problem is non-trivial and that linear feedback is not powerful enough to fake quantum correlations, validating our architectural choice for the v2.0 engine.
+    *   Plots of "Best `S`-Score vs. Generation" for both the linear and shared-weight controller experiments.
 
-#### **5.4. Checkpoint 3: The Full Quantum Engine (The "v2.0" Test)**
+#### **5.4. Phase 3: The Full `S(R)` Curve Generation**
 
-*   **Goal:** To execute the primary experiment and test the central Layered-Time Hypothesis.
+*   **Goal:** To execute the primary experiment and test the central Layered-Time Hypothesis using the final, unconstrained `NonLocalCoordinator`.
 *   **Tasks:**
-    1.  Integrate the full, non-linear `QuantumEngine` (`NN_Controller`) as specified in Section 4.2.
-    2.  Execute the `GlobalOptimizer` for an extensive run. This will be the most computationally intensive phase of the project. A run of at least 1000 generations, or until clear convergence is observed, is required.
+    1.  Integrate the full, non-linear `NonLocalCoordinator` as specified in Section 4.2.
+    2.  Execute the `GlobalOptimizer` for an extensive run for each value of `d` in the test set. This will be the most computationally intensive phase of the project. A run of at least 1000 generations, or until clear convergence is observed, is required for each `d`.
 *   **Deliverables:**
-    1.  **Primary Result:** A final, publication-quality plot of "Best `S`-Score vs. Generation" for the `S(R)` curve, mapping the best achievable score for each tested speed ratio `R`.
-    2.  **Key Artifacts:** The saved weights of the best-performing `NonLocalCoordinator` for each `R`. The complete, raw diagnostic log files from all optimization runs.
+    1.  **Primary Result:** A final, publication-quality plot of "Best `S`-Score vs. Delay `d`" (the `S(R)` curve), mapping the best achievable score for each tested speed ratio.
+    2.  **Key Artifacts:** The saved weights of the best-performing `NonLocalCoordinator` for each `d`. The complete, raw diagnostic log files from all optimization runs.
 
-#### **5.5. Checkpoint 4: Advanced Analysis & Future Work**
+#### **5.5. Phase 4: Advanced Analysis & Manuscript Preparation**
 
-*   **Goal:** To interpret the results of Checkpoint 3 and outline the next steps for the research program.
+*   **Goal:** To interpret the results of Phase 3, perform robustness checks, and prepare the manuscript.
 *   **Tasks:**
     1.  **Robustness Analysis:** Take the best controller found and re-evaluate it against multiple new, unseen random seeds for both the ESNs and the CHSH inputs. This tests for overfitting.
     2.  **Controller Analysis:** Analyze the learned weights and behavior of the most successful `NonLocalCoordinator`. Can we understand the function it learned? Does it use sparse or dense activations? What is the information content of its corrective signals?
-    3.  **"Reservoir-as-Controller" Implementation:** As a final proof of concept, implement the test described in the v2.0 spec: train a new ESN to mimic the function of the `NN_Controller`, demonstrating the paradigm's universality.
+    3.  **Noise-Floor Sweep:** For a fixed, high-performing `d` (e.g., `d=1`), run a mini-experiment sweeping the ESN's internal noise parameter `noise_rc` over the set `{0, 1e-4, 1e-3, 1e-2}`. This helps disentangle the effects of the controller's speed advantage from the signal-to-noise ratio of the underlying substrate.
+    4.  **"Reservoir-as-Controller" Implementation:** As a final proof of concept, implement the test described in the v2.0 spec: train a new ESN to mimic the function of the `NN_Controller`, demonstrating the paradigm's universality.
 *   **Deliverable:** A final project report summarizing all findings and a v1.0 manuscript draft for the "Part I" publication (see Section 9).
 
 ---
@@ -335,7 +355,7 @@ This section formally details potential failure modes and the proactive or react
 #### **6.1. R-1: Optimizer Stagnation or Instability**
 *   **Risk:** The CMA-ES optimizer may fail to find a good solution, either by getting stuck in a poor local optimum or by behaving erratically on a chaotic fitness landscape.
 *   **Proactive Mitigation:**
-    *   **Regularization:** The `QuantumEngine`'s design includes bounded `Tanh` outputs. We will add an option to include L2 weight decay in the fitness function (`Fitness = S - λ * ||weights||²`) to discourage explosive weights.
+    *   **Regularization:** The `NonLocalCoordinator`'s design includes bounded `Tanh` outputs. We will add an option to include L2 weight decay in the fitness function (`Fitness = S - λ * ||weights||²`) to discourage explosive weights.
     *   **Smooth Reservoir:** The `ClassicalSystem` includes internal noise (`noise_rc`) specifically to smooth its dynamics and, by extension, the fitness landscape.
 *   **Reactive Mitigation:**
     *   **Adaptive Restarts:** The optimization script will monitor the progress of the best fitness score. If it fails to improve by a certain tolerance over `X` generations (e.g., `< 0.001` over 50 generations), the script will automatically save the state and restart the CMA-ES algorithm with a new random seed and a larger initial variance (`sigma0`).
@@ -353,6 +373,8 @@ This section formally details potential failure modes and the proactive or react
 *   **Proactive Mitigation:**
     *   **Parallelization:** The `GlobalOptimizer` harness will be designed from the start to use Python's `multiprocessing.Pool` to evaluate the entire population in parallel, scaling perfectly to the number of available CPU cores.
     *   **Code Optimization:** We will use `torch.compile` (or Numba for NumPy parts) to JIT-compile the performance-critical simulation loop.
+    *   **FLOPs Budgeting:** The expected floating-point operations per evaluation will be documented. For the specified NLC (`200-256-256-2`) and ESNs (`N=100`), this is roughly on the order of `T_total * (2*N*N + NLC_flops) ≈ 5000 * (2*100*100 + (200*256 + 256*256 + 256*2)) ≈ 2.3e9` FLOPs.
+    *   **"Thin-Runtime" Mode:** The orchestrator will include a command-line flag for a "smoke test" mode where `T_eval_block` is reduced to 250. This allows for rapid regression testing and validation of the pipeline on a small computational budget.
     *   **Mixed-Precision:** We will investigate using `torch.bfloat16` for the neural network computations, which can provide a significant speedup on modern hardware with minimal loss of precision.
     *   **Early Termination:** The `evaluate_fitness` function will include a check: if after the first 25% of the simulation steps the system's correlations are trivially zero, the run can be terminated early and assigned a very poor fitness score, saving computational resources.
 
@@ -370,7 +392,7 @@ Credibility is paramount. This project will adhere to the highest standards of c
 
 *   **7.1. Immutable Experiment IDs:** Every single call to the `GlobalOptimizer` will generate a unique identifier (e.g., a UUID). All artifacts from that run—logs, saved models, plots—will be stored in a directory named with that UUID (e.g., `/runs/<UUID>/`).
 *   **7.2. Hash-Locked Randomness:** For the final, publication-grade runs, the binary file containing the random measurement settings will be generated in advance, and its SHA-256 hash will be published online (e.g., in a blog post or pre-print abstract) before the analysis is complete. This provides cryptographic proof that we did not "cherry-pick" a favorable random sequence.
-*   **7.3. Environment and Version Pinning:** The project repository will contain a locked requirements file (`poetry.lock` or `pip-freeze.txt`) specifying the exact version of every single dependency. The Dockerfile will specify the exact OS and CUDA version. This ensures byte-for-byte reproducibility.
+*   **7.3. Environment and Version Pinning:** The project repository will contain a locked requirements file (`poetry.lock` or `pip-freeze.txt`) specifying the exact version of every single dependency. The Dockerfile will specify the exact OS and CUDA version. For GPU-dependent operations, we will pin to a specific major/minor CUDA version (e.g., `12.1.*`); minor patch versions are allowed but the exact version used will be logged at runtime.
 *   **7.4. Open Data and Code Policy:** Upon publication of Part I, the entire codebase and the complete raw data logs from the `S(R)` curve generation will be released to the public under a permissive license (e.g., MIT for code, CC-BY-4.0 for data).
 
 ---
@@ -381,7 +403,9 @@ The results will be communicated in a staged, dual-track strategy to address bot
 
 *   **8.1. Part I – The Control-Theoretic Study:**
     *   **Target Venue:** A top-tier machine learning or computational science conference/workshop (e.g., NeurIPS, ICML, or a specialized RC workshop).
-    *   **Content:** Focuses on the engineering achievement. The narrative will be "A method for training a classical dynamical system to reproduce complex statistical correlations via a speed-hierarchical controller." The `S(R)` curve is the central result. The paper will detail the architecture, optimization, and computational cost.
+    *   **Content:** Focuses on the engineering achievement. The narrative will be "A method for training a classical dynamical system to reproduce complex statistical correlations via a speed-hierarchical controller." The `S(R)` curve is the central result. The paper will detail the architecture, optimization, and computational cost. A secondary plot showing "Best `S` vs. NLC FLOPs" will be included to appeal to the ML audience's focus on efficiency.
+    *   **Limitations Appendix:** The manuscript will reserve a short appendix titled "Limitations and Scope," which will explicitly state that this work operates by design within a simulated reality and does not challenge the results of physical Bell tests, citing the standard locality and freedom-of-choice assumptions that this model violates. This preempts philosophical misinterpretation and demonstrates intellectual honesty.
+
 *   **8.2. Part II – The Layered-Time Interpretation:**
     *   **Target Venue:** A journal focused on the foundations of physics or philosophy of science (e.g., *Foundations of Physics*).
     *   **Content:** This paper will cite Part I for the technical details and focus entirely on the interpretation. It will formally lay out the Layered-Time Hypothesis and use the experimental results as a "working model" to explore its implications for our understanding of quantum mechanics and reality.
@@ -395,14 +419,14 @@ The results will be communicated in a staged, dual-track strategy to address bot
 ### **9. Glossary of Terms**
 
 *   **Bell-CHSH Inequality:** A mathematical formula used in physics to test whether a system's statistical correlations are classical (`S≤2`) or require a quantum description (`S>2`).
-*   **CMA-ES (Covariance Matrix Adaptation Evolution Strategy):** A powerful, gradient-free optimization algorithm for complex problems.
 *   **Classical System:** Any system whose behavior is governed by local realism (no "spooky action at a distance").
+*   **CMA-ES (Covariance Matrix Adaptation Evolution Strategy):** A powerful, gradient-free optimization algorithm for complex problems.
 *   **Decoherence:** The process by which a quantum system loses its "quantumness" due to interaction with its environment.
 *   **ESN (Echo State Network):** A type of reservoir computer with a fixed, random recurrent neural network at its core.
 *   **Layered-Time Hypothesis:** The theory that quantum mechanics is an emergent phenomenon experienced by "slow" observers being manipulated by a "fast" computational reality.
 *   **NLC (NonLocalCoordinator):** The fast controller neural network in our experiment.
 *   **Ontology:** The philosophical study of the nature of being and reality.
 *   **Reservoir Computing (RC):** A computational paradigm that uses the complex dynamics of a fixed system (the reservoir) as its primary computational resource.
-*   **Speed-ratio `R`:** The dimensionless parameter `τ_s / τ_c`, quantifying the speed advantage of the controller over the substrate.
 *   **`S(R)` Curve:** The primary scientific result of this project; a plot of the best attainable Bell score `S` as a function of the speed-ratio `R`.
+*   **Speed-ratio `R`:** The dimensionless parameter `τ_s / τ_c`, quantifying the speed advantage of the controller over the substrate.
 *   **Tsirelson's Bound:** The theoretical maximum `S` score (`≈ 2.828`) achievable by a quantum system.
