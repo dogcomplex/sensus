@@ -1,5 +1,3 @@
-Is this a better breakdown?:
-
 
 """
 We can emulate quantum computation of *ternary* vectors using classical wave superpositions by time-multiplexing the real and imaginary components into two phases — injecting real parts at even time steps (t % 2 = 0) using [A,a]*[B,-b] and imaginary parts at odd time steps (t % 2 = 1) using [A,a]*[b,B] 
