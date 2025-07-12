@@ -57,8 +57,8 @@ class ClassicalSystem:
 
     def step(self, input_A, input_B):
         """Evolves the system by one time step."""
-        state_A = self.reservoir_A.run(input_A)
-        state_B = self.reservoir_B.run(input_B)
+        state_A = self.reservoir_A.run(input_A)[-1, :].reshape(1, -1)
+        state_B = self.reservoir_B.run(input_B)[-1, :].reshape(1, -1)
         return state_A, state_B
 
     def collect_state(self, state_A, state_B):
