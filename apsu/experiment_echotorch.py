@@ -39,45 +39,43 @@ def run_chsh_trial_echotorch(controller, system, seed, device, delay=1):
     pre_run_inputs_A = torch.cat([washout_inputs.squeeze(0), base_inputs_A]).unsqueeze(0)
     pre_run_inputs_B = torch.cat([washout_inputs.squeeze(0), base_inputs_B]).unsqueeze(0)
     
-    # Wrap all major GPU computations in autocast for mixed-precision performance
+    # Run the reservoirs to get the full state sequence x(k)
+    system.reservoir_A.reset_hidden()
+    system.reservoir_B.reset_hidden()
+    full_states_A = system.reservoir_A(pre_run_inputs_A).squeeze(0) # Shape [5000, 100]
+    full_states_B = system.reservoir_B(pre_run_inputs_B).squeeze(0) # Shape [5000, 100]
+    
+    # We only need the states from the evaluation period for the controller
+    uncorrected_states_A = full_states_A[T_WASHOUT:]
+    uncorrected_states_B = full_states_B[T_WASHOUT:]
+    
+    # B. Compute all corrective signals in one go.
     with autocast(device_type=device.type, dtype=torch.float16, enabled=(device.type == 'cuda')):
-        # Run the reservoirs to get the full state sequence x(k)
-        system.reservoir_A.reset_hidden()
-        system.reservoir_B.reset_hidden()
-        full_states_A = system.reservoir_A(pre_run_inputs_A).squeeze(0) # Shape [5000, 100]
-        full_states_B = system.reservoir_B(pre_run_inputs_B).squeeze(0) # Shape [5000, 100]
-        
-        # We only need the states from the evaluation period for the controller
-        uncorrected_states_A = full_states_A[T_WASHOUT:]
-        uncorrected_states_B = full_states_B[T_WASHOUT:]
-        
-        # B. Compute all corrective signals in one go.
         corrections_A, corrections_B = controller(uncorrected_states_A, uncorrected_states_B)
 
-        # C. Apply the delay (latency shim) to the corrective signals using tensor ops.
-        if delay > 0:
-            zero_padding = torch.zeros(delay, 1, device=device, dtype=corrections_A.dtype)
-            delayed_corrections_A = torch.cat([zero_padding, corrections_A[:-delay]], dim=0)
-            delayed_corrections_B = torch.cat([zero_padding, corrections_B[:-delay]], dim=0)
-        else:
-            delayed_corrections_A = corrections_A
-            delayed_corrections_B = corrections_B
-                
-        # D. Create the final, corrected input sequences.
-        final_inputs_A = base_inputs_A + delayed_corrections_A
-        final_inputs_B = base_inputs_B + delayed_corrections_B
+    # C. Apply the delay (latency shim) to the corrective signals using tensor ops.
+    if delay > 0:
+        zero_padding = torch.zeros(delay, 1, device=device, dtype=corrections_A.dtype)
+        delayed_corrections_A = torch.cat([zero_padding, corrections_A[:-delay]], dim=0)
+        delayed_corrections_B = torch.cat([zero_padding, corrections_B[:-delay]], dim=0)
+    else:
+        delayed_corrections_A = corrections_A
+        delayed_corrections_B = corrections_B
+            
+    # D. Create the final, corrected input sequences.
+    final_inputs_A = base_inputs_A + delayed_corrections_A
+    final_inputs_B = base_inputs_B + delayed_corrections_B
 
-        # E. Run the definitive, fully-corrected simulation.
-        # We must collect the states from this run for the readout.
-        system.reservoir_A.reset_hidden()
-        system.reservoir_B.reset_hidden()
-        _ = system.reservoir_A(washout_inputs)
-        _ = system.reservoir_B(washout_inputs)
-        
-        # Now run the evaluation part and collect the states
-        eval_states_A = system.reservoir_A(final_inputs_A.unsqueeze(0))
-        eval_states_B = system.reservoir_B(final_inputs_B.unsqueeze(0))
+    # E. Run the definitive, fully-corrected simulation.
+    # We must collect the states from this run for the readout.
+    system.reservoir_A.reset_hidden()
+    system.reservoir_B.reset_hidden()
+    _ = system.reservoir_A(washout_inputs)
+    _ = system.reservoir_B(washout_inputs)
     
+    # Now run the evaluation part and collect the states
+    eval_states_A = system.reservoir_A(final_inputs_A.unsqueeze(0))
+    eval_states_B = system.reservoir_B(final_inputs_B.unsqueeze(0))
     system.states_A.append(eval_states_A)
     system.states_B.append(eval_states_B)
 
