@@ -62,20 +62,27 @@ class NonLocalCoordinator(nn.Module):
         """
         Computes the corrective signals.
 
+        Can handle both single state vectors [1, N] and sequences [T, N].
+
         Args:
-            state_a (torch.Tensor): The state vector of ESN A.
-            state_b (torch.Tensor): The state vector of ESN B.
+            state_a (torch.Tensor): The state vector(s) of ESN A.
+            state_b (torch.Tensor): The state vector(s) of ESN B.
 
         Returns:
-            (torch.Tensor, torch.Tensor): Corrective signal c_a, c_b.
+            (torch.Tensor, torch.Tensor): Corrective signal(s) c_a, c_b.
         """
-        # Ensure input is a flat tensor: [1, 2 * N]
-        combined_state = torch.cat((state_a.flatten(), state_b.flatten())).unsqueeze(0)
+        # Combine along the feature dimension
+        # Input shape for a sequence: state_a=[T, 100], state_b=[T, 100]
+        # Output shape of combined_state: [T, 200]
+        combined_state = torch.cat([state_a, state_b], dim=-1)
         
-        # Get corrective signals
-        corrections = self.model(combined_state).squeeze(0)
+        # Get corrective signals. The model processes the sequence directly.
+        # Output shape of corrections: [T, 2]
+        corrections = self.model(combined_state)
         
-        c_a = corrections[0].reshape(1, 1)
-        c_b = corrections[1].reshape(1, 1)
+        # Split the corrections back into c_a and c_b
+        # Output shapes: [T, 1] for both
+        c_a = corrections[:, 0].unsqueeze(-1)
+        c_b = corrections[:, 1].unsqueeze(-1)
 
         return c_a, c_b 

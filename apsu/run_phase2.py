@@ -4,7 +4,7 @@ import torch
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 import reservoirpy as rpy
-import multiprocessing
+import torch.multiprocessing as mp
 from functools import partial
 
 from .non_local_coordinator import NonLocalCoordinator
@@ -29,7 +29,7 @@ def set_weights(model, weights):
             param.data.copy_(torch.tensor(weights[start:start+num_params]).view_as(param))
             start += num_params
 
-def evaluate_fitness(weights, device):
+def evaluate_fitness(weights, device, delay):
     """
     Fitness function for the CMA-ES optimizer.
     It takes a weight vector, runs a CHSH trial, and returns the S-score.
@@ -45,12 +45,12 @@ def evaluate_fitness(weights, device):
     
     # We run one trial per fitness evaluation for speed.
     # The seed is kept constant to have a static fitness landscape.
-    s_score = run_chsh_trial(controller, seed=42, device=device)
+    s_score = run_chsh_trial(controller, seed=42, device=device, delay=delay)
     
     # CMA-ES minimizes, but we want to maximize S.
     return -s_score
 
-def main():
+def main(delay):
     """
     Main function to execute Phase 2: Linear Controller Validation.
     """
@@ -94,9 +94,9 @@ def main():
             solutions = es.ask()
             
             # Parallelize fitness evaluations to saturate the GPU
-            with multiprocessing.get_context("spawn").Pool() as pool:
+            with mp.get_context("spawn").Pool() as pool:
                 # 'partial' pre-fills the 'device' argument for the fitness function
-                partial_eval = partial(evaluate_fitness, device=device)
+                partial_eval = partial(evaluate_fitness, device=device, delay=delay)
                 fitnesses = pool.map(partial_eval, solutions)
             
             es.tell(solutions, fitnesses)
@@ -135,5 +135,12 @@ def main():
 
 if __name__ == "__main__":
     # This is crucial for multiprocessing with CUDA on some platforms
-    multiprocessing.freeze_support() 
-    main() 
+    mp.freeze_support() 
+    
+    # --- Experiment Configuration ---
+    # Per spec §2.3, we must test different delay values.
+    # We start with d=1 as the baseline.
+    delay_to_test = 1
+    print(f"--- Running experiment with controller delay d={delay_to_test} ---")
+
+    main(delay=delay_to_test) 
