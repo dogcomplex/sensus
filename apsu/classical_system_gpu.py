@@ -46,12 +46,15 @@ class Reservoir(nn.Module):
         """Processes a sequence of inputs in a fully vectorized manner."""
         n_steps = input_sequence.shape[0]
         
+        # Ensure state has the same dtype as the weights
+        state_dtype = self.W.dtype
+        
         if initial_state is None:
-            state = torch.zeros(1, self.units, device=input_sequence.device)
+            state = torch.zeros(1, self.units, device=input_sequence.device, dtype=state_dtype)
         else:
-            state = initial_state
+            state = initial_state.to(state_dtype)
             
-        history = torch.empty(n_steps, self.units, device=input_sequence.device)
+        history = torch.empty(n_steps, self.units, device=input_sequence.device, dtype=state_dtype)
 
         # This loop is now internal to the GPU-accelerated part of the code
         for i in range(n_steps):
@@ -66,6 +69,11 @@ class Reservoir(nn.Module):
         self.Win = self.Win.to(device)
         self.W = self.W.to(device)
         return super().to(device)
+
+    def half(self):
+        self.Win = self.Win.half()
+        self.W = self.W.half()
+        return super().half()
 
 class Ridge(nn.Module):
     """PyTorch implementation of Ridge regression for readout."""
@@ -105,6 +113,11 @@ class ClassicalSystemGPU:
         self.readout_A = Ridge(esn_dimension, 1).to(device)
         self.readout_B = Ridge(esn_dimension, 1).to(device)
         
+        # Convert reservoirs to half precision if on GPU for performance
+        if self.device.type == 'cuda':
+            self.reservoir_A.half()
+            self.reservoir_B.half()
+        
         # State history is now generated on-the-fly by the run method
         self.states_A_history = None
         self.states_B_history = None
@@ -113,11 +126,12 @@ class ClassicalSystemGPU:
         # inputs_A and inputs_B are the full sequences for the evaluation run
         
         # 1. Washout phase (un-vectorized is fine, it's not the bottleneck)
-        washout_input = torch.zeros((1, 1), device=self.device)
+        washout_input = torch.zeros((1, 1), device=self.device, dtype=inputs_A.dtype)
         
-        # Initialize states explicitly
-        state_A = torch.zeros(1, self.reservoir_A.units, device=self.device)
-        state_B = torch.zeros(1, self.reservoir_B.units, device=self.device)
+        # Initialize states explicitly with the correct dtype
+        state_dtype = self.reservoir_A.W.dtype
+        state_A = torch.zeros(1, self.reservoir_A.units, device=self.device, dtype=state_dtype)
+        state_B = torch.zeros(1, self.reservoir_B.units, device=self.device, dtype=state_dtype)
 
         for _ in range(washout_steps):
             pre_A = state_A @ self.reservoir_A.W.T + washout_input @ self.reservoir_A.Win.T
@@ -136,14 +150,20 @@ class ClassicalSystemGPU:
         targets_A = torch.tensor(targets_A, dtype=torch.float32, device=self.device)
         targets_B = torch.tensor(targets_B, dtype=torch.float32, device=self.device)
         
+        # Ensure readout training is done in float32 for numerical stability
+        states_A_f32 = self.states_A_history.to(torch.float32)
+        states_B_f32 = self.states_B_history.to(torch.float32)
+
         # The history tensors are already correctly shaped for training
-        self.readout_A.fit(self.states_A_history, targets_A)
-        self.readout_B.fit(self.states_B_history, targets_B)
+        self.readout_A.fit(states_A_f32, targets_A)
+        self.readout_B.fit(states_B_f32, targets_B)
 
     def get_readout_outputs(self):
-        # Use the history tensors directly
-        outputs_A = self.readout_A(self.states_A_history)
-        outputs_B = self.readout_B(self.states_B_history)
+        # Use the history tensors directly, converting to float32 for the readout
+        states_A_f32 = self.states_A_history.to(torch.float32)
+        states_B_f32 = self.states_B_history.to(torch.float32)
+        outputs_A = self.readout_A(states_A_f32)
+        outputs_B = self.readout_B(states_B_f32)
         
         # Return as numpy arrays to interface with existing CHSH calculation
         return outputs_A.detach().cpu().numpy(), outputs_B.detach().cpu().numpy() 

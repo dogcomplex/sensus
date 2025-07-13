@@ -43,6 +43,10 @@ def evaluate_fitness(weights, device, delay):
     set_weights(controller, weights)
     controller.to(device) # Move the controller to the selected device
     
+    # OPTIMIZATION: Convert model to half-precision for Tensor Core acceleration
+    if device.type == 'cuda':
+        controller.half()
+
     # We run one trial per fitness evaluation for speed.
     # The seed is kept constant to have a static fitness landscape.
     s_score = run_chsh_trial(controller, seed=42, device=device, delay=delay)
