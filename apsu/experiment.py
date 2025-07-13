@@ -8,14 +8,14 @@ from . import chsh
 T_WASHOUT = 1000  # Steps to let the reservoir settle
 T_EVAL = 4000     # Steps to evaluate for each CHSH setting combination
 
-def run_chsh_trial(controller, seed, config=None):
+def run_chsh_trial(controller, seed, device, config=None):
     """
     Executes a single, complete CHSH experiment trial for a given controller.
 
     Args:
-        controller (torch.nn.Module or None): The controller to test. If None,
-                                              it runs a null experiment.
+        controller (torch.nn.Module or None): The controller to test.
         seed (int): Random seed for this specific run.
+        device (torch.device): The device (CPU or CUDA) to run the controller on.
         config (dict, optional): A dictionary for future configuration.
 
     Returns:
@@ -42,14 +42,14 @@ def run_chsh_trial(controller, seed, config=None):
         c_a, c_b = np.array([[0.0]]), np.array([[0.0]]) # Default zero correction
         if controller is not None:
             # The controller gets a global view of the system state
-            # Convert numpy states to torch tensors
-            state_a_torch = torch.from_numpy(state_A).float()
-            state_b_torch = torch.from_numpy(state_B).float()
+            # Convert numpy states to torch tensors and move to the correct device
+            state_a_torch = torch.from_numpy(state_A).float().to(device)
+            state_b_torch = torch.from_numpy(state_B).float().to(device)
             
             # Compute corrective signals
             c_a_torch, c_b_torch = controller(state_a_torch, state_b_torch)
-            c_a = c_a_torch.detach().numpy()
-            c_b = c_b_torch.detach().numpy()
+            c_a = c_a_torch.detach().cpu().numpy()
+            c_b = c_b_torch.detach().cpu().numpy()
 
         # The input at each step is the CHSH setting plus the controller's signal
         input_A_t = np.array([[base_inputs_A[i, 0]]]) + c_a

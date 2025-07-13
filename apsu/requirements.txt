@@ -1,3 +1,8 @@
+--index-url https://download.pytorch.org/whl/nightly/cu128
+--pre
+torch
+torchvision
+torchaudio
 reservoirpy==0.3.13
 numpy
 scipy
@@ -5,4 +10,7 @@ matplotlib
 pandas
 tqdm
 cma
-torch 
+
+# NOTE: The CMA-ES optimizer for Phase 2+ requires the 'CMA_diagonal'
+# option to be set to True to avoid memory errors with high-dimensional
+# controllers. See run_phase2.py for implementation. 
