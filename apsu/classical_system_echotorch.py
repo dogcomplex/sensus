@@ -122,14 +122,20 @@ class ClassicalSystemEchoTorch:
         self.readout_A.train(True)
         self.readout_B.train(True)
         
-        # Concatenate the collected states. The shape should be (batch, time, features).
-        # The list of states from the vectorized run already has the correct shape.
-        X_A = torch.cat(self.states_A, dim=0)
-        X_B = torch.cat(self.states_B, dim=0)
+        # --- Move to CPU for memory-intensive training ---
+        # The covariance matrix calculation can exhaust GPU VRAM.
+        # Moving to CPU lets us use system RAM. We also up-cast to float64
+        # for better numerical stability during this one-off training step.
+        self.readout_A.to('cpu').to(torch.float64)
+        self.readout_B.to('cpu').to(torch.float64)
+        
+        # Concatenate the collected states.
+        X_A = torch.cat(self.states_A, dim=0).to('cpu', dtype=torch.float64)
+        X_B = torch.cat(self.states_B, dim=0).to('cpu', dtype=torch.float64)
 
         # Convert numpy targets to tensors with shape (batch, time, features)
-        y_A = torch.from_numpy(targets_A).float().unsqueeze(0).to(self.device)
-        y_B = torch.from_numpy(targets_B).float().unsqueeze(0).to(self.device)
+        y_A = torch.from_numpy(targets_A).double().unsqueeze(0).to('cpu')
+        y_B = torch.from_numpy(targets_B).double().unsqueeze(0).to('cpu')
 
         # Stage 1: Accumulate xTx and xTy matrices
         self.readout_A(X_A, y_A)
@@ -139,13 +145,17 @@ class ClassicalSystemEchoTorch:
         self.readout_A.finalize()
         self.readout_B.finalize()
         
+        # --- Move back to original device for inference ---
+        self.readout_A.to(self.device).to(torch.float32)
+        self.readout_B.to(self.device).to(torch.float32)
+
         # Diagnose the training by calculating the Mean Squared Error
         # The readout is now in eval mode after finalize()
-        pred_A = self.readout_A(X_A)
-        pred_B = self.readout_B(X_B)
+        pred_A = self.readout_A(torch.cat(self.states_A, dim=0))
+        pred_B = self.readout_B(torch.cat(self.states_B, dim=0))
 
-        mse_A = torch.mean((pred_A - y_A) ** 2).item()
-        mse_B = torch.mean((pred_B - y_B) ** 2).item()
+        mse_A = torch.mean((pred_A.to(self.device) - torch.from_numpy(targets_A).float().unsqueeze(0).to(self.device)) ** 2).item()
+        mse_B = torch.mean((pred_B.to(self.device) - torch.from_numpy(targets_B).float().unsqueeze(0).to(self.device)) ** 2).item()
 
         return mse_A, mse_B
 
