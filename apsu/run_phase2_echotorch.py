@@ -8,40 +8,37 @@ import matplotlib.pyplot as plt
 import torch.multiprocessing as mp
 from functools import partial
 import os
+import hashlib
 import pickle
 
 # Import the EchoTorch-specific components
 from .non_local_coordinator import NonLocalCoordinator
-from .non_local_coordinator_small import NonLocalCoordinator_small
 from .experiment_echotorch import run_chsh_trial_echotorch
 from .classical_system_echotorch import ClassicalSystemEchoTorch
 
 # --- Configuration ---
 ESN_DIMENSION = 100
-HIDDEN_DIM = 256
-MAX_GENERATIONS = 10
-# Let's use a smaller population for faster iteration during performance tuning
-POPULATION_SIZE = mp.cpu_count() if mp.cpu_count() <= 12 else 12
+MAX_GENERATIONS = 100 # Using a proper budget now that we have a working strategy
+# Let's cap the concurrency to a safe number to avoid OS-level memory errors
+# on Windows when spawning many heavy torch processes.
+NUM_WORKERS = 4
+# Set a fixed population size that is known to work and is a multiple of workers.
+POPULATION_SIZE = 12
 
 # --- Globals for Multiprocessing ---
 # These will be initialized once per worker process
 system = None
 controller = None
 
-
-def init_worker(device, is_linear, use_small_controller):
+def init_worker(device, is_linear, hidden_dim):
     """Initializes the simulation environment for each worker process."""
     global system, controller
     # Create a single, persistent ClassicalSystem instance for this worker
     system = ClassicalSystemEchoTorch(N=ESN_DIMENSION, device=device)
-    
-    # Choose the controller class based on the flag
-    ControllerClass = NonLocalCoordinator_small if use_small_controller else NonLocalCoordinator
-    
     # Create a single controller instance to be updated with weights
-    controller = ControllerClass(
+    controller = NonLocalCoordinator(
         esn_dimension=ESN_DIMENSION,
-        hidden_dim=HIDDEN_DIM, 
+        hidden_dim=hidden_dim, 
         is_linear=is_linear
     ).to(device)
 
@@ -54,89 +51,117 @@ def set_weights(model, weights):
             param.data.copy_(torch.tensor(weights[start:start+num_params]).view_as(param).to(param.device))
             start += num_params
 
-def evaluate_fitness(weights, device, delay):
+def evaluate_fitness(weights, device, delay, n_avg):
     """
     Fitness function for the CMA-ES optimizer.
     It now uses the persistent system and controller from the worker's global scope.
+    It can average the S-score over multiple trials to smooth the landscape.
     """
     global system, controller
     set_weights(controller, weights)
     
     if device.type == 'cuda':
+        # Using .half() can speed things up but may affect precision.
+        # Let's keep it for now.
         controller.half()
 
-    s_score = run_chsh_trial_echotorch(controller, system, seed=42, device=device, delay=delay)
-    
+    if n_avg <= 1:
+        # Run a single trial
+        s_score = run_chsh_trial_echotorch(controller, system, seed=np.random.randint(0, 1e6), device=device, delay=delay)
+    else:
+        # Run multiple trials and average the scores
+        scores = []
+        for i in range(n_avg):
+            # Use a different seed for each trial in the average
+            trial_seed = np.random.randint(0, 1e6)
+            s = run_chsh_trial_echotorch(controller, system, seed=trial_seed, device=device, delay=delay)
+            scores.append(s)
+        s_score = np.mean(scores)
+
     return -s_score
 
-def main(delay, is_linear_controller, use_small_controller):
+def main(delay, is_linear_controller, hidden_dim, n_avg, run_id):
     """
     Main function using an efficient multiprocessing strategy.
+    Now includes state-saving and resuming capabilities.
     """
     controller_type = "Linear" if is_linear_controller else "Non-Linear"
-    controller_size = "Small" if use_small_controller else "Large"
-    print(f"--- Starting Project Apsu (EchoTorch): Phase 2 (Optimized) ---")
-    print(f"Controller Type: {controller_type} ({controller_size})")
+    print("--- Starting Project Apsu (EchoTorch): Phase 2 (Debug) ---")
+    print(f"RUN_ID: {run_id}")
+    print(f"Controller: {controller_type} | Hidden Dim: {hidden_dim} | Delay (d): {delay} | Fitness Avg (n_avg): {n_avg}")
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
     
-    # --- Optimizer State Caching ---
-    # Create a directory to store optimizer states
-    save_dir = "apsu/cma_es_states"
-    os.makedirs(save_dir, exist_ok=True)
-    optimizer_state_file = os.path.join(save_dir, f"cma_es_{controller_size.lower()}_{controller_type.lower()}_d_{delay}.pkl")
-    
     # We only need to get the number of parameters on the main process
-    # The actual controller instances will be created in the workers
-    ControllerClass = NonLocalCoordinator_small if use_small_controller else NonLocalCoordinator
-    temp_controller = ControllerClass(
-        esn_dimension=ESN_DIMENSION, hidden_dim=HIDDEN_DIM, is_linear=is_linear_controller
+    temp_controller = NonLocalCoordinator(
+        esn_dimension=ESN_DIMENSION, hidden_dim=hidden_dim, is_linear=is_linear_controller
     )
     n_params = sum(p.numel() for p in temp_controller.parameters())
     del temp_controller
-    print(f"Optimizing a {controller_size.upper()} {controller_type.upper()} controller with {n_params} parameters.")
+    print(f"Optimizing a {controller_type.upper()} controller with {n_params} parameters.")
 
     cma_options = {
         'popsize': POPULATION_SIZE,
         'CMA_diagonal': True,
-        'seed': 42
+        'seed': 42 # Seeding the optimizer itself for reproducibility
     }
+
+    # --- State Caching and Resuming ---
+    os.makedirs('apsu/optimizer_cache', exist_ok=True)
+    cache_file = f'apsu/optimizer_cache/{run_id}.pkl'
     
+    # --- Fallback to old cache file path ---
+    controller_size_str = "small" if (hidden_dim is not None and hidden_dim <= 16) else "large"
+    controller_type_str = "linear" if is_linear_controller else "non-linear"
+    old_cache_dir = 'apsu/cma_es_states'
+    # This constructs the old filename based on the user's example
+    old_cache_file = os.path.join(old_cache_dir, f"cma_es_{controller_size_str}_{controller_type_str}_d_{delay}.pkl")
+
     es = None
-    if os.path.exists(optimizer_state_file):
-        with open(optimizer_state_file, 'rb') as f:
+    # 1. Prioritize loading from the new cache path
+    if os.path.exists(cache_file):
+        print(f"Found existing optimizer state. Resuming from {cache_file}")
+        with open(cache_file, 'rb') as f:
             es = pickle.load(f)
-        print(f"Resumed optimizer state from {optimizer_state_file}")
-        if es.N != n_params:
-            print("Warning: Optimizer dimension mismatch! Starting new optimization.")
-            es = None
+    # 2. Fallback to the old cache path
+    elif os.path.exists(old_cache_file):
+        print(f"Found OLD optimizer state. Resuming from {old_cache_file}")
+        print("This state will be migrated to the new cache format on the next save.")
+        with open(old_cache_file, 'rb') as f:
+            es = pickle.load(f)
+    
+    # Verify the loaded dimension matches the current model
+    if es and es.N != n_params:
+        print(f"Warning: Optimizer dimension mismatch! Expected {n_params}, found {es.N}. Starting new optimization.")
+        es = None
 
-    if es is None:
+    if not es:
+        print("No compatible state found. Starting new optimization.")
         es = cma.CMAEvolutionStrategy(n_params * [0], 0.5, cma_options)
-        print("Starting new optimization run.")
-
-    print(f"Running CMA-ES for {MAX_GENERATIONS} generations with population size {POPULATION_SIZE}.")
+    
+    print(f"Running CMA-ES for {MAX_GENERATIONS} generations with population size {es.popsize}.")
 
     best_s_scores = []
+    start_gen = es.countiter
     
-    # Use the 'spawn' context for CUDA safety
-    # Initialize each worker process with the init_worker function
-    with mp.get_context("spawn").Pool(initializer=init_worker, initargs=(device, is_linear_controller, use_small_controller)) as pool:
-        with tqdm(range(MAX_GENERATIONS), desc="CMA-ES Generations") as pbar:
+    with mp.get_context("spawn").Pool(processes=NUM_WORKERS, initializer=init_worker, initargs=(device, is_linear_controller, hidden_dim)) as pool:
+        with tqdm(range(start_gen, MAX_GENERATIONS), desc="CMA-ES Generations", initial=start_gen, total=MAX_GENERATIONS) as pbar:
             for gen in pbar:
+                if es.stop():
+                    print("\nOptimizer has signaled to stop. Ending run.")
+                    break
+                
                 solutions = es.ask()
                 
-                # Use partial to pre-fill the non-changing arguments
-                partial_eval = partial(evaluate_fitness, device=device, delay=delay)
+                partial_eval = partial(evaluate_fitness, device=device, delay=delay, n_avg=n_avg)
                 
-                # The pool will now efficiently reuse the workers and their environments
                 fitnesses = pool.map(partial_eval, solutions)
                 
                 es.tell(solutions, fitnesses)
-
-                # Save the full optimizer state after each generation
-                with open(optimizer_state_file, 'wb') as f:
+                
+                # Save state after each successful generation using the standard pickle library
+                with open(cache_file, 'wb') as f:
                     pickle.dump(es, f)
                 
                 best_s_in_gen = -es.result.fbest
@@ -145,102 +170,105 @@ def main(delay, is_linear_controller, use_small_controller):
                 pbar.set_postfix({"best_S": f"{best_s_in_gen:.4f}"})
 
     print("\nOptimization complete.")
-    print(f"Best S-score found: {-es.result.fbest:.4f}")
+    best_final_s = -es.result.fbest
+    print(f"Best S-score found: {best_final_s:.4f}")
 
-    # Plotting and saving results...
-    controller_type_str = f"{controller_size} {controller_type}"
-
-    # Check against Success Gate C1 from spec §1.3
-    # Note: Individual plot generation is now part of main()
-    individual_plot_path = f"apsu/phase2_{controller_size.lower()}_{controller_type.lower()}_d_{delay}_results.png"
-    
+    # --- Plotting individual run results ---
+    # We still plot the progress for this specific run
     plt.figure(figsize=(10, 6))
-    plt.plot(best_s_scores, marker='o')
+    plt.plot(range(start_gen, start_gen + len(best_s_scores)), best_s_scores, marker='o')
     plt.axhline(2.0, color='r', linestyle='--', label="Classical Bound (S=2)")
-    plt.axhline(2.828, color='g', linestyle='--', label="Tsirelson's Bound (S≈2.828)")
-    
-    # Add dynamic y-axis scaling for better visualization
-    if best_s_scores:
-        min_s = min(best_s_scores)
-        max_s = max(best_s_scores)
-        # Add a bit of padding to the top and bottom
-        y_margin = (max_s - min_s) * 0.15 if (max_s - min_s) > 0.01 else 0.1
-        plot_min = max(0, min_s - y_margin)
-        # Ensure the classical bound is always visible, but don't zoom out too far
-        plot_max = max(max_s + y_margin, 2.2) 
-        plt.ylim(plot_min, plot_max)
-
-    plt.title(f"Best S-Score vs. Generation ({controller_type_str} Controller, d={delay})")
+    plt.title(f"Best S-Score vs. Generation (RUN_ID: {run_id})")
     plt.xlabel("Generation")
     plt.ylabel("Best S-Score")
     plt.grid(True, alpha=0.3)
     plt.legend()
     
-    plt.savefig(individual_plot_path)
-    print(f"Results plot saved to {individual_plot_path}")
+    # Ensure save directory exists
+    os.makedirs("apsu/diagnostic_plots", exist_ok=True)
+    save_path = f"apsu/diagnostic_plots/run_{run_id}.png"
+    plt.savefig(save_path)
+    print(f"Individual run plot saved to {save_path}")
     plt.close()
     
-    if max(best_s_scores) > 2.02:
-        print(f"\nSuccess Gate Passed: {controller_type_str.upper()} controller VIOLATED the classical bound!")
-    else:
-        print(f"\nSuccess Gate FAILED: {controller_type_str.upper()} controller was unable to violate the classical bound.")
-        
-    print(f"--- Phase 2 (EchoTorch, {controller_type_str}) Complete for d={delay} ---")
-    # Return both the final best score and the full history for later plotting
-    return -es.result.fbest, best_s_scores
+    print(f"--- Phase 2 (Debug) Complete for RUN_ID: {run_id} ---")
+    return best_final_s, best_s_scores
+
+def generate_run_id(params):
+    """Creates a unique, readable ID for a run based on its parameters."""
+    # Use a hash for uniqueness but keep params for readability
+    param_str = "_".join(f"{k}-{v}" for k, v in sorted(params.items()))
+    hash_obj = hashlib.sha1(param_str.encode())
+    return f"{param_str}_{hash_obj.hexdigest()[:6]}"
+
 
 if __name__ == "__main__":
-    # --- The S(R) Curve Generation ---
-    # As per spec §2.3 and §5.4, we test a set of controller delays.
-    # We will skip d=0.5 for now as it requires special handling.
+    # --- Apsu v3.2 - Final S(R) Curve Generation ---
+    # Based on diagnostic results, we are proceeding with the winning strategy:
+    # - Controller: Small, Non-Linear (hidden_dim=16)
+    # - Fitness: Noisy (n_avg=1)
+    # This provides the best learning signal.
+
+    # The parameters for our definitive run
+    definitive_params = {
+        "is_linear": False, 
+        "hidden_dim": 16, 
+        "n_avg": 1
+    }
+
+    # As per spec, we test a set of controller delays.
     delay_values = [1, 2, 3, 5, 8, 13]
-    
-    # Store the best S-score found for each delay.
+
+    # Store results for final plots
+    all_histories = {}
     final_s_scores = {}
-    # Store the full optimization history for each delay.
-    optimization_histories = {}
-
-    # --- Control Flag ---
-    # Set to True to run with a Linear controller, False for Non-Linear
-    use_linear_controller = True
-    # --- New Control Flag ---
-    # Set to True to use the smaller controller architecture
-    use_small_controller = True
     
-    controller_type = "Linear" if use_linear_controller else "Non-Linear"
-    controller_size = "Small" if use_small_controller else "Large"
-
+    print("--- Starting Final S(R) Curve Generation ---")
     for d in delay_values:
-        print(f"--- Running experiment with controller delay d={d} ---")
-        # For the main experiment, we use the non-linear controller.
-        best_s, history = main(delay=d, is_linear_controller=use_linear_controller, use_small_controller=use_small_controller)
-        final_s_scores[d] = best_s
-        optimization_histories[d] = history
-        print(f"Best S-score for d={d}: {best_s:.4f}")
+        print(f"\n--- Running experiment for d={d} ---")
+        
+        run_params = {
+            "controller": "NL-Small",
+            "hd": definitive_params["hidden_dim"],
+            "d": d,
+            "navg": definitive_params["n_avg"]
+        }
+        run_id = generate_run_id(run_params)
 
-    print("\n\n--- Full S(R) Curve Experiment Complete ---")
+        best_s, history = main(
+            delay=d,
+            is_linear_controller=definitive_params["is_linear"],
+            hidden_dim=definitive_params["hidden_dim"],
+            n_avg=definitive_params["n_avg"],
+            run_id=run_id
+        )
+        final_s_scores[d] = best_s
+        all_histories[d] = history
+
+    print("\n\n--- Final S(R) Curve Experiment Complete ---")
     print("Final Results:")
     for d, s in final_s_scores.items():
         print(f"  d = {d:<2} | S = {s:.4f}")
 
-    # --- Generate the Final Plots ---
+    # --- Generate Final Summary Plots ---
     
     # 1. Combined Optimization History Plot
-    plt.figure(figsize=(12, 7))
-    for d, history in sorted(optimization_histories.items()):
-        plt.plot(history, marker='o', linestyle='-', label=f'd = {d}')
+    plt.figure(figsize=(12, 8))
+    for d, history in sorted(all_histories.items()):
+        label = f"d = {d}"
+        plt.plot(history, marker='o', linestyle='-', label=label, alpha=0.8)
 
     plt.axhline(2.0, color='r', linestyle='--', label="Classical Bound (S=2)")
-    plt.title(f"Optimization History for All Controller Delays ({controller_size} {controller_type})", fontsize=16)
+    plt.title("S(R) Curve - Optimization Histories", fontsize=16)
     plt.xlabel("Generation", fontsize=12)
     plt.ylabel("Best S-Score in Generation", fontsize=12)
     plt.grid(True, which='both', linestyle='--', linewidth=0.5)
     plt.legend()
-    history_plot_path = f"apsu/optimization_history_{controller_size.lower()}_{controller_type.lower()}_echotorch.png"
-    plt.savefig(history_plot_path)
-    print(f"\nCombined optimization history plot saved to {history_plot_path}")
+    
+    summary_plot_path = "apsu/final_optimization_history.png"
+    plt.savefig(summary_plot_path)
+    print(f"\nFinal history plot saved to {summary_plot_path}")
     plt.close()
-
 
     # 2. Final S(R) Curve Plot
     delays = sorted(final_s_scores.keys())
@@ -251,18 +279,18 @@ if __name__ == "__main__":
     plt.axhline(2.0, color='r', linestyle='--', label="Classical Bound (S=2)")
     plt.axhline(2.828, color='g', linestyle='--', label="Tsirelson's Bound (S≈2.828)")
     
-    plt.title(f"S(R) Curve: Best S-Score vs. Controller Delay ({controller_size} {controller_type})", fontsize=16)
+    plt.title("S(R) Curve: Best S-Score vs. Controller Delay", fontsize=16)
     plt.xlabel("Controller Delay (d) [lower is faster]", fontsize=12)
     plt.ylabel("Best Attainable S-Score", fontsize=12)
     plt.grid(True, which='both', linestyle='--', linewidth=0.5)
     plt.legend()
-    plt.xscale('log') # Delay is often best viewed on a log scale
+    plt.xscale('log') 
     
     # Add annotations
     for d, s in zip(delays, scores):
         plt.text(d, s, f' {s:.3f}', va='bottom' if s > 2.1 else 'top')
 
-    final_plot_path = f"apsu/S_vs_R_curve_{controller_size.lower()}_{controller_type.lower()}_echotorch.png"
+    final_plot_path = "apsu/final_S_vs_R_curve.png"
     plt.savefig(final_plot_path)
     print(f"\nFinal S(R) curve plot saved to {final_plot_path}")
     plt.close() 
