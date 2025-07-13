@@ -1,5 +1,3 @@
---index-url https://download.pytorch.org/whl/nightly/cu128
---pre
 torch
 torchvision
 torchaudio
@@ -8,8 +6,10 @@ numpy
 scipy
 matplotlib
 pandas
+scikit-learn
 tqdm
 cma
+datasets
 
 # NOTE: The CMA-ES optimizer for Phase 2+ requires the 'CMA_diagonal'
 # option to be set to True to avoid memory errors with high-dimensional
