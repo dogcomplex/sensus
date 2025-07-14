@@ -3,7 +3,7 @@ import numpy as np
 import logging
 from .classical_system_echotorch import ClassicalSystemEchoTorch
 from .non_local_coordinator import NonLocalCoordinator
-from .reservoir_controller import ReservoirController
+from .utils import get_chsh_targets  # Import from the new utils file
 import matplotlib.pyplot as plt
 import os
 
@@ -11,23 +11,24 @@ import os
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def _create_controller(controller_config, system):
-    """Factory function to create a controller based on config."""
-    controller_type = controller_config.get('type', 'NonLocal') # Default to NonLocal
+    """Factory function to create the NonLocalCoordinator."""
+    # This function now acts as a strict gatekeeper, only passing expected
+    # arguments to the constructor to prevent TypeErrors from legacy config keys.
     config = controller_config.get('config', {})
+    n_inputs = system.n_units * 2
+    
+    # Explicitly build the config for the NonLocalCoordinator
+    nlc_config = {
+        'input_dim': n_inputs,
+        'hidden_dim': config.get('hidden_dim'),
+        'output_dim': config.get('output_dim', 2),
+        'use_bias': config.get('use_bias', True)
+    }
 
-    if controller_type.lower() == 'reservoir':
-        # Ensure reservoir_config is passed if nested
-        if 'reservoir_config' in config:
-            config = config['reservoir_config']
-        return ReservoirController(**config)
-    
-    elif controller_type.lower() == 'nonlocal':
-        # Pass the system's state dimension to the NLC
-        n_inputs = system.units * 2 
-        return NonLocalCoordinator(n_inputs=n_inputs, **config)
-    
-    else:
-        raise ValueError(f"Unknown controller type: {controller_type}")
+    if nlc_config['hidden_dim'] is None:
+        raise ValueError("Controller config in the experiment file is missing the required 'hidden_dim' key.")
+
+    return NonLocalCoordinator(**nlc_config)
 
 
 def _get_chsh_settings(n_steps, seed=None, settings_path=None):
@@ -51,50 +52,41 @@ def _get_chsh_settings(n_steps, seed=None, settings_path=None):
 
 def _compute_s_score(outputs_A, outputs_B, a_settings, b_settings):
     """
-    Computes the CHSH S-score.
+    Computes the CHSH S-score from binarized outcomes.
     S = |E(a,b) - E(a,b')| + |E(a',b) + E(a',b')|
     """
-    # Ensure outputs are numpy arrays on the CPU for calculation
-    if isinstance(outputs_A, torch.Tensor):
-        outputs_A = outputs_A.squeeze().cpu().numpy()
-    if isinstance(outputs_B, torch.Tensor):
-        outputs_B = outputs_B.squeeze().cpu().numpy()
+    # This function assumes inputs are already binarized numpy arrays (+1/-1)
+    outcomes_A = outputs_A
+    outcomes_B = outputs_B
+
+    correlations = {}
     
-    # Binarize the outputs to +1/-1, which is required for a valid CHSH calculation.
-    # The raw outputs of the linear readout are not bounded.
-    outcomes_A_bin = np.sign(outputs_A)
-    outcomes_B_bin = np.sign(outputs_B)
+    # Calculate E(a, b) for all four setting combinations
+    for sa_val, sb_val in [(0, 0), (0, 1), (1, 0), (1, 1)]:
+        mask = (a_settings == sa_val) & (b_settings == sb_val)
+        if np.any(mask):
+            correlation = np.mean(outcomes_A[mask] * outcomes_B[mask])
+        else:
+            correlation = 0.0
+        
+        # Map (0,0) -> 'ab', (0,1) -> 'ab_prime', etc.
+        key = f"a{'_prime' if sa_val == 1 else ''}_b{'_prime' if sb_val == 1 else ''}"
+        correlations[key] = correlation
 
-    # Ensure there are no zeros from the sign function, map them to +1
-    outcomes_A_bin[outcomes_A_bin == 0] = 1
-    outcomes_B_bin[outcomes_B_bin == 0] = 1
-
-    outcomes = {
-        "ab": [], "ab_prime": [], "a_prime_b": [], "a_prime_b_prime": []
-    }
-
-    for i in range(len(a_settings)):
-        product = outcomes_A_bin[i] * outcomes_B_bin[i]
-        if a_settings[i] == 0 and b_settings[i] == 0:
-            outcomes["ab"].append(product)
-        elif a_settings[i] == 0 and b_settings[i] == 1:
-            outcomes["ab_prime"].append(product)
-        elif a_settings[i] == 1 and b_settings[i] == 0:
-            outcomes["a_prime_b"].append(product)
-        elif a_settings[i] == 1 and b_settings[i] == 1:
-            outcomes["a_prime_b_prime"].append(product)
-
-    E_ab = np.mean(outcomes["ab"]) if outcomes["ab"] else 0
-    E_ab_prime = np.mean(outcomes["ab_prime"]) if outcomes["ab_prime"] else 0
-    E_a_prime_b = np.mean(outcomes["a_prime_b"]) if outcomes["a_prime_b"] else 0
-    E_a_prime_b_prime = np.mean(outcomes["a_prime_b_prime"]) if outcomes["a_prime_b_prime"] else 0
+    E_ab = correlations.get("a_b", 0)
+    E_ab_prime = correlations.get("a_b_prime", 0)
+    E_a_prime_b = correlations.get("a_prime_b", 0)
+    E_a_prime_b_prime = correlations.get("a_prime_b_prime", 0)
     
-    correlations = {
+    S = abs(E_ab - E_ab_prime) + abs(E_a_prime_b + E_a_prime_b_prime)
+    
+    # For compatibility with the rest of the system's logging.
+    final_correlations = {
         "C(a,b)": E_ab, "C(a,b')": E_ab_prime,
         "C(a',b)": E_a_prime_b, "C(a',b')": E_a_prime_b_prime
     }
-    S = abs(E_ab - E_ab_prime) + abs(E_a_prime_b + E_a_prime_b_prime)
-    return S, correlations
+
+    return S, final_correlations
 
 def _generate_chsh_data(n_bits, seed):
     """Generates the measurement settings and ideal target outputs for a CHSH trial."""
@@ -121,92 +113,109 @@ def _generate_chsh_data(n_bits, seed):
 
 def evaluate_fitness(individual, eval_config, return_full_results=False):
     """
-    Evaluates the fitness of an individual (a set of controller weights).
+    Evaluates the fitness of an individual using a scientifically robust
+    two-system "air gap" protocol to prevent any possible state leakage.
     """
     try:
         # --- 1. Setup ---
-        # This section is now robust to different config structures from different runners.
         device = eval_config.get('device', 'cpu')
-
-        system_config = eval_config.get('classical_system', eval_config.get('classical_system_config', {}))
+        system_config = eval_config.get('classical_system', {})
         controller_config = eval_config.get('controller', {})
-        eval_config = eval_config.get('chsh_evaluation', eval_config.get('simulation_config', {}))
+        chsh_config = eval_config.get('chsh_evaluation', {})
 
-        system = ClassicalSystemEchoTorch(device=device, **system_config)
+        # Create two identical, separate systems. One for calibration, one for evaluation.
+        system_cal = ClassicalSystemEchoTorch(device=device, **system_config)
         
-        # Pass the full controller config to the factory
+        # The evaluation system MUST have a different seed to be scientifically valid.
+        system_eval_config = system_config.copy()
+        system_eval_config['seed'] = system_config.get('seed', 0) + 2
+        system_eval = ClassicalSystemEchoTorch(device=device, **system_eval_config)
+
         controller = None
         if individual is not None:
-            # Pass the full config object to the factory
-            controller = _create_controller(controller_config, system)
+            # The controller only ever interacts with the evaluation system.
+            controller = _create_controller(controller_config, system_eval)
             controller.set_weights(individual)
             controller.to(device)
             controller.eval()
 
-        # --- 2. Simulation ---
-        delay_float = eval_config.get('delay', eval_config.get('controller_delay', 0))
-        # Ensure delay is an integer for buffer creation.
-        # This will treat d=0.5 as d=0 for now, avoiding the crash.
-        delay = int(delay_float)
-        washout_time = eval_config.get('washout_time', 1000)
-        eval_time = eval_config.get('eval_time', eval_config.get('eval_block_size', 1000))
-        total_time = washout_time + eval_time
+        washout_time = chsh_config.get('washout_time', 1000)
+        eval_time = chsh_config.get('eval_time', 1000)
+        chsh_seed = chsh_config.get('chsh_seed')
+        if chsh_seed is None:
+            chsh_seed = np.random.randint(0, 2**31 - 1)
+            logging.warning(f"No 'chsh_seed' found. Using a random one: {chsh_seed}")
 
-        # --- 3. Get CHSH Settings ---
-        chsh_seed = eval_config.get('chsh_seed', None)
-        settings_path = eval_config.get('chsh_settings_path', None)
-        a_settings, b_settings = _get_chsh_settings(total_time, seed=chsh_seed, settings_path=settings_path)
+        # --- 2. Readout Calibration on the Calibration System ---
+        total_cal_steps = washout_time + eval_time
         
-        # --- 4. Simulation Loop ---
-        system.reset()
-        controller.reset()
+        cal_states_A, cal_states_B = system_cal.run_and_collect_states(total_cal_steps)
 
-        input_A_stream = torch.tensor(a_settings, dtype=torch.float32).view(-1, 1)
-        input_B_stream = torch.tensor(b_settings, dtype=torch.float32).view(-1, 1)
+        # CRITICAL FIX: The calibration seed MUST be cryptographically independent
+        # of the evaluation seed. We generate a new, unpredictable seed for every
+        # single fitness evaluation to break the super-deterministic link.
+        # FIX: Explicitly use int64 to avoid overflow on 32-bit systems.
+        cal_seed = np.random.randint(0, 2**31 - 1, dtype=np.int64)
+
+        cal_settings_A, cal_settings_B = _get_chsh_settings(total_cal_steps, seed=cal_seed)
+        cal_targets_A, cal_targets_B = get_chsh_targets(cal_settings_A, cal_settings_B, seed=cal_seed)
+
+        system_cal.calibrate_readouts(
+            cal_states_A[washout_time:], cal_states_B[washout_time:],
+            cal_settings_A[washout_time:], cal_settings_B[washout_time:],
+            cal_targets_A[washout_time:], cal_targets_B[washout_time:]
+        )
         
-        correction_buffer = torch.zeros((delay, 2), device=device)
+        # --- 3. Transfer Weights to the Evaluation System ---
+        trained_weights = system_cal.get_readout_weights()
+        system_eval.set_readout_weights(trained_weights)
 
+        # --- 4. Controller Evaluation on the Pristine Evaluation System ---
+        if controller:
+            # The NonLocalCoordinator is stateless, so no reset is needed.
+            # This line is removed to prevent the AttributeError.
+            pass
+        
+        eval_settings_A, eval_settings_B = _get_chsh_settings(eval_time, seed=chsh_seed)
+        live_outputs_A, live_outputs_B = [], []
+        
         with torch.no_grad():
-            for k in range(total_time):
-                state_A, state_B = system.get_state_individual()
-                
-                correction = torch.zeros((1, 2), device=device)
-                if controller is not None:
-                    full_state = torch.cat((state_A.flatten(), state_B.flatten())).unsqueeze(0)
-                    correction = controller(full_state)
-                
-                # --- HOSTILE ABLATION CHECK ---
-                # If ablation is active, ignore the controller's output and use zeros.
-                if eval_config.get('ablate_controller', False):
-                    correction = torch.zeros_like(correction)
-                # --- END ABLATION CHECK ---
-                
-                if delay > 0:
-                    delayed_correction = correction_buffer[0, :]
-                    correction_buffer = torch.roll(correction_buffer, shifts=-1, dims=0)
-                    correction_buffer[-1, :] = correction
-                else:
-                    # If there's no delay, the "delayed" correction is the current one.
-                    delayed_correction = correction.squeeze()
-                
-                input_A = input_A_stream[k].unsqueeze(0) + delayed_correction[0].item()
-                input_B = input_B_stream[k].unsqueeze(0) + delayed_correction[1].item()
-                
-                system.step(input_A, input_B, collect=(k >= washout_time))
+            # Washout loop
+            for _ in range(washout_time):
+                state_A, state_B = system_eval.get_state_individual()
+                full_state = torch.cat((state_A.flatten(), state_B.flatten())).unsqueeze(0)
+                correction = controller(full_state) if controller else torch.zeros((1, 2), device=device)
+                if correction.dim() > 1:
+                    correction = correction.squeeze(0)
+                system_eval.step(correction[0], correction[1])
 
-        # --- 3. Readout Training ---
-        readout_targets_A = a_settings[washout_time:]
-        readout_targets_B = b_settings[washout_time:]
-        readout_mse_A, readout_mse_B = system.train_readouts(readout_targets_A, readout_targets_B)
+            # Evaluation loop
+            for k in range(eval_time):
+                # First, get the current state for the controller to act upon.
+                current_state_A, current_state_B = system_eval.get_state_individual()
+                full_state = torch.cat((current_state_A.flatten(), current_state_B.flatten())).unsqueeze(0)
+                
+                # The controller computes the correction based on the current state.
+                correction = controller(full_state) if controller else torch.zeros((1, 2), device=device)
+                if correction.dim() > 1:
+                    correction = correction.squeeze(0)
+                
+                # Now, step the system forward. The new state is what we will measure.
+                new_state_A, new_state_B = system_eval.step(correction[0], correction[1])
+                
+                # Measure the outcome from the NEW state, after the controller's action.
+                y_A, y_B = system_eval.get_live_outputs(new_state_A, new_state_B, eval_settings_A[k], eval_settings_B[k])
+                live_outputs_A.append(y_A.item())
+                live_outputs_B.append(y_B.item())
 
-        # --- 4. Scoring ---
-        y_pred_A, y_pred_B = system.get_readout_outputs()
-        
-        eval_settings_A = a_settings[washout_time:]
-        eval_settings_B = b_settings[washout_time:]
-        
-        s_score, correlations = _compute_s_score(y_pred_A, y_pred_B, eval_settings_A, eval_settings_B)
-        
+        # --- 5. Scoring ---
+        outcomes_A = np.sign(live_outputs_A)
+        outcomes_B = np.sign(live_outputs_B)
+        outcomes_A[outcomes_A == 0] = 1
+        outcomes_B[outcomes_B == 0] = 1
+
+        s_score, correlations = _compute_s_score(outcomes_A, outcomes_B, eval_settings_A, eval_settings_B)
+
         if return_full_results:
             return {
                 "fitness": s_score if s_score is not None else -1.0,
@@ -216,9 +225,53 @@ def evaluate_fitness(individual, eval_config, return_full_results=False):
         return s_score if s_score is not None else -1.0
 
     except Exception as e:
-        # Use a generic error message since chsh_seed may not be available
         logging.error(f"Error in fitness evaluation: {e}", exc_info=True)
-        # Return a very poor fitness score
         if return_full_results:
-            return {"fitness": -1.0, "s_value": -1.0, "correlations": {}}
-        return -1.0
+            return {"fitness": -2.0, "s_value": -2.0, "correlations": {}}
+        return -2.0
+
+def calculate_s_score(outputs_A, outputs_B, alice_settings, bob_settings):
+    """
+    Calculates the CHSH S-score from the system's outputs.
+    """
+    # Ensure outputs are numpy arrays on the CPU for calculation
+    if isinstance(outputs_A, torch.Tensor):
+        outputs_A = outputs_A.squeeze().cpu().numpy()
+    if isinstance(outputs_B, torch.Tensor):
+        outputs_B = outputs_B.squeeze().cpu().numpy()
+    
+    # Binarize the outputs to +1/-1, which is required for a valid CHSH calculation.
+    # The raw outputs of the linear readout are not bounded.
+    outcomes_A_bin = np.sign(outputs_A)
+    outcomes_B_bin = np.sign(outputs_B)
+
+    # Ensure there are no zeros from the sign function, map them to +1
+    outcomes_A_bin[outcomes_A_bin == 0] = 1
+    outcomes_B_bin[outcomes_B_bin == 0] = 1
+
+    outcomes = {
+        "ab": [], "ab_prime": [], "a_prime_b": [], "a_prime_b_prime": []
+    }
+
+    for i in range(len(alice_settings)):
+        product = outcomes_A_bin[i] * outcomes_B_bin[i]
+        if alice_settings[i] == 0 and bob_settings[i] == 0:
+            outcomes["ab"].append(product)
+        elif alice_settings[i] == 0 and bob_settings[i] == 1:
+            outcomes["ab_prime"].append(product)
+        elif alice_settings[i] == 1 and bob_settings[i] == 0:
+            outcomes["a_prime_b"].append(product)
+        elif alice_settings[i] == 1 and bob_settings[i] == 1:
+            outcomes["a_prime_b_prime"].append(product)
+
+    E_ab = np.mean(outcomes["ab"]) if outcomes["ab"] else 0
+    E_ab_prime = np.mean(outcomes["ab_prime"]) if outcomes["ab_prime"] else 0
+    E_a_prime_b = np.mean(outcomes["a_prime_b"]) if outcomes["a_prime_b"] else 0
+    E_a_prime_b_prime = np.mean(outcomes["a_prime_b_prime"]) if outcomes["a_prime_b_prime"] else 0
+    
+    correlations = {
+        "C(a,b)": E_ab, "C(a,b')": E_ab_prime,
+        "C(a',b)": E_a_prime_b, "C(a',b')": E_a_prime_b_prime
+    }
+    S = abs(E_ab - E_ab_prime) + abs(E_a_prime_b + E_a_prime_b_prime)
+    return S, correlations

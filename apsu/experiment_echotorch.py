@@ -74,17 +74,46 @@ def run_chsh_trial_echotorch(controller, system, seed, device, delay=1):
     _ = system.reservoir_B(washout_inputs)
     
     # Now run the evaluation part and collect the states
-    eval_states_A = system.reservoir_A(final_inputs_A.unsqueeze(0))
-    eval_states_B = system.reservoir_B(final_inputs_B.unsqueeze(0))
-    system.states_A.append(eval_states_A)
-    system.states_B.append(eval_states_B)
+    eval_states_A = system.reservoir_A(final_inputs_A.unsqueeze(0)).squeeze(0)
+    eval_states_B = system.reservoir_B(final_inputs_B.unsqueeze(0)).squeeze(0)
 
-    # 3. Readout Training Phase
-    targets_A, targets_B = chsh.get_chsh_targets(alice_settings, bob_settings)
-    system.train_readouts(targets_A, targets_B)
+    # 3. Readout Training Phase - FOR FOUR INDEPENDENT READOUTS
+    targets_by_setting = chsh.get_chsh_targets_by_setting(alice_settings, bob_settings)
+    system.train_four_readouts(eval_states_A, eval_states_B, targets_by_setting)
     
-    # 4. Scoring Phase
-    outputs_A, outputs_B = system.get_readout_outputs()
-    s_score = chsh.calculate_s_score(outputs_A, outputs_B, alice_settings, bob_settings)
-    
+    # 4. Scoring Phase - EVALUATE EACH SETTING INDEPENDENTLY
+    correlations = {}
+    setting_map = {'00': 0, '01': 1, '10': 2, '11': 3} # Map from string key to index
+
+    for s_a in [0, 1]:
+        for s_b in [0, 1]:
+            setting_key = f"{s_a}{s_b}"
+            setting_index = setting_map[setting_key]
+            
+            # Get the subset of data corresponding to this setting
+            mask = (alice_settings == s_a) & (bob_settings == s_b)
+            
+            # Get outputs from the specific readout trained for this setting
+            # We must pass the *full* state history to the readout, which will then give predictions.
+            # Then we select the predictions corresponding to the mask.
+            full_outputs_A, full_outputs_B = system.get_readout_outputs_for_setting(eval_states_A, eval_states_B, setting_index)
+
+            outputs_A_setting = full_outputs_A[mask]
+            outputs_B_setting = full_outputs_B[mask]
+            
+            # Ensure we have data to calculate correlation
+            if len(outputs_A_setting) > 0:
+                # Correlation is the expectation value of the product of outcomes
+                correlation = np.mean(np.sign(outputs_A_setting) * np.sign(outputs_B_setting))
+                correlations[setting_key] = correlation
+            else:
+                correlations[setting_key] = 0.0 # No data for this setting combination
+
+    # Calculate the S-score from the four individually-calculated correlations
+    s_score = correlations.get('00', 0) + correlations.get('01', 0) + correlations.get('10', 0) - correlations.get('11', 0)
+
+    # Clean up collected states to free memory
+    system.states_A.clear()
+    system.states_B.clear()
+
     return s_score 

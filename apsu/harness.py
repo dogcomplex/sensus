@@ -6,6 +6,7 @@ from datetime import datetime
 import torch
 from pathlib import Path
 import argparse
+import uuid
 
 # Force OpenMP to use a single thread to avoid multiprocessing-related memory errors
 # that can occur with libraries like scikit-learn on Windows. This must be set
@@ -25,8 +26,23 @@ def fitness_function_wrapper(args):
     """
     A top-level wrapper to unpack arguments for multiprocessing.Pool.imap.
     This function must be at the top level to be pickleable by multiprocessing.
+    
+    This has been refactored to IGNORE the incoming config and instead load a
+    definitive config from a known path to bypass multiprocessing serialization bugs.
     """
-    individual, eval_config = args
+    individual, run_path_str, payload_id = args
+    run_path = Path(run_path_str)
+    
+    # Load the definitive payload from disk
+    payload_path = run_path / f"payload_{payload_id}.json"
+    try:
+        with open(payload_path, 'r') as f:
+            eval_config = json.load(f)
+    except FileNotFoundError:
+        # Fallback for safety, but this should not be reached.
+        logging.error(f"CRITICAL: Could not find payload file {payload_path}")
+        return -2.0 # Return a distinctly bad fitness
+
     return evaluate_fitness(individual, eval_config, return_full_results=True)
 
 def get_optimizer(optimizer_config, dimension, run_path) -> BaseOptimizer:
@@ -70,6 +86,12 @@ def run_experiment(config):
         # that the optimizer needs to work with.
         system_config = config.get('classical_system', {})
         controller_config = config.get('controller', {})
+        
+        # Inject a dummy seed for the temporary system creation if it's not in the config.
+        # This is safe because this system is only used to count parameters and is then discarded.
+        if 'seed' not in system_config:
+            system_config['seed'] = 999
+
         temp_system = ClassicalSystemEchoTorch(device=device, **system_config)
         temp_controller = _create_controller(controller_config, temp_system)
         
@@ -80,8 +102,28 @@ def run_experiment(config):
 
         optimizer = get_optimizer(config['optimizer'], n_params, run_path)
         logging.info(f"Using optimizer: {type(optimizer).__name__}")
+        
+        # Prepare a slimmed-down config dictionary to pass to the evaluation function.
+        eval_payload = {
+            "chsh_evaluation": config.get("chsh_evaluation", {}),
+            "classical_system": config.get("classical_system", {}),
+            "controller": config.get("controller", {}),
+            "optimizer": config.get("optimizer", {}), # Add optimizer for the base class
+            "device": config.get("device", "cpu"),
+            "ablate_controller": config.get("ablate_controller", False)
+        }
 
-        optimizer.run(fitness_function_wrapper, config)
+        # --- Scorched Earth Fix ---
+        # Serialize the definitive payload to disk with a unique ID.
+        # The wrapper function will load this directly, bypassing multiprocessing args.
+        payload_id = str(uuid.uuid4())
+        payload_path = run_path / f"payload_{payload_id}.json"
+        with open(payload_path, 'w') as f:
+            json.dump(eval_payload, f, indent=4)
+        # --- End Fix ---
+
+
+        optimizer.run(fitness_function_wrapper, run_path, payload_id)
         
         logging.info("Optimization finished.")
 

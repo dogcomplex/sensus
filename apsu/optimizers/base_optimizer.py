@@ -4,6 +4,7 @@ import logging
 from multiprocessing import Pool
 import numpy as np
 from tqdm import tqdm
+import json
 
 class BaseOptimizer(ABC):
     """
@@ -46,12 +47,21 @@ class BaseOptimizer(ABC):
         """Checks if the optimizer's stopping criteria are met."""
         return False
 
-    def run(self, fitness_function, config):
+    def run(self, fitness_function, run_path, payload_id):
         """
         The main entry point to start the optimization process.
+        
+        The 'config' or 'eval_payload' is no longer passed directly. Instead,
+        we pass the path to the run directory and a unique ID for the definitive
+        payload file, which the fitness_function wrapper will read from disk.
         """
-        # Extract common parameters from the main config
-        optimizer_config = config.get('optimizer', {}).get('config', {})
+        # We still need to configure the optimizer itself, so we load the payload here
+        # just for that purpose.
+        payload_path = run_path / f"payload_{payload_id}.json"
+        with open(payload_path, 'r') as f:
+            eval_payload = json.load(f)
+        
+        optimizer_config = eval_payload.get('optimizer', {}).get('config', {})
         self.n_generations = optimizer_config.get('n_generations', 100)
         self.num_workers = optimizer_config.get('num_workers', os.cpu_count())
 
@@ -64,7 +74,8 @@ class BaseOptimizer(ABC):
                 logging.info(f"--- Generation {generation + 1}/{self.n_generations} ---")
                 
                 solutions = self.ask()
-                eval_args = [(sol, config) for sol in solutions]
+                # Pass the run path and payload ID to the wrapper.
+                eval_args = [(sol, str(run_path), payload_id) for sol in solutions]
                 
                 results = list(tqdm(pool.imap(fitness_function, eval_args), total=len(solutions), desc=f"Gen {generation+1}"))
                 

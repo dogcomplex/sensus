@@ -6,6 +6,7 @@ import shutil
 import json
 import time
 from pathlib import Path
+import random
 
 PYTHON_EXECUTABLE = sys.executable
 
@@ -157,39 +158,63 @@ def generate_high_res_sweep_commands():
 
 def generate_goldilocks_sweep_commands():
     """
-    Generates a very high-resolution sweep from 1 to 100 units, with early
-    optimizer stopping disabled to ensure a thorough search.
+    Generates experiment configurations to test the S(R) curve, where R is
+    the speed-ratio controlled by the delay parameter 'd'. This is the primary
+    experiment described in the project's design documents.
     """
-    print("--- Generating Goldilocks Reservoir Controller sweep configurations... ---")
+    print("--- Generating S(R) Curve (formerly Goldilocks) configurations... ---")
     
-    base_config_path = Path("apsu/experiments/phase2/unit_20_best_controller.json")
+    # Use a standard, robust NLC config as the base
+    base_config_path = Path("apsu/experiments/cma_es/full_config.json")
     if not base_config_path.exists():
-        print(f"ERROR: Base high-res config '{base_config_path}' not found!")
+        print(f"ERROR: Base NLC config '{base_config_path}' not found!")
         sys.exit(1)
 
     with open(base_config_path, 'r') as f:
         base_config = json.load(f)
 
-    controller_sizes = list(range(1, 101))
+    # Define the delay values to sweep, per REQUIREMENTS_v4.md, section 2.3
+    d_values = [0.5, 1, 2, 3, 5, 8, 13]
     commands = []
     
-    output_dir = Path("apsu/experiments/goldilocks_sweep")
+    # Define a single, fixed controller architecture for the entire sweep.
+    # The variable is the delay, not the controller's internal structure.
+    base_config["controller"] = {
+        "type": "NonLocal",
+        "config": {
+            "hidden_dim": 32, # A reasonable, fixed size.
+            "use_bias": True
+        }
+    }
+
+    # Generate ONE seed for the entire sweep for scientific validity.
+    consistent_chsh_seed = random.randint(0, 2**32 - 1)
+    print(f"INFO: Using consistent CHSH seed for all sweep experiments: {consistent_chsh_seed}")
+    base_config["chsh_evaluation"]["chsh_seed"] = consistent_chsh_seed
+    
+    output_dir = Path("apsu/experiments/s_curve_sweep")
     output_dir.mkdir(exist_ok=True)
 
     base_config["optimizer"]["config"]["n_generations"] = 100
     base_config["optimizer"]["config"]["disable_early_stopping"] = True
-    base_config["results_dir"] = str(output_dir / "results")
+    base_config["optimizer"]["config"]["num_workers"] = 2
+    
+    sweep_results_parent_dir = output_dir / "results"
+    base_config["results_dir"] = str(sweep_results_parent_dir)
 
-    for size in controller_sizes:
-        config_filename = output_dir / f"res_controller_{size}_units_config.json"
+    for d in d_values:
+        d_str = str(d).replace('.', '_')
+        config_filename = output_dir / f"d_{d_str}_config.json"
         
-        if not config_filename.exists():
-            print(f"Generating config: {config_filename} for controller size={size}")
-            new_config = base_config.copy()
-            new_config["controller"]["config"]["units"] = size
-            
-            with open(config_filename, 'w') as f:
-                json.dump(new_config, f, indent=4)
+        print(f"Generating config: {config_filename} for delay d={d}")
+        new_config = base_config.copy()
+        new_config["chsh_evaluation"]["delay"] = d
+        
+        # Ensure each experiment has its own isolated results directory.
+        new_config["results_dir"] = str(sweep_results_parent_dir / f"delay_{d_str}")
+
+        with open(config_filename, 'w') as f:
+            json.dump(new_config, f, indent=4)
         
         command = f"{PYTHON_EXECUTABLE} -m apsu.harness --config={config_filename}"
         commands.append(command)
@@ -252,7 +277,25 @@ def run_command(command_str):
         print(f"--- Error: {str(e)} ---")
         return False
 
+def clean_project_caches():
+    """Aggressively removes caches and old results to ensure a clean run."""
+    print("--- Cleaning project caches and old artifacts... ---")
+    project_root = Path(__file__).parent.parent
+    apsu_dir = project_root / 'apsu'
+
+    # Remove __pycache__ directories
+    for path in list(apsu_dir.rglob("__pycache__")):
+        if path.is_dir():
+            print(f"Removing cache: {path}")
+            shutil.rmtree(path, ignore_errors=True)
+
+    print("--- Cache cleaning complete. ---")
+
+
 def main():
+    """
+    Main entry point for the batch runner.
+    """
     parser = argparse.ArgumentParser(description="Apsu Project Batch Runner")
     parser.add_argument(
         '--mode',
@@ -264,15 +307,27 @@ def main():
     parser.add_argument(
         '--force',
         action='store_true',
-        help="Force re-execution by clearing all previous results before starting."
+        help='Clears all caches and experiment results for the selected mode before running.'
     )
     args = parser.parse_args()
 
     print(f"Using Python executable: {PYTHON_EXECUTABLE}")
 
+    # --- Force Clean ---
     if args.force:
-        print(f"--- FORCE flag is active. This will ensure all experiments are run, but will no longer clear results. ---")
-        # clear_previous_results() # This function is now disabled.
+        print("--- FORCE flag is active. Cleaning caches and results before run. ---")
+        clean_project_caches()
+        
+        # Also clean the specific results directory for the chosen mode.
+        # This now deletes the ENTIRE experiment directory for the mode
+        # to ensure stale configs are also removed.
+        mode_dir = Path(f"apsu/experiments/{args.mode}")
+        if mode_dir.exists() and mode_dir.is_dir():
+            print(f"--- FORCE: Removing entire experiment directory: {mode_dir} ---")
+            shutil.rmtree(mode_dir)
+        else:
+            print(f"Warning: Could not find experiment directory for mode '{args.mode}' to clean.")
+
 
     commands = get_experiment_commands(args.mode)
     total_experiments = len(commands)

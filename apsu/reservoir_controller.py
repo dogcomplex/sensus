@@ -85,13 +85,12 @@ class ReservoirController(nn.Module):
         if self.device is None:
             self.device = x.device
         
-        # The ESNCell expects a time-series input. We have a single state vector.
-        # We can treat the features of the state vector as a sequence of inputs
-        # to drive the controller reservoir for a few steps.
-        # This allows the reservoir to develop a more complex internal state.
-        
-        # x has shape (1, 200). Reshape to (1, 200, 1) to feed as a sequence.
-        reservoir_input = x.unsqueeze(-1)
+        # The ESNCell expects a time-series input of shape (batch, time, features).
+        # Our input `x` is a single state vector (batch, features).
+        # We must project the high-dimensional state to the 1D input of the ESN.
+        # A simple sum is a valid projection.
+        # Input shape: (1, 200) -> (1, 1, 1)
+        reservoir_input = x.sum(dim=1, keepdim=True).unsqueeze(-1)
         
         # Run the reservoir. It updates its hidden state internally.
         self.reservoir(reservoir_input)

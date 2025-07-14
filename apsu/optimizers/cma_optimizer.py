@@ -53,11 +53,12 @@ class CMAESOptimizer(BaseOptimizer):
         self.best_solution = self.es.result.xbest
         self.history.append(self.best_fitness)
 
-    def run(self, fitness_function, config):
+    def run(self, fitness_function, run_path, payload_id):
         """
         Runs the CMA-ES optimization loop by delegating to the BaseOptimizer.
         """
-        super().run(fitness_function, config)
+        # The signature now matches the BaseOptimizer's run method.
+        super().run(fitness_function, run_path, payload_id)
         logging.info("CMA-ES optimization finished.")
         # The base class doesn't return, but this one can for consistency if called directly.
         return self.best_solution, self.best_fitness
