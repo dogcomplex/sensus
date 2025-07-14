@@ -4,6 +4,12 @@ import sys
 import os
 from datetime import datetime
 import torch
+
+# Force OpenMP to use a single thread to avoid multiprocessing-related memory errors
+# that can occur with libraries like scikit-learn on Windows. This must be set
+# before any libraries that might use OpenMP are imported.
+os.environ['OMP_NUM_THREADS'] = '1'
+
 from apsu.chsh import evaluate_fitness, _create_controller
 from apsu.optimizers.base_optimizer import BaseOptimizer
 from apsu.optimizers.cma_optimizer import CMAESOptimizer

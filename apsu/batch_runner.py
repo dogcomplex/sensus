@@ -9,36 +9,6 @@ from pathlib import Path
 
 PYTHON_EXECUTABLE = sys.executable
 
-def clear_previous_results():
-    """Deletes previous results directories, with retries for Windows."""
-    print("Clearing previous experiment results...")
-    
-    dirs_to_clear = [
-        "apsu/experiments/cma_es/results_smoke",
-        "apsu/experiments/cma_es/results_full",
-        "apsu/experiments/sa/results_smoke",
-        "apsu/experiments/sa/results_full",
-        "apsu/experiments/reservoir/results_smoke",
-        "apsu/experiments/reservoir/results_full",
-        "apsu/experiments/s_curve",
-        "apsu/review" # Clear all old review artifacts
-    ]
-    for d in dirs_to_clear:
-        if os.path.isdir(d):
-            for i in range(3):  # Retry up to 3 times
-                try:
-                    shutil.rmtree(d)
-                    print(f"Removed: {d}")
-                    break
-                except OSError as e:
-                    print(f"Warning: Failed to remove {d} on attempt {i+1}. Retrying in 1 second... Error: {e}")
-                    time.sleep(1)
-            else:  # This block runs if the loop completes without a `break`
-                print(f"ERROR: Could not remove directory {d} after multiple attempts.")
-                print("This can happen on Windows if a file is open in another program (e.g., an image viewer).")
-                print("Please close any programs that might be using files in the project directory and try again.")
-                sys.exit(1)
-
 def generate_s_curve_commands():
     """Generates experiment configurations and commands for the S(d) curve."""
     print("--- Generating S(R) curve experiment configurations... ---")
@@ -61,7 +31,13 @@ def generate_s_curve_commands():
     phase1_full_config_path = Path("apsu/experiments/phase1/phase1_full_config.json")
     if not phase1_full_config_path.exists():
         print(f"Generating missing config: {phase1_full_config_path}")
+        # This part assumes phase1_fast_config.json exists as a template.
+        # A more robust solution might define this config directly in code.
         phase1_fast_config_path = Path("apsu/experiments/phase1/phase1_fast_config.json")
+        if not phase1_fast_config_path.exists():
+             print(f"ERROR: Template config '{phase1_fast_config_path}' not found! Cannot generate full phase 1 config.")
+             sys.exit(1)
+
         with open(phase1_fast_config_path, 'r') as f:
             phase1_config = json.load(f)
         
@@ -80,19 +56,21 @@ def generate_s_curve_commands():
     output_dir.mkdir(exist_ok=True, parents=True)
 
     for d in d_values:
-        new_config = base_config.copy()
-        new_config["chsh_evaluation"]["delay"] = d
-        
-        # Modify generations for sub-tick delay to maintain computational budget
-        if d < 1:
-            # Ensure generations is an int
-            new_config["optimizer"]["config"]["n_generations"] = int(base_config["optimizer"]["config"]["n_generations"] / d)
-
         config_filename = output_dir / f"d_{str(d).replace('.', '_')}_config.json"
-        with open(config_filename, 'w') as f:
-            json.dump(new_config, f, indent=4)
+
+        if not config_filename.exists():
+            print(f"Generating config: {config_filename} for d={d}")
+            new_config = base_config.copy()
+            new_config["chsh_evaluation"]["delay"] = d
+            
+            # Set generations to 100, overriding any other logic.
+            new_config["optimizer"]["config"]["n_generations"] = 100
+
+            with open(config_filename, 'w') as f:
+                json.dump(new_config, f, indent=4)
+        else:
+            print(f"Found existing config: {config_filename}")
         
-        print(f"Generated config: {config_filename} for d={d}")
         commands.append(f"{PYTHON_EXECUTABLE} -m apsu.harness --config={config_filename}")
 
     print("--- Configuration generation complete. ---")
@@ -167,8 +145,8 @@ def main():
     print(f"Using Python executable: {PYTHON_EXECUTABLE}")
 
     if args.force:
-        print(f"--- FORCE flag is active. All previous results will be cleared before running. ---")
-        clear_previous_results()
+        print(f"--- FORCE flag is active. This will ensure all experiments are run, but will no longer clear results. ---")
+        # clear_previous_results() # This function is now disabled.
 
     commands = get_experiment_commands(args.mode)
     total_experiments = len(commands)

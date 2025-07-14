@@ -1,0 +1,19 @@
+{
+    "experiment_description": "Phase 1 (Fast): A quick null experiment to validate the CHSH measurement apparatus with a zero controller.",
+    "classical_system_config": {
+        "units": 50,
+        "spectral_radius": 0.9,
+        "leaking_rate": 0.5,
+        "noise_rc": 0.001,
+        "seed": 42
+    },
+    "simulation_config": {
+        "washout_time": 100,
+        "eval_block_size": 250,
+        "controller_delay": 0
+    },
+    "phase1_config": {
+        "num_trials": 10,
+        "plot_path": "apsu/review/phase1/phase1_null_experiment_results_fast.png"
+    }
+} 
