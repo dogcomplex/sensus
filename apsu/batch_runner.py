@@ -113,6 +113,48 @@ def generate_reservoir_sweep_commands():
         
     return commands
 
+def generate_high_res_sweep_commands():
+    """Generates a focused, high-resolution sweep around the 20-unit 'Goldilocks Zone'."""
+    print("--- Generating High-Resolution Reservoir Controller sweep configurations... ---")
+    
+    # Use our best-performing config as the template
+    base_config_path = Path("apsu/experiments/phase2/unit_20_best_controller.json")
+    if not base_config_path.exists():
+        print(f"ERROR: Base high-res config '{base_config_path}' not found!")
+        sys.exit(1)
+
+    with open(base_config_path, 'r') as f:
+        base_config = json.load(f)
+
+    # Define the focused sweep range around the known best result
+    # We now test every integer value from 1 to 26 for a complete picture.
+    controller_sizes = list(range(1, 27))
+    commands = []
+    
+    output_dir = Path("apsu/experiments/high_res_sweep")
+    output_dir.mkdir(exist_ok=True)
+
+    # Use a solid number of generations for a robust result
+    base_config["optimizer"]["config"]["n_generations"] = 100
+    base_config["results_dir"] = str(output_dir / "results")
+
+    for size in controller_sizes:
+        config_filename = output_dir / f"res_controller_{size}_units_config.json"
+        
+        # Don't regenerate configs if they already exist
+        if not config_filename.exists():
+            print(f"Generating config: {config_filename} for controller size={size}")
+            new_config = base_config.copy()
+            new_config["controller"]["config"]["units"] = size
+            
+            with open(config_filename, 'w') as f:
+                json.dump(new_config, f, indent=4)
+        
+        command = f"{PYTHON_EXECUTABLE} -m apsu.harness --config={config_filename}"
+        commands.append(command)
+        
+    return commands
+
 def get_experiment_commands(mode):
     """Gets a list of experiment commands based on the mode."""
     if mode == 'smoke':
@@ -131,6 +173,8 @@ def get_experiment_commands(mode):
         return generate_s_curve_commands()
     elif mode == 'reservoir_sweep':
         return generate_reservoir_sweep_commands()
+    elif mode == 'high_res_sweep':
+        return generate_high_res_sweep_commands()
     else:
         print(f"ERROR: Unknown mode '{mode}'")
         sys.exit(1)
@@ -171,7 +215,7 @@ def main():
         '--mode',
         type=str,
         default='smoke',
-        choices=['smoke', 'full', 's_curve', 'reservoir_sweep'],
+        choices=['smoke', 'full', 's_curve', 'reservoir_sweep', 'high_res_sweep'],
         help="The batch of experiments to run: 'smoke' for quick checks, 's_curve' for the main experiment, 'full' is an alias for 's_curve'."
     )
     parser.add_argument(

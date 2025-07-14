@@ -105,7 +105,7 @@ class ReservoirController(nn.Module):
         # Apply final bounding activation
         return self.output_activation(output)
 
-    def reset_hidden(self):
+    def reset(self):
         """Resets the reservoir's hidden state for a new trial."""
         if hasattr(self.reservoir, 'reset_hidden'):
             self.reservoir.reset_hidden()

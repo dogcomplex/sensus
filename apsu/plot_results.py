@@ -41,6 +41,15 @@ def get_config_delay(config_path):
     except (FileNotFoundError, json.JSONDecodeError):
         return 'N/A'
 
+def get_controller_units(config_path):
+    """Reads a config file and extracts the reservoir controller's units."""
+    try:
+        with open(config_path, 'r') as f:
+            config = json.load(f)
+            # Path to the units for the ReservoirController
+            return config.get('controller', {}).get('config', {}).get('units', 'N/A')
+    except (FileNotFoundError, json.JSONDecodeError):
+        return 'N/A'
 
 def plot_s_curve(results_df, output_path):
     """Plots the final S-score vs. Controller Delay (d)."""
@@ -68,20 +77,84 @@ def plot_s_curve(results_df, output_path):
     plt.close()
     print(f"S(R) curve plot saved to {output_path}")
 
-def plot_combined_progress(results_df, output_path):
+def plot_reservoir_sweep(results_df, output_path):
+    """Plots the final S-score vs. Reservoir Controller Units."""
+    final_scores = results_df.loc[results_df.groupby('units')['best_fitness'].idxmax()]
+    final_scores = final_scores.sort_values('units')
+
+    plt.style.use('seaborn-v0_8-whitegrid')
+    fig, ax = plt.subplots(figsize=(12, 8))
+    
+    sns.lineplot(data=final_scores, x='units', y='best_fitness', marker='o', ax=ax, markersize=10, lw=2.5)
+    ax.axhline(2.0, color='red', linestyle='--', label='Classical Bound (S=2)')
+    ax.axhline(2 * np.sqrt(2), color='green', linestyle='--', label="Tsirelson's Bound (S≈2.828)")
+    
+    ax.set_title('Best CHSH Score vs. Reservoir Controller Size', fontsize=18)
+    ax.set_xlabel('Controller Reservoir Units', fontsize=14)
+    ax.set_ylabel('Best Found S-Score', fontsize=14)
+    ax.legend()
+    ax.grid(True, which='both', linestyle='--')
+    
+    for _, row in final_scores.iterrows():
+        ax.text(row['units'], row['best_fitness'], f" {row['best_fitness']:.4f}", ha='left', va='bottom')
+        
+    plt.savefig(output_path, dpi=300)
+    plt.close()
+    print(f"Reservoir sweep plot saved to {output_path}")
+
+def plot_high_res_sweep(results_df, output_path):
+    """Plots a bar chart for the high-resolution reservoir sweep."""
+    final_scores = results_df.loc[results_df.groupby('units')['best_fitness'].idxmax()]
+    final_scores = final_scores.sort_values('units')
+
+    plt.style.use('seaborn-v0_8-whitegrid')
+    fig, ax = plt.subplots(figsize=(16, 9))
+
+    # Create a color list: green for success (S>2), blue for failure
+    colors = ['#2ca02c' if s > 2.0 else '#1f77b4' for s in final_scores['best_fitness']]
+
+    sns.barplot(data=final_scores, x='units', y='best_fitness', ax=ax, palette=colors, width=0.8)
+
+    ax.axhline(2.0, color='red', linestyle='--', label='Classical Bound (S=2)')
+    ax.axhline(2 * np.sqrt(2), color='purple', linestyle='--', label="Tsirelson's Bound (S≈2.828)")
+
+    ax.set_title('High-Resolution Sweep: Best CHSH Score vs. Controller Size', fontsize=20)
+    ax.set_xlabel('Controller Reservoir Units', fontsize=16)
+    ax.set_ylabel('Best Found S-Score', fontsize=16)
+    ax.tick_params(axis='x', rotation=45)
+    ax.legend()
+    ax.grid(True, which='both', axis='y', linestyle='--')
+
+    # Annotate bars
+    for i, p in enumerate(ax.patches):
+        score = final_scores['best_fitness'].iloc[i]
+        ax.annotate(f'{score:.3f}',
+                    (p.get_x() + p.get_width() / 2., p.get_height()),
+                    ha='center', va='center',
+                    xytext=(0, 9),
+                    textcoords='offset points',
+                    fontsize=8)
+
+    plt.tight_layout()
+    plt.savefig(output_path, dpi=300)
+    plt.close()
+    print(f"High-resolution sweep plot saved to {output_path}")
+
+
+def plot_combined_progress(results_df, output_path, group_by='delay'):
     """Plots all optimization progresses on a single graph."""
     # Calculate the cumulative max fitness for each group
-    results_df['cumulative_best'] = results_df.groupby('delay')['best_fitness'].cummax()
+    results_df['cumulative_best'] = results_df.groupby(group_by)['best_fitness'].cummax()
 
     plt.style.use('seaborn-v0_8-whitegrid')
     fig, ax = plt.subplots(figsize=(14, 9))
     
-    sns.lineplot(data=results_df, x='generation', y='cumulative_best', hue='delay', palette='viridis', lw=2, ax=ax)
+    sns.lineplot(data=results_df, x='generation', y='cumulative_best', hue=group_by, palette='viridis', lw=2, ax=ax)
     
     ax.set_title('Cumulative Best Fitness vs. Generation', fontsize=18)
     ax.set_xlabel('Generation', fontsize=14)
     ax.set_ylabel('Best S-Score Found', fontsize=14)
-    ax.legend(title='Delay (d)')
+    ax.legend(title=group_by.capitalize())
     ax.grid(True, which='both', linestyle='--')
     
     plt.savefig(output_path, dpi=300)
@@ -97,6 +170,13 @@ def main():
         help='Directory containing the experiment result folders.'
     )
     parser.add_argument(
+        '--mode',
+        type=str,
+        default='s_curve',
+        choices=['s_curve', 'reservoir_sweep', 'high_res_sweep'],
+        help='The type of experiment to plot.'
+    )
+    parser.add_argument(
         '--output_dir',
         type=str,
         default='apsu/review/summary',
@@ -110,18 +190,49 @@ def main():
 
     all_results = []
     
-    # Match directories that look like they belong to the s_curve run
+    # Logic to find the parameter of interest based on the mode
+    if args.mode == 's_curve':
+        param_getter = get_config_delay
+        param_name = 'delay'
+    elif args.mode == 'reservoir_sweep':
+        param_getter = get_controller_units
+        param_name = 'units'
+    elif args.mode == 'high_res_sweep':
+        param_getter = get_controller_units
+        param_name = 'units'
+    else:
+        print(f"Error: Unknown mode '{args.mode}'")
+        return
+
+    # Match directories that look like they belong to the run
+    # For high_res_sweep, override the results_dir to the correct default
+    if args.mode == 'high_res_sweep' and 'cma_es' in args.results_dir: # a bit of a hack to check if default is used
+        results_path = Path('apsu/experiments/high_res_sweep/results')
+        print(f"INFO: --mode high_res_sweep selected, overriding results directory to {results_path}")
+
+
     for experiment_dir in results_path.iterdir():
         if experiment_dir.is_dir() and 'apsu_experiment' in experiment_dir.name:
-            log_file = experiment_dir / 'cma_fit.dat'
+            # The bug in older versions caused logs to be in the parent dir, 
+            # prefixed with the experiment name. The new version saves them inside
+            # the experiment dir with a 'cma_' prefix. This logic handles both cases.
+            log_file_correct = experiment_dir / 'cma_fit.dat'
+            log_file_buggy_old_name = results_path / f"{experiment_dir.name}fit.dat"
+            
+            log_file_to_use = None
+            if log_file_correct.exists():
+                log_file_to_use = log_file_correct
+            elif log_file_buggy_old_name.exists():
+                log_file_to_use = log_file_buggy_old_name
+
             config_file = experiment_dir / 'config.json'
             
-            if log_file.exists() and config_file.exists():
-                delay = get_config_delay(config_file)
-                if delay != 'N/A':
-                    df = parse_cma_log(log_file)
+            if log_file_to_use and config_file.exists():
+                param_value = param_getter(config_file)
+                if param_value != 'N/A':
+                    df = parse_cma_log(log_file_to_use)
                     if not df.empty:
-                        df['delay'] = delay
+                        df[param_name] = param_value
                         all_results.append(df)
 
     if not all_results:
@@ -130,9 +241,25 @@ def main():
 
     full_df = pd.concat(all_results, ignore_index=True)
 
-    # Generate plots
-    plot_s_curve(full_df, output_path / 's_curve_summary.png')
-    plot_combined_progress(full_df, output_path / 'combined_optimization_progress.png')
+    # --- Start of section to add for debugging ---
+    print("\n--- Raw Data Used for Plotting ---")
+    final_scores_df = full_df.loc[full_df.groupby(param_name)['best_fitness'].idxmax()]
+    final_scores_df = final_scores_df.sort_values(param_name)
+    print(final_scores_df[[param_name, 'best_fitness']].to_string(index=False))
+    print("------------------------------------\n")
+    # --- End of section to add for debugging ---
+
+    # Generate plots based on mode
+    if args.mode == 's_curve':
+        plot_s_curve(full_df, output_path / 's_curve_summary.png')
+        plot_combined_progress(full_df, output_path / 's_curve_combined_progress.png', group_by='delay')
+    elif args.mode == 'reservoir_sweep':
+        plot_reservoir_sweep(full_df, output_path / 'reservoir_sweep_summary.png')
+        plot_combined_progress(full_df, output_path / 'reservoir_sweep_combined_progress.png', group_by='units')
+    elif args.mode == 'high_res_sweep':
+        plot_high_res_sweep(full_df, output_path / 'high_res_sweep_summary.png')
+        plot_combined_progress(full_df, output_path / 'high_res_sweep_combined_progress.png', group_by='units')
+
 
 if __name__ == "__main__":
     main() 

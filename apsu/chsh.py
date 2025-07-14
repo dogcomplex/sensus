@@ -10,35 +10,25 @@ import os
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-def _create_controller(config, device):
-    """Factory function to create the appropriate controller."""
-    controller_config = config.get('controller', {})
-    controller_type = controller_config.get('type', 'NonLinear')
+def _create_controller(controller_config, system):
+    """Factory function to create a controller based on config."""
+    controller_type = controller_config.get('type', 'NonLocal') # Default to NonLocal
+    config = controller_config.get('config', {})
 
-    # Correctly infer input dimension from the system configuration
-    system_config = config.get('classical_system', config.get('classical_system_config', {}))
-    system_units = system_config.get('units', 100) # Default to 100 if not found
-    default_input_dim = 2 * system_units
-
-    if controller_type == 'NonLinear':
-        input_dim = controller_config.get('input_dim', default_input_dim)
-        return NonLocalCoordinator(
-            input_dim=input_dim,
-            hidden_dim=controller_config.get('hidden_dim', 16),
-            output_dim=2,
-            use_bias=controller_config.get('use_bias', True)
-        ).to(device)
-    elif controller_type == 'Reservoir':
-        input_dim = controller_config.get('input_dim', default_input_dim)
-        # The reservoir controller's config is nested one level deeper
-        rc_config = controller_config.get('config', {})
-        return ReservoirController(
-            input_dim=input_dim,
-            output_dim=2,
-            **rc_config
-        ).to(device)
+    if controller_type.lower() == 'reservoir':
+        # Ensure reservoir_config is passed if nested
+        if 'reservoir_config' in config:
+            config = config['reservoir_config']
+        return ReservoirController(**config)
+    
+    elif controller_type.lower() == 'nonlocal':
+        # Pass the system's state dimension to the NLC
+        n_inputs = system.units * 2 
+        return NonLocalCoordinator(n_inputs=n_inputs, **config)
+    
     else:
         raise ValueError(f"Unknown controller type: {controller_type}")
+
 
 def _get_chsh_settings(n_steps, seed=None, settings_path=None):
     """
@@ -148,7 +138,7 @@ def evaluate_fitness(individual, eval_config, return_full_results=False):
         controller = None
         if individual is not None:
             # Pass the full config object to the factory
-            controller = _create_controller(eval_config, device)
+            controller = _create_controller(controller_config, system)
             controller.set_weights(individual)
             controller.to(device)
             controller.eval()
@@ -185,6 +175,12 @@ def evaluate_fitness(individual, eval_config, return_full_results=False):
                     full_state = torch.cat((state_A.flatten(), state_B.flatten())).unsqueeze(0)
                     correction = controller(full_state)
                 
+                # --- HOSTILE ABLATION CHECK ---
+                # If ablation is active, ignore the controller's output and use zeros.
+                if eval_config.get('ablate_controller', False):
+                    correction = torch.zeros_like(correction)
+                # --- END ABLATION CHECK ---
+                
                 if delay > 0:
                     delayed_correction = correction_buffer[0, :]
                     correction_buffer = torch.roll(correction_buffer, shifts=-1, dims=0)
@@ -210,20 +206,19 @@ def evaluate_fitness(individual, eval_config, return_full_results=False):
         eval_settings_B = b_settings[washout_time:]
         
         s_score, correlations = _compute_s_score(y_pred_A, y_pred_B, eval_settings_A, eval_settings_B)
-
+        
         if return_full_results:
             return {
-                "fitness": s_score,
+                "fitness": s_score if s_score is not None else -1.0,
                 "s_value": s_score,
-                "correlations": correlations,
-                "readout_mse": (readout_mse_A + readout_mse_B) / 2
+                "correlations": correlations
             }
-        
-        return s_score
+        return s_score if s_score is not None else -1.0
 
     except Exception as e:
-        logging.error(f"Error in fitness evaluation for seed {chsh_seed}: {e}", exc_info=True)
+        # Use a generic error message since chsh_seed may not be available
+        logging.error(f"Error in fitness evaluation: {e}", exc_info=True)
         # Return a very poor fitness score
         if return_full_results:
-            return {"fitness": -1.0, "s_value": -1.0}
+            return {"fitness": -1.0, "s_value": -1.0, "correlations": {}}
         return -1.0

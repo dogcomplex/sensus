@@ -5,6 +5,7 @@ import os
 from datetime import datetime
 import torch
 from pathlib import Path
+import argparse
 
 # Force OpenMP to use a single thread to avoid multiprocessing-related memory errors
 # that can occur with libraries like scikit-learn on Windows. This must be set
@@ -12,6 +13,7 @@ from pathlib import Path
 os.environ['OMP_NUM_THREADS'] = '1'
 
 from apsu.chsh import evaluate_fitness, _create_controller
+from apsu.classical_system_echotorch import ClassicalSystemEchoTorch
 from apsu.optimizers.base_optimizer import BaseOptimizer
 from apsu.optimizers.cma_optimizer import CMAESOptimizer
 from apsu.optimizers.sa_optimizer import SAOptimizer
@@ -39,13 +41,12 @@ def get_optimizer(optimizer_config, dimension, run_path) -> BaseOptimizer:
     else:
         raise ValueError(f"Unknown optimizer type: {optimizer_type}")
 
-def run_experiment(config_path):
+def run_experiment(config):
     """
     Main function to run an experiment from a config file.
     """
     try:
-        with open(config_path, 'r') as f:
-            config = json.load(f)
+        # The config dictionary is now passed directly. No need to open a file.
 
         # Create a unique directory for this run's results
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -64,10 +65,18 @@ def run_experiment(config_path):
         logging.info(f"Results will be saved in: {run_path}")
 
         device = config.get('device', 'cpu')
-        temp_controller = _create_controller(config, device)
+
+        # Create a temporary classical system and controller to determine the number of parameters
+        # that the optimizer needs to work with.
+        system_config = config.get('classical_system', {})
+        controller_config = config.get('controller', {})
+        temp_system = ClassicalSystemEchoTorch(device=device, **system_config)
+        temp_controller = _create_controller(controller_config, temp_system)
+        
         n_params = temp_controller.get_n_params()
         logging.info(f"Controller has {n_params} parameters.")
         del temp_controller
+        del temp_system
 
         optimizer = get_optimizer(config['optimizer'], n_params, run_path)
         logging.info(f"Using optimizer: {type(optimizer).__name__}")
@@ -77,19 +86,41 @@ def run_experiment(config_path):
         logging.info("Optimization finished.")
 
     except FileNotFoundError:
-        logging.error(f"Configuration file not found: {config_path}")
+        logging.error(f"Configuration file not found.")
         sys.exit(1)
     except Exception as e:
         logging.error(f"An unexpected error occurred in harness: {e}", exc_info=True)
         sys.exit(1)
 
 def main():
-    if len(sys.argv) != 2 or not sys.argv[1].startswith('--config='):
-        print("Usage: python -m apsu.harness --config=<path_to_config.json>")
+    parser = argparse.ArgumentParser(description="Run an Apsu experiment.")
+    parser.add_argument(
+        '--config',
+        type=str,
+        required=True,
+        help='Path to the experiment configuration JSON file.'
+    )
+    parser.add_argument(
+        '--ablate-controller',
+        action='store_true',
+        help='If set, the controller runs but its output is ignored (zeroed out) to test for bugs.'
+    )
+    args = parser.parse_args()
+
+    try:
+        with open(args.config, 'r') as f:
+            config = json.load(f)
+    except FileNotFoundError:
+        logging.error(f"Configuration file not found: {args.config}")
         sys.exit(1)
-    
-    config_path = sys.argv[1].split('=')[1]
-    run_experiment(config_path)
+
+    # Pass the ablation flag into the main config dict
+    config['ablate_controller'] = args.ablate_controller
+    if args.ablate_controller:
+        logging.warning("ABLATION MODE: Controller output will be zeroed out.")
+
+    run_experiment(config)
+
 
 if __name__ == "__main__":
     main() 

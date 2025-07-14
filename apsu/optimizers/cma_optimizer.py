@@ -1,82 +1,65 @@
-import cma
 import os
-import pickle
-import logging
-import numpy as np
-import matplotlib.pyplot as plt
-import multiprocessing
-from tqdm import tqdm
 import time
+import logging
 from multiprocessing import Pool
 
-from .base_optimizer import BaseOptimizer
+import cma
+import numpy as np
+from tqdm import tqdm
+
+from apsu.optimizers.base_optimizer import BaseOptimizer
 
 logger = logging.getLogger(__name__)
 
 class CMAESOptimizer(BaseOptimizer):
     """
-    Covariance Matrix Adaptation Evolution Strategy (CMA-ES) optimizer.
+    An optimizer using the Covariance Matrix Adaptation Evolution Strategy (CMA-ES).
     """
-
     def __init__(self, dimension, log_dir, population_size=None, n_generations=100, sigma0=0.5, num_workers=None):
-        super().__init__(dimension)
+        super().__init__(dimension, log_dir)
         self.population_size = population_size if population_size is not None else 4 + int(3 * np.log(dimension))
         self.n_generations = n_generations
         self.sigma0 = sigma0
-        self.num_workers = num_workers if num_workers is not None else multiprocessing.cpu_count()
+        self.num_workers = num_workers if num_workers is not None else os.cpu_count()
+        self.solutions = None # To hold the current population
 
         # CMA-ES specific initialization
-        self.es = cma.CMAEvolutionStrategy(
-            dimension * [0], 
-            self.sigma0, 
-            {
-                'popsize': self.population_size,
-                'CMA_diagonal': True,
-                'seed': int(time.time())
-            }
-        )
-        # The cma library expects a string for the log directory, not a Path object.
-        log_dir_str = str(log_dir)
-        self.logger = cma.CMADataLogger(log_dir_str).register(self.es)
+        opts = cma.CMAOptions()
+        opts.set('popsize', self.population_size)
+        opts.set('CMA_diagonal', True)
+        opts.set('seed', int(time.time()))
+        # Set the log path for CMA's own log files
+        # CMA logs to the current directory by default, so we give it a prefix
+        # inside the designated log directory.
+        log_path_prefix = os.path.join(str(log_dir), 'cma_')
+        opts.set('verb_filenameprefix', log_path_prefix)
+
+        self.es = cma.CMAEvolutionStrategy(dimension * [0], self.sigma0, opts)
+
         self.history = []
 
     def ask(self):
         """Asks the optimizer for a new population of candidate solutions."""
-        return self.es.ask()
+        self.solutions = self.es.ask()
+        return self.solutions
 
     def tell(self, fitness_values):
         """Tells the optimizer the fitness values of the last population."""
-        # CMA-ES minimizes, so we negate the fitness values
+        # CMA-ES minimizes, so we negate the fitness values which are S-scores
         self.es.tell(self.solutions, [-f for f in fitness_values])
-        self.logger.add()
-        
+
         self.best_fitness = self.es.result.fbest * -1
         self.best_solution = self.es.result.xbest
         self.history.append(self.best_fitness)
 
     def run(self, fitness_function, config):
-        """Runs the CMA-ES optimization loop."""
-        with Pool(self.num_workers) as pool:
-            for generation in range(self.n_generations):
-                logging.info(f"--- Generation {generation + 1}/{self.n_generations} ---")
-                solutions = self.es.ask()
-                
-                # Package arguments for the wrapper
-                eval_args = [(sol, config) for sol in solutions]
-                
-                results = list(tqdm(pool.imap(fitness_function, eval_args), total=len(solutions), desc=f"Gen {generation+1}"))
-                
-                # Process results and tell the optimizer
-                fitness_values = [res['fitness'] for res in results]
-                self.es.tell(solutions, fitness_values)
-                
-                best_fitness_this_gen = self.es.result.fbest
-                logging.info(f"Generation {generation + 1}: Best Fitness={best_fitness_this_gen:.4f}, Avg Fitness={np.mean(fitness_values):.4f}")
-                self.logger.add()
-                self.es.disp()
-
+        """
+        Runs the CMA-ES optimization loop by delegating to the BaseOptimizer.
+        """
+        super().run(fitness_function, config)
         logging.info("CMA-ES optimization finished.")
-        return self.es.result.xbest, self.es.result.fbest
+        # The base class doesn't return, but this one can for consistency if called directly.
+        return self.best_solution, self.best_fitness
     
     def stop(self):
         return self.es.stop()
