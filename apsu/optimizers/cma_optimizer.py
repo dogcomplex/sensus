@@ -15,13 +15,14 @@ class CMAESOptimizer(BaseOptimizer):
     """
     An optimizer using the Covariance Matrix Adaptation Evolution Strategy (CMA-ES).
     """
-    def __init__(self, dimension, log_dir, population_size=None, n_generations=100, sigma0=0.5, num_workers=None):
+    def __init__(self, dimension, log_dir, population_size=None, n_generations=100, sigma0=0.5, num_workers=None, disable_early_stopping=False):
         super().__init__(dimension, log_dir)
         self.population_size = population_size if population_size is not None else 4 + int(3 * np.log(dimension))
         self.n_generations = n_generations
         self.sigma0 = sigma0
         self.num_workers = num_workers if num_workers is not None else os.cpu_count()
         self.solutions = None # To hold the current population
+        self.disable_early_stopping = disable_early_stopping
 
         # CMA-ES specific initialization
         opts = cma.CMAOptions()
@@ -62,6 +63,8 @@ class CMAESOptimizer(BaseOptimizer):
         return self.best_solution, self.best_fitness
     
     def stop(self):
+        if self.disable_early_stopping:
+            return False
         return self.es.stop()
 
     def save_state(self):

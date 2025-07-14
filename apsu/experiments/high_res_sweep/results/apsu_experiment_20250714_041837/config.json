@@ -31,6 +31,5 @@
             "sigma0": 0.5,
             "num_workers": 4
         }
-    },
-    "ablate_controller": false
+    }
 }

@@ -47,7 +47,10 @@ def get_controller_units(config_path):
         with open(config_path, 'r') as f:
             config = json.load(f)
             # Path to the units for the ReservoirController
-            return config.get('controller', {}).get('config', {}).get('units', 'N/A')
+            units = config.get('controller', {}).get('config', {}).get('units', 'N/A')
+            if units != 'N/A':
+                return int(units)
+            return 'N/A'
     except (FileNotFoundError, json.JSONDecodeError):
         return 'N/A'
 
@@ -140,6 +143,41 @@ def plot_high_res_sweep(results_df, output_path):
     plt.close()
     print(f"High-resolution sweep plot saved to {output_path}")
 
+def plot_goldilocks_sweep(results_df, output_path):
+    """Plots a detailed line graph for the Goldilocks sweep, highlighting the best performer."""
+    final_scores = results_df.loc[results_df.groupby('units')['best_fitness'].idxmax()]
+    final_scores = final_scores.sort_values('units')
+    
+    best_performer = final_scores.loc[final_scores['best_fitness'].idxmax()]
+
+    plt.style.use('seaborn-v0_8-whitegrid')
+    fig, ax = plt.subplots(figsize=(20, 10))
+
+    # Plot the main line
+    sns.lineplot(data=final_scores, x='units', y='best_fitness', marker='o', ax=ax, markersize=6, lw=2, label="Best S-Score per Controller Size")
+    
+    # Add critical lines
+    ax.axhline(2.0, color='red', linestyle='--', label='Classical Bound (S=2)')
+    ax.axhline(2 * np.sqrt(2), color='green', linestyle='--', label="Tsirelson's Bound (S≈2.828)")
+
+    # Highlight the best point
+    ax.scatter(best_performer['units'], best_performer['best_fitness'], color='gold', s=200, zorder=5, marker='*', edgecolors='black', label=f"Peak Performance (S={best_performer['best_fitness']:.4f} at {best_performer['units']} units)")
+
+    ax.set_title('Goldilocks Sweep: Best CHSH Score vs. Controller Size (1-100 Units)', fontsize=22)
+    ax.set_xlabel('Controller Reservoir Units', fontsize=16)
+    ax.set_ylabel('Best Found S-Score', fontsize=16)
+    ax.legend(fontsize=12)
+    ax.grid(True, which='both', linestyle='--')
+    
+    # Set x-axis ticks to be more readable for the 1-100 range
+    ax.set_xticks(np.arange(0, 101, 5))
+    ax.tick_params(axis='x', rotation=45)
+
+    plt.tight_layout()
+    plt.savefig(output_path, dpi=300)
+    plt.close()
+    print(f"Goldilocks sweep plot saved to {output_path}")
+
 
 def plot_combined_progress(results_df, output_path, group_by='delay'):
     """Plots all optimization progresses on a single graph."""
@@ -173,7 +211,7 @@ def main():
         '--mode',
         type=str,
         default='s_curve',
-        choices=['s_curve', 'reservoir_sweep', 'high_res_sweep'],
+        choices=['s_curve', 'reservoir_sweep', 'high_res_sweep', 'goldilocks_sweep'],
         help='The type of experiment to plot.'
     )
     parser.add_argument(
@@ -200,34 +238,32 @@ def main():
     elif args.mode == 'high_res_sweep':
         param_getter = get_controller_units
         param_name = 'units'
+    elif args.mode == 'goldilocks_sweep':
+        param_getter = get_controller_units
+        param_name = 'units'
     else:
         print(f"Error: Unknown mode '{args.mode}'")
         return
 
-    # Match directories that look like they belong to the run
-    # For high_res_sweep, override the results_dir to the correct default
-    if args.mode == 'high_res_sweep' and 'cma_es' in args.results_dir: # a bit of a hack to check if default is used
+    # Override results_dir for specific modes if the user hasn't provided a custom one.
+    is_default_results_dir = 'cma_es' in args.results_dir
+    if args.mode == 'high_res_sweep' and is_default_results_dir:
         results_path = Path('apsu/experiments/high_res_sweep/results')
         print(f"INFO: --mode high_res_sweep selected, overriding results directory to {results_path}")
+    elif args.mode == 'goldilocks_sweep':
+        # Always override for goldilocks_sweep as it has its own dedicated folder.
+        results_path = Path('apsu/experiments/goldilocks_sweep/results')
+        print(f"INFO: --mode goldilocks_sweep selected, overriding results directory to {results_path}")
 
 
+    # This loop iterates through the results_path directly,
+    # which contains the timestamped experiment folders.
     for experiment_dir in results_path.iterdir():
-        if experiment_dir.is_dir() and 'apsu_experiment' in experiment_dir.name:
-            # The bug in older versions caused logs to be in the parent dir, 
-            # prefixed with the experiment name. The new version saves them inside
-            # the experiment dir with a 'cma_' prefix. This logic handles both cases.
-            log_file_correct = experiment_dir / 'cma_fit.dat'
-            log_file_buggy_old_name = results_path / f"{experiment_dir.name}fit.dat"
-            
-            log_file_to_use = None
-            if log_file_correct.exists():
-                log_file_to_use = log_file_correct
-            elif log_file_buggy_old_name.exists():
-                log_file_to_use = log_file_buggy_old_name
-
+        if experiment_dir.is_dir():
+            log_file_to_use = experiment_dir / 'cma_fit.dat'
             config_file = experiment_dir / 'config.json'
             
-            if log_file_to_use and config_file.exists():
+            if log_file_to_use.exists() and config_file.exists():
                 param_value = param_getter(config_file)
                 if param_value != 'N/A':
                     df = parse_cma_log(log_file_to_use)
@@ -242,23 +278,26 @@ def main():
     full_df = pd.concat(all_results, ignore_index=True)
 
     # --- Start of section to add for debugging ---
-    print("\n--- Raw Data Used for Plotting ---")
+    print("\n--- Compact Raw Data Summary ---")
     final_scores_df = full_df.loc[full_df.groupby(param_name)['best_fitness'].idxmax()]
     final_scores_df = final_scores_df.sort_values(param_name)
     print(final_scores_df[[param_name, 'best_fitness']].to_string(index=False))
-    print("------------------------------------\n")
+    print("--------------------------------\n")
     # --- End of section to add for debugging ---
 
-    # Generate plots based on mode
+
+    # Call the correct plotting function based on the mode
     if args.mode == 's_curve':
         plot_s_curve(full_df, output_path / 's_curve_summary.png')
-        plot_combined_progress(full_df, output_path / 's_curve_combined_progress.png', group_by='delay')
     elif args.mode == 'reservoir_sweep':
         plot_reservoir_sweep(full_df, output_path / 'reservoir_sweep_summary.png')
-        plot_combined_progress(full_df, output_path / 'reservoir_sweep_combined_progress.png', group_by='units')
     elif args.mode == 'high_res_sweep':
         plot_high_res_sweep(full_df, output_path / 'high_res_sweep_summary.png')
-        plot_combined_progress(full_df, output_path / 'high_res_sweep_combined_progress.png', group_by='units')
+    elif args.mode == 'goldilocks_sweep':
+        plot_goldilocks_sweep(full_df, output_path / 'goldilocks_sweep_summary.png')
+
+    # Always generate the combined progress plot
+    plot_combined_progress(full_df, output_path / f'{args.mode}_combined_progress.png', group_by=param_name)
 
 
 if __name__ == "__main__":
