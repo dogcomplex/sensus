@@ -1,0 +1,210 @@
+import subprocess
+import os
+import argparse
+import sys
+import shutil
+import json
+import time
+from pathlib import Path
+
+PYTHON_EXECUTABLE = sys.executable
+
+def clear_previous_results():
+    """Deletes previous results directories, with retries for Windows."""
+    print("Clearing previous experiment results...")
+    
+    dirs_to_clear = [
+        "apsu/experiments/cma_es/results_smoke",
+        "apsu/experiments/cma_es/results_full",
+        "apsu/experiments/sa/results_smoke",
+        "apsu/experiments/sa/results_full",
+        "apsu/experiments/reservoir/results_smoke",
+        "apsu/experiments/reservoir/results_full",
+        "apsu/experiments/s_curve",
+        "apsu/review" # Clear all old review artifacts
+    ]
+    for d in dirs_to_clear:
+        if os.path.isdir(d):
+            for i in range(3):  # Retry up to 3 times
+                try:
+                    shutil.rmtree(d)
+                    print(f"Removed: {d}")
+                    break
+                except OSError as e:
+                    print(f"Warning: Failed to remove {d} on attempt {i+1}. Retrying in 1 second... Error: {e}")
+                    time.sleep(1)
+            else:  # This block runs if the loop completes without a `break`
+                print(f"ERROR: Could not remove directory {d} after multiple attempts.")
+                print("This can happen on Windows if a file is open in another program (e.g., an image viewer).")
+                print("Please close any programs that might be using files in the project directory and try again.")
+                sys.exit(1)
+
+def generate_s_curve_commands():
+    """Generates experiment configurations and commands for the S(d) curve."""
+    print("--- Generating S(R) curve experiment configurations... ---")
+    base_config_path = Path("apsu/experiments/cma_es/full_config.json")
+    if not base_config_path.exists():
+        print(f"ERROR: Base configuration '{base_config_path}' not found! Please create it.")
+        sys.exit(1)
+
+    with open(base_config_path, 'r') as f:
+        base_config = json.load(f)
+
+    # Per REQUIREMENTS_v4.md, section 2.3
+    d_values = [0.5, 1, 2, 3, 5, 8, 13]
+    commands = []
+    
+    # Always run phase 0 and 1 first as a baseline check
+    commands.append(f"{PYTHON_EXECUTABLE} -m apsu.run_phase0")
+    
+    # Generate Phase 1 full config on the fly if it doesn't exist
+    phase1_full_config_path = Path("apsu/experiments/phase1/phase1_full_config.json")
+    if not phase1_full_config_path.exists():
+        print(f"Generating missing config: {phase1_full_config_path}")
+        phase1_fast_config_path = Path("apsu/experiments/phase1/phase1_fast_config.json")
+        with open(phase1_fast_config_path, 'r') as f:
+            phase1_config = json.load(f)
+        
+        phase1_config["experiment_description"] = "Phase 1 (Full): A rigorous null experiment to validate the CHSH measurement apparatus with a zero controller. Uses a large number of trials for statistical confidence."
+        phase1_config["simulation_config"]["washout_time"] = 1000
+        phase1_config["simulation_config"]["eval_block_size"] = 1000
+        phase1_config["phase1_config"]["num_trials"] = 100
+        phase1_config["phase1_config"]["plot_path"] = "apsu/review/phase1/phase1_null_experiment_results_full.png"
+        
+        with open(phase1_full_config_path, 'w') as f:
+            json.dump(phase1_config, f, indent=4)
+
+    commands.append(f"{PYTHON_EXECUTABLE} -m apsu.run_phase1 --config {phase1_full_config_path}")
+
+    output_dir = Path("apsu/experiments/s_curve")
+    output_dir.mkdir(exist_ok=True, parents=True)
+
+    for d in d_values:
+        new_config = base_config.copy()
+        new_config["chsh_evaluation"]["delay"] = d
+        
+        # Modify generations for sub-tick delay to maintain computational budget
+        if d < 1:
+            # Ensure generations is an int
+            new_config["optimizer"]["config"]["n_generations"] = int(base_config["optimizer"]["config"]["n_generations"] / d)
+
+        config_filename = output_dir / f"d_{str(d).replace('.', '_')}_config.json"
+        with open(config_filename, 'w') as f:
+            json.dump(new_config, f, indent=4)
+        
+        print(f"Generated config: {config_filename} for d={d}")
+        commands.append(f"{PYTHON_EXECUTABLE} -m apsu.harness --config={config_filename}")
+
+    print("--- Configuration generation complete. ---")
+    return commands
+
+def get_experiment_commands(mode):
+    """Gets a list of experiment commands based on the mode."""
+    if mode == 'smoke':
+        return [
+            f"{PYTHON_EXECUTABLE} -m apsu.run_phase0",
+            f"{PYTHON_EXECUTABLE} -m apsu.run_phase1 --config apsu/experiments/phase1/phase1_fast_config.json",
+            f"{PYTHON_EXECUTABLE} -m apsu.harness --config=apsu/experiments/cma_es/smoke_config.json",
+            f"{PYTHON_EXECUTABLE} -m apsu.harness --config=apsu/experiments/sa/smoke_config.json",
+            f"{PYTHON_EXECUTABLE} -m apsu.harness --config=apsu/experiments/reservoir/smoke_config.json",
+        ]
+    elif mode == 's_curve':
+        return generate_s_curve_commands()
+    elif mode == 'full':
+        # A "full" run is now defined as the s_curve run.
+        print("INFO: 'full' mode is an alias for 's_curve'. Running the S-curve experiment.")
+        return generate_s_curve_commands()
+    else:
+        print(f"ERROR: Unknown mode '{mode}'")
+        sys.exit(1)
+
+def run_command(command_str):
+    """Runs a command string, streams its output, and returns success."""
+    print(f"--- RUNNING: {command_str} ---")
+    try:
+        command_parts = command_str.split()
+        process = subprocess.Popen(
+            command_parts,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            encoding='utf-8',
+            bufsize=1
+        )
+        for line in process.stdout:
+            sys.stdout.write(line)
+        
+        process.wait()
+        
+        if process.returncode == 0:
+            print(f"--- SUCCESS: {command_str} ---")
+            return True
+        else:
+            print(f"--- FAILURE (Exit Code: {process.returncode}): {command_str} ---")
+            return False
+            
+    except Exception as e:
+        print(f"--- CRITICAL FAILURE: {command_str} ---")
+        print(f"--- Error: {str(e)} ---")
+        return False
+
+def main():
+    parser = argparse.ArgumentParser(description="Apsu Project Batch Runner")
+    parser.add_argument(
+        '--mode',
+        type=str,
+        default='smoke',
+        choices=['smoke', 'full', 's_curve'],
+        help="The batch of experiments to run: 'smoke' for quick checks, 's_curve' for the main experiment, 'full' is an alias for 's_curve'."
+    )
+    parser.add_argument(
+        '--force',
+        action='store_true',
+        help="Force re-execution by clearing all previous results before starting."
+    )
+    args = parser.parse_args()
+
+    print(f"Using Python executable: {PYTHON_EXECUTABLE}")
+
+    if args.force:
+        print(f"--- FORCE flag is active. All previous results will be cleared before running. ---")
+        clear_previous_results()
+
+    commands = get_experiment_commands(args.mode)
+    total_experiments = len(commands)
+    succeeded_count = 0
+    failed_experiments = []
+
+    print(f"Starting batch run in '{args.mode}' mode. Total experiments: {total_experiments}")
+
+    for i, command in enumerate(commands):
+        print("\n" + "-"*80)
+        print(f"Processing experiment {i+1}/{total_experiments}")
+        
+        if run_command(command):
+            succeeded_count += 1
+        else:
+            failed_experiments.append(command)
+    
+    print("\n" + "="*80)
+    print("BATCH RUN SUMMARY")
+    print("="*80)
+    print(f"Total experiments attempted: {total_experiments}")
+    print(f"Succeeded: {succeeded_count}")
+    print(f"Failed: {len(failed_experiments)}")
+
+    if failed_experiments:
+        print("\nThe following experiments failed:")
+        for cmd in failed_experiments:
+            print(f"  - {cmd}")
+        print("\nResult: BATCH RUN FAILED")
+    else:
+        print("\nResult: ALL EXPERIMENTS SUCCEEDED")
+    
+    print("="*80)
+
+    if failed_experiments:
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()

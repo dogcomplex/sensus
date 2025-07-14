@@ -1,0 +1,34 @@
+{
+    "experiment_name": "sa_small_nonlinear_fast",
+    "experiment_description": "Simulated Annealing on a small non-linear controller. This is a quick run to verify the SA optimizer is working.",
+    "device": "cpu",
+    "results_dir": "apsu/review/sa/small_nonlinear_fast",
+
+    "classical_system_config": {
+        "units": 100,
+        "spectral_radius": 0.95,
+        "leaking_rate": 0.3,
+        "noise_rc": 0.001,
+        "input_scaling": 1.0,
+        "seed": 4242
+    },
+    
+    "controller_config": {
+        "input_dim": 200,
+        "hidden_dims": [16, 16],
+        "output_dim": 2,
+        "activation_function": "tanh"
+    },
+
+    "simulation_config": {
+        "washout_time": 200,
+        "eval_block_size": 500,
+        "controller_delay": 1
+    },
+
+    "optimizer_config": {
+        "name": "simulated_annealing",
+        "maxiter": 100,
+        "initial_temp": 5230
+    }
+}

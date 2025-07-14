@@ -10,242 +10,224 @@ from echotorch.nn.linear import RRCell
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
+import logging
+
+def create_leaky_esn_cell(units, spectral_radius, leaking_rate, noise_rc, seed, device):
+    """
+    Creates a single LeakyESN cell.
+    """
+    dtype = torch.float32
+    if seed is not None:
+        echotorch.utils.manual_seed(seed)
+
+    w_generator = mg.NormalMatrixGenerator(spectral_radius=spectral_radius, connectivity=1.0)
+    win_generator = mg.NormalMatrixGenerator(mean=0.0, std=1.0)
+    wbias_generator = mg.NormalMatrixGenerator(mean=0.0, std=1.0)
+
+    def noise_generator(size):
+        return torch.randn(size, device=device) * noise_rc if noise_rc > 0 else None
+
+    w = w_generator.generate(size=(units, units), dtype=dtype).to(device)
+    w_in = win_generator.generate(size=(units, 1), dtype=dtype).to(device)
+    w_bias = wbias_generator.generate(size=(units,), dtype=dtype).to(device)
+
+    return LiESNCell(
+        input_dim=1,
+        output_dim=units,
+        w=w,
+        w_in=w_in,
+        w_bias=w_bias,
+        leaky_rate=leaking_rate,
+        noise_generator=noise_generator if noise_rc > 0 else None,
+        dtype=dtype
+    ).to(device)
+
 
 class ClassicalSystemEchoTorch:
     """
     Represents the physical substrate being controlled, using EchoTorch.
-
-    This class encapsulates two Echo State Networks (ESNs), representing
-    the "slow medium" of the experiment. It is designed to be a classical,
-    deterministic (given a seed), high-dimensional dynamical system.
-    This is a reimplementation of the `ClassicalSystem` class to use
-    the EchoTorch library instead of reservoirpy.
     """
-    def __init__(self, N=100, sr=0.95, lr=0.3, noise_rc=0.001, seed=1234, input_dim=1, device='cpu'):
+    def __init__(self, units=100, spectral_radius=0.95, leaking_rate=0.3, noise_rc=0.001, input_scaling=1.0, seed=None, device='cuda'):
         """
         Initializes the ClassicalSystem using EchoTorch.
-
-        Args:
-            N (int): Number of units in each reservoir (state vector dimension).
-            sr (float): Spectral radius of the reservoir weight matrices.
-            lr (float): Leaking rate of the reservoir neurons.
-            noise_rc (float): Amount of internal noise in the reservoir.
-            seed (int): Random seed for reproducibility.
-            input_dim (int): The dimension of the input signal.
-            device (str or torch.device): The device to run the simulation on.
         """
-        self.N = N
-        self.sr = sr
-        self.lr = lr
+        self.units = units
+        self.spectral_radius = spectral_radius
+        self.leaking_rate = leaking_rate
         self.noise_rc = noise_rc
+        self.input_scaling = input_scaling
         self.seed = seed
-        self.input_dim = input_dim
-        self.device = torch.device(device)
+        self.device = torch.device(device if torch.cuda.is_available() else 'cpu')
+        self.dtype = torch.float32
 
-        # Set seed for reproducibility
-        echotorch.utils.manual_seed(seed)
-
-        # 1. Create weight matrix generators
-        w_generator = mg.NormalMatrixGenerator(
-            spectral_radius=sr,
-            connectivity=1.0 # Fully connected
+        # Create two identical reservoirs (A and B)
+        self.reservoir_A = create_leaky_esn_cell(
+            self.units, self.spectral_radius, self.leaking_rate, self.noise_rc, self.seed, self.device
         )
-        win_generator = mg.NormalMatrixGenerator(mean=0.0, std=1.0)
-        wbias_generator = mg.NormalMatrixGenerator(mean=0.0, std=1.0)
-        
-        # 2. Define a noise generator function that creates tensors on the correct device
-        def noise_generator(size):
-            return torch.randn(size, device=self.device) * noise_rc
+        self.reservoir_B = create_leaky_esn_cell(
+            self.units, self.spectral_radius, self.leaking_rate, self.noise_rc, self.seed + 1 if self.seed is not None else None, self.device
+        )
 
-        # 3. Create two identical reservoirs (A and B)
-        # Reservoir A
-        echotorch.utils.manual_seed(seed)
-        w_A = w_generator.generate(size=(N, N), dtype=torch.float32).to(self.device)
-        win_A = win_generator.generate(size=(N, input_dim), dtype=torch.float32).to(self.device)
-        wbias_A = wbias_generator.generate(size=(N,), dtype=torch.float32).to(self.device)
-        self.reservoir_A = LiESNCell(
-            input_dim=input_dim,
-            output_dim=N,
-            w=w_A,
-            w_in=win_A,
-            w_bias=wbias_A,
-            leaky_rate=lr,
-            noise_generator=noise_generator,
-            dtype=torch.float32
-        ).to(self.device)
+        # Create readouts
+        self.readout_A = RRCell(input_dim=self.units, output_dim=1, device=self.device)
+        self.readout_B = RRCell(input_dim=self.units, output_dim=1, device=self.device)
 
-        # Reservoir B
-        echotorch.utils.manual_seed(seed + 1) # Use a different seed for B
-        w_B = w_generator.generate(size=(N, N), dtype=torch.float32).to(self.device)
-        win_B = win_generator.generate(size=(N, input_dim), dtype=torch.float32).to(self.device)
-        wbias_B = wbias_generator.generate(size=(N,), dtype=torch.float32).to(self.device)
-        self.reservoir_B = LiESNCell(
-            input_dim=input_dim,
-            output_dim=N,
-            w=w_B,
-            w_in=win_B,
-            w_bias=wbias_B,
-            leaky_rate=lr,
-            noise_generator=noise_generator,
-            dtype=torch.float32
-        ).to(self.device)
-
-        # 4. Create readouts (but do not train them yet)
-        self.readout_A = RRCell(input_dim=N, output_dim=1, dtype=torch.float32, device=self.device)
-        self.readout_B = RRCell(input_dim=N, output_dim=1, dtype=torch.float32, device=self.device)
-
-        self.states_A = []
-        self.states_B = []
-
-        # Ensure reservoirs are in training mode to update hidden states
-        self.reservoir_A.train()
-        self.reservoir_B.train()
+        # Initialize state tracking lists
+        self.reset()
 
     def reset(self):
-        """Resets the readouts and collected states for a new trial."""
+        """Resets the system to a clean state for a new trial."""
+        if hasattr(self.reservoir_A, 'reset_hidden'):
+            self.reservoir_A.reset_hidden()
+            self.reservoir_B.reset_hidden()
+        
         self.readout_A.reset()
         self.readout_B.reset()
-        self.states_A = []
-        self.states_B = []
 
-    def collect_state(self, state_A, state_B):
-        """Appends states to internal storage for later readout training."""
-        self.states_A.append(state_A)
-        self.states_B.append(state_B)
+        self.collected_states_A = []
+        self.collected_states_B = []
+        self.readout_outputs_A = None
+        self.readout_outputs_B = None
+
+    def step(self, input_A, input_B, collect=False):
+        """
+        Runs one step of the reservoirs and optionally collects the states.
+        """
+        input_A_tensor = input_A.reshape(1, 1, -1).to(self.device) * self.input_scaling
+        input_B_tensor = input_B.reshape(1, 1, -1).to(self.device) * self.input_scaling
+        
+        self.reservoir_A(input_A_tensor)
+        self.reservoir_B(input_B_tensor)
+
+        if collect:
+            self.collect_state(self.reservoir_A.hidden.clone(), self.reservoir_B.hidden.clone())
+            
+        return self.reservoir_A.hidden.clone(), self.reservoir_B.hidden.clone()
+
+    def collect_state(self, x_A, x_B):
+        self.collected_states_A.append(x_A.squeeze().cpu().detach())
+        self.collected_states_B.append(x_B.squeeze().cpu().detach())
+
+    def get_state(self):
+        """Returns the concatenated current state of both reservoirs."""
+        state_A = self.reservoir_A.hidden
+        state_B = self.reservoir_B.hidden
+        return torch.cat((state_A.flatten(), state_B.flatten()), dim=0).unsqueeze(0)
+
+    def get_state_individual(self):
+        """Returns the current state of each reservoir individually."""
+        return self.reservoir_A.hidden.clone(), self.reservoir_B.hidden.clone()
 
     def train_readouts(self, targets_A, targets_B):
         """
-        Trains the Ridge readouts on all collected states using the
-        EchoTorch two-stage training process.
+        Trains the readout layers for both reservoirs on the collected states.
         """
-        # Ensure readouts are in training mode
-        self.readout_A.train(True)
-        self.readout_B.train(True)
-        
-        # --- Move to CPU for memory-intensive training ---
-        # The covariance matrix calculation can exhaust GPU VRAM.
-        # Moving to CPU lets us use system RAM. We also up-cast to float64
-        # for better numerical stability during this one-off training step.
-        self.readout_A.to('cpu').to(torch.float64)
-        self.readout_B.to('cpu').to(torch.float64)
-        
-        # Concatenate the collected states.
-        X_A = torch.cat(self.states_A, dim=0).to('cpu', dtype=torch.float64)
-        X_B = torch.cat(self.states_B, dim=0).to('cpu', dtype=torch.float64)
+        if not self.collected_states_A or not self.collected_states_B:
+            raise ValueError("No states have been collected. Call step() with collect=True first.")
 
-        # Convert numpy targets to tensors with shape (batch, time, features)
-        y_A = torch.from_numpy(targets_A).double().unsqueeze(0).to('cpu')
-        y_B = torch.from_numpy(targets_B).double().unsqueeze(0).to('cpu')
+        states_A_tensor = torch.stack(self.collected_states_A, dim=0).unsqueeze(0).to(self.device)
+        states_B_tensor = torch.stack(self.collected_states_B, dim=0).unsqueeze(0).to(self.device)
 
-        # Stage 1: Accumulate xTx and xTy matrices
-        self.readout_A(X_A, y_A)
-        self.readout_B(X_B, y_B)
+        # Robustly handle targets whether they are numpy arrays or tensors
+        if isinstance(targets_A, np.ndarray):
+            targets_A_tensor = torch.from_numpy(targets_A).float().view(-1, 1).to(self.device)
+        else:
+            targets_A_tensor = targets_A.float().view(-1, 1).to(self.device)
 
-        # Stage 2: Finalize training to compute w_out
+        if isinstance(targets_B, np.ndarray):
+            targets_B_tensor = torch.from_numpy(targets_B).float().view(-1, 1).to(self.device)
+        else:
+            targets_B_tensor = targets_B.float().view(-1, 1).to(self.device)
+
+        # Add a batch dimension to match the states tensor
+        targets_A_tensor = targets_A_tensor.unsqueeze(0)
+        targets_B_tensor = targets_B_tensor.unsqueeze(0)
+
+        self.readout_A.reset()
+        self.readout_A.train()
+        self.readout_A(states_A_tensor, targets_A_tensor)
         self.readout_A.finalize()
+        self.readout_A.eval()
+
+        self.readout_B.reset()
+        self.readout_B.train()
+        self.readout_B(states_B_tensor, targets_B_tensor)
         self.readout_B.finalize()
-        
-        # --- Move back to original device for inference ---
-        self.readout_A.to(self.device).to(torch.float32)
-        self.readout_B.to(self.device).to(torch.float32)
+        self.readout_B.eval()
 
-        # Diagnose the training by calculating the Mean Squared Error
-        # The readout is now in eval mode after finalize()
-        pred_A = self.readout_A(torch.cat(self.states_A, dim=0))
-        pred_B = self.readout_B(torch.cat(self.states_B, dim=0))
+        self.readout_outputs_A = self.readout_A(states_A_tensor)
+        self.readout_outputs_B = self.readout_B(states_B_tensor)
 
-        mse_A = torch.mean((pred_A.to(self.device) - torch.from_numpy(targets_A).float().unsqueeze(0).to(self.device)) ** 2).item()
-        mse_B = torch.mean((pred_B.to(self.device) - torch.from_numpy(targets_B).float().unsqueeze(0).to(self.device)) ** 2).item()
+        mse_A = torch.mean((self.readout_outputs_A - targets_A_tensor)**2).item()
+        mse_B = torch.mean((self.readout_outputs_B - targets_B_tensor)**2).item()
+
+        self.collected_states_A.clear()
+        self.collected_states_B.clear()
 
         return mse_A, mse_B
 
     def get_readout_outputs(self):
+        """Returns the outputs from the trained readout layers."""
+        if self.readout_outputs_A is None or self.readout_outputs_B is None:
+            raise ValueError("Readouts have not been trained or used yet.")
+        return self.readout_outputs_A, self.readout_outputs_B
+
+    def diagnose(self, steps=2000, plot_path="diagnostics_report.png"):
         """
-        Runs the collected states through the trained readouts to get
-        the final output streams.
+        Runs diagnostic checks on the reservoirs and generates a report.
         """
-        # Concatenate the collected states, which already have the correct shape.
-        X_A = torch.cat(self.states_A, dim=0)
-        X_B = torch.cat(self.states_B, dim=0)
-
-        outputs_A = self.readout_A(X_A)
-        outputs_B = self.readout_B(X_B)
-
-        # Return as a simple numpy array
-        return outputs_A.squeeze(0).detach().cpu().numpy(), outputs_B.squeeze(0).detach().cpu().numpy()
-
-    def diagnose(self, steps=2000, save_path="apsu/diagnostics_report_echotorch.png"):
-        """
-        Runs a pre-flight check to validate reservoir health.
-        """
-        print(f"Running diagnosis for {steps} steps...")
+        logging.info(f"Starting diagnostic run for {steps} steps...")
+        self.reset()
+        inputs = torch.randn(steps, 2).to(self.device)
         
-        # 1. Run reservoirs with white-noise input.
-        white_noise = (torch.randn(1, steps, self.input_dim) * 0.5).float().to(self.device)
+        states_A_diag = []
+        states_B_diag = []
+
+        with torch.no_grad():
+            for i in range(steps):
+                self.step(inputs[i:i+1, 0:1], inputs[i:i+1, 1:2])
+                states_A_diag.append(self.reservoir_A.hidden.squeeze().cpu().numpy())
+                states_B_diag.append(self.reservoir_B.hidden.squeeze().cpu().numpy())
+
+        states_A_diag = np.array(states_A_diag)
+        states_B_diag = np.array(states_B_diag)
+        logging.info("Diagnostic run complete. Generating plots...")
+
+        fig, axes = plt.subplots(2, 3, figsize=(22, 12), constrained_layout=True)
+        fig.suptitle(f"Classical System Diagnostics Report (Units={self.units}, SR={self.spectral_radius}, LR={self.leaking_rate})", fontsize=16)
         
-        self.reservoir_A.reset_hidden()
-        internal_states_A = self.reservoir_A(white_noise, reset_state=True)
-        internal_states_A = internal_states_A.squeeze(0).detach().cpu().numpy()
-        
-        print("Diagnosis run complete. Generating plots...")
+        self._plot_diagnosis(axes[0, :], states_A_diag, "Reservoir A", 'skyblue', 'darkviolet')
+        self._plot_diagnosis(axes[1, :], states_B_diag, "Reservoir B", 'salmon', 'darkgreen')
 
-        # 3. Generate and save a multi-panel plot.
-        fig, axes = plt.subplots(2, 2, figsize=(15, 12))
-        fig.suptitle(f"ClassicalSystem (EchoTorch) Diagnostic Report (Reservoir A)\nN={self.N}, sr={self.sr}, lr={self.lr}, noise={self.noise_rc}", fontsize=16)
+        output_dir = os.path.dirname(plot_path)
+        if output_dir:
+            os.makedirs(output_dir, exist_ok=True)
 
-        # Panel A: Histogram of activation values
-        axes[0, 0].hist(internal_states_A.flatten(), bins=50, density=True)
-        axes[0, 0].set_title("Neuron Activation Histogram")
-        axes[0, 0].set_xlabel("Activation Value")
-        axes[0, 0].set_ylabel("Density")
-
-        # Panel B: Time-series of 5 random neurons
-        random_neurons_indices = np.random.choice(self.N, 5, replace=False)
-        for i in random_neurons_indices:
-            axes[0, 1].plot(internal_states_A[:500, i], label=f"Neuron {i}")
-        axes[0, 1].set_title("Time-series of 5 Random Neurons (First 500 steps)")
-        axes[0, 1].set_xlabel("Time Step")
-        axes[0, 1].set_ylabel("Activation")
-        axes[0, 1].legend(fontsize='small')
-
-        # Panel C: 2D PCA projection of the attractor
-        pca = PCA(n_components=2)
-        states_pca = pca.fit_transform(internal_states_A)
-        axes[1, 0].plot(states_pca[:, 0], states_pca[:, 1], lw=0.5)
-        axes[1, 0].set_title("State Space Attractor (2D PCA Projection)")
-        axes[1, 0].set_xlabel("Principal Component 1")
-        axes[1, 0].set_ylabel("Principal Component 2")
-
-        # Panel D: Blank for now, can add Reservoir B diagnostics later
-        axes[1, 1].axis('off')
-        axes[1, 1].text(0.5, 0.5, 'Reservoir B Diagnostics TBD', ha='center', va='center', fontsize=12)
-
-
-        plt.tight_layout(rect=[0, 0.03, 1, 0.95])
-        
-        try:
-            plt.savefig(save_path)
-            print(f"Diagnostic report saved to {save_path}")
-        except Exception as e:
-            print(f"Error saving diagnostic plot: {e}")
-
+        plt.savefig(plot_path)
         plt.close()
+        logging.info(f"Diagnostic report saved to {plot_path}")
 
+    def _plot_diagnosis(self, ax_row, states, name, color1, color2):
+        """Helper to plot diagnostic panel for one reservoir."""
+        ax_row[0].hist(states.flatten(), bins=50, color=color1, edgecolor='black')
+        ax_row[0].set_title(f"{name}: Activations Histogram")
+        ax_row[0].set_xlabel("Activation Value")
+        ax_row[0].set_ylabel("Frequency")
 
-def main():
-    """
-    Main function to execute Phase 0: Baseline Characterization.
-    """
-    print("--- Starting Project Apsu (EchoTorch): Phase 0 ---")
-    
-    # Instantiate the system with default parameters from the spec, explicitly on CPU for diagnosis
-    classical_system = ClassicalSystemEchoTorch(device='cpu')
-    
-    # Run the diagnostic pre-flight check
-    classical_system.diagnose()
-    
-    print("--- Phase 0 Complete ---")
+        for i in range(min(5, self.units)):
+            neuron_idx = np.random.randint(0, states.shape[1])
+            ax_row[1].plot(states[:200, neuron_idx], lw=1)
+        ax_row[1].set_title(f"{name}: Random Neuron Activations (200 steps)")
+        ax_row[1].set_xlabel("Time Step")
+        ax_row[1].set_ylabel("Activation")
 
-
-if __name__ == "__main__":
-    main() 
+        if self.units > 1:
+            pca = PCA(n_components=2)
+            projected_states = pca.fit_transform(states)
+            ax_row[2].plot(projected_states[:, 0], projected_states[:, 1], lw=0.5, color=color2)
+            ax_row[2].set_title(f"{name}: PCA of State Space Attractor")
+            ax_row[2].set_xlabel("Principal Component 1")
+            ax_row[2].set_ylabel("Principal Component 2")
+        else:
+            ax_row[2].axis('off')
+            ax_row[2].text(0.5, 0.5, 'PCA not applicable (units=1)', ha='center', va='center') 

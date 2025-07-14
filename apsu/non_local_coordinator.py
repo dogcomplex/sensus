@@ -1,88 +1,66 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
+import numpy as np
 
 class NonLocalCoordinator(nn.Module):
     """
-    The Non-Local Coordinator (NLC).
-
-    As per spec §4.2, this is the trainable controller module. For the first
-    part of Phase 2, this is a simple linear controller to test baseline
-    capabilities.
-
-    It takes the concatenated state of both ESNs and computes a corrective
-    signal for each.
+    The "Fast Controller" - a non-linear function approximator (NN).
     """
-    def __init__(self, esn_dimension, hidden_dim=None, is_linear=True):
-        """
-        Args:
-            esn_dimension (int): The state dimension (N) of a single ESN.
-                                 The input to the NLC is 2*N.
-            hidden_dim (int, optional): Dimension of the hidden layer. If None,
-                                        a linear controller is created.
-            is_linear (bool): If True, creates a single-layer linear controller.
-                              This overrides hidden_dim.
-        """
+    def __init__(self, input_dim, hidden_dim, output_dim=2, use_bias=True):
         super(NonLocalCoordinator, self).__init__()
+        self.network = nn.Sequential(
+            nn.Linear(input_dim, hidden_dim, bias=use_bias),
+            nn.ReLU(),
+            nn.Linear(hidden_dim, hidden_dim, bias=use_bias),
+            nn.ReLU(),
+            nn.Linear(hidden_dim, output_dim, bias=use_bias),
+            nn.Tanh()
+        )
+        self.init_weights()
+
+    def init_weights(self):
+        """
+        Initializes the weights of the network using Kaiming He uniform initialization.
+        """
+        for m in self.network:
+            if isinstance(m, nn.Linear):
+                nn.init.kaiming_uniform_(m.weight, a=np.sqrt(5))
+                if m.bias is not None:
+                    fan_in, _ = nn.init._calculate_fan_in_and_fan_out(m.weight)
+                    bound = 1 / np.sqrt(fan_in)
+                    nn.init.uniform_(m.bias, -bound, bound)
+
+    def forward(self, x):
+        """
+        Performs the forward pass of the controller.
         
-        input_dim = 2 * esn_dimension
-        output_dim = 2 # Corrective signal c_A and c_B
-
-        if is_linear:
-            # Per Phase 2 spec, start with a simple linear controller.
-            self.model = nn.Sequential(
-                nn.Linear(input_dim, output_dim),
-                # Tanh is a critical safety mechanism to bound outputs to [-1, 1]
-                # and prevent runaway feedback (Spec §4.2)
-                nn.Tanh()
-            )
-        else:
-            # Full non-linear controller for later phases (Spec §4.2)
-            self.model = nn.Sequential(
-                nn.Linear(input_dim, hidden_dim),
-                nn.ReLU(),
-                nn.Linear(hidden_dim, hidden_dim),
-                nn.ReLU(),
-                nn.Linear(hidden_dim, output_dim),
-                nn.Tanh()
-            )
-        
-        # Initialize weights as per spec §4.2
-        self.apply(self._init_weights)
-
-    def _init_weights(self, module):
-        """
-        Applies Kaiming He uniform initialization to linear layers.
-        """
-        if isinstance(module, nn.Linear):
-            nn.init.kaiming_uniform_(module.weight, nonlinearity='relu')
-            if module.bias is not None:
-                nn.init.zeros_(module.bias)
-
-    def forward(self, state_a, state_b):
-        """
-        Computes the corrective signals.
-
-        Can handle both single state vectors [1, N] and sequences [T, N].
-
         Args:
-            state_a (torch.Tensor): The state vector(s) of ESN A.
-            state_b (torch.Tensor): The state vector(s) of ESN B.
-
+            x (torch.Tensor): The combined state of the two reservoirs.
+            
         Returns:
-            (torch.Tensor, torch.Tensor): Corrective signal(s) c_a, c_b.
+            torch.Tensor: The corrective signals, bounded between [-1, 1].
         """
-        # Combine along the feature dimension
-        # Input shape for a sequence: state_a=[T, 100], state_b=[T, 100]
-        # Output shape of combined_state: [T, 200]
-        combined_state = torch.cat([state_a, state_b], dim=-1)
-        
-        # Get corrective signals. The model processes the sequence directly.
-        # Output shape of corrections: [T, 2]
-        corrections = self.model(combined_state)
-        
-        # Split the corrections back into c_a and c_b
-        # Output shapes: [T, 1] for both
-        c_a = corrections[:, 0].unsqueeze(-1)
-        c_b = corrections[:, 1].unsqueeze(-1)
+        return self.network(x)
 
-        return c_a, c_b 
+    def get_n_params(self):
+        """Returns the total number of trainable parameters in the controller."""
+        return sum(p.numel() for p in self.parameters() if p.requires_grad)
+
+    def set_weights(self, weights: np.ndarray):
+        """
+        Sets the weights of the controller from a flat numpy array.
+        """
+        if not isinstance(weights, np.ndarray):
+            raise TypeError(f"Weights must be a numpy array, but got {type(weights)}")
+            
+        with torch.no_grad():
+            start = 0
+            for param in self.parameters():
+                if param.requires_grad:
+                    n_param = param.numel()
+                    end = start + n_param
+                    # Ensure the weights tensor has the same dtype and device as the model parameter.
+                    new_data = torch.from_numpy(weights[start:end]).reshape(param.shape)
+                    param.data = new_data.to(device=param.device, dtype=param.dtype)
+                    start = end 

@@ -1,0 +1,37 @@
+{
+    "experiment_id": "reservoir_controller_fast_smoke_test",
+    "description": "Fast smoke test for the Reservoir-as-Controller architecture, optimized with CMA-ES.",
+    "optimizer": {
+        "type": "CMAES",
+        "config": {
+            "sigma0": 0.5,
+            "popsize": 10,
+            "max_generations": 5
+        }
+    },
+    "controller": {
+        "type": "Reservoir",
+        "config": {
+            "units": 32,
+            "spectral_radius": 0.99,
+            "leaking_rate": 0.2,
+            "noise_rc": 0.001,
+            "input_scaling": 1.0
+        }
+    },
+    "classical_system": {
+        "units": 50,
+        "spectral_radius": 0.95,
+        "leaking_rate": 0.3,
+        "noise_rc": 0.001,
+        "input_scaling": 1.0,
+        "seed": 44
+    },
+    "chsh_evaluation": {
+        "delay": 1,
+        "washout_time": 200,
+        "eval_time": 500,
+        "chsh_seed_base": 1339
+    },
+    "results_dir": "apsu/experiments/reservoir/results_fast"
+}

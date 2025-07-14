@@ -1,0 +1,35 @@
+{
+    "experiment_name": "phase2_large_nonlinear_full",
+    "experiment_description": "Phase 2, Test B (Full): Full optimization run of a large non-linear controller.",
+    "device": "cuda",
+    "num_workers": 20,
+    "results_dir": "apsu/review/phase2/test_b_full",
+
+    "classical_system_config": {
+        "units": 100,
+        "spectral_radius": 0.95,
+        "leaking_rate": 0.3,
+        "noise_rc": 0.001,
+        "input_scaling": 1.0,
+        "seed": 9001
+    },
+    
+    "controller_config": {
+        "input_dim": 200,
+        "hidden_dims": [256, 256],
+        "output_dim": 2,
+        "activation_function": "relu"
+    },
+
+    "simulation_config": {
+        "washout_time": 1000,
+        "eval_block_size": 1000,
+        "controller_delay": 1
+    },
+
+    "optimizer_config": {
+        "sigma0": 0.5,
+        "population_size": 50,
+        "n_generations": 100
+    }
+}

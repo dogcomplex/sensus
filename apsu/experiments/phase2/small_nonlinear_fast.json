@@ -1,0 +1,17 @@
+{
+    "optimizer": "cma_es",
+    "run_type": "test",
+    "description": "Short (10 gen) diagnostic test using the 'winning' strategy from the initial review: a small network with noisy fitness evaluation.",
+    
+    "esn_dimension": 100,
+    "is_linear": false,
+    "hidden_dim": 16,
+    "delay": 1,
+    
+    "optimizer_params": {
+        "max_generations": 10,
+        "population_size": 12,
+        "num_workers": 4,
+        "n_avg": 1
+    }
+} 
