@@ -4,6 +4,7 @@ import sys
 import os
 from datetime import datetime
 import torch
+from pathlib import Path
 
 # Force OpenMP to use a single thread to avoid multiprocessing-related memory errors
 # that can occur with libraries like scikit-learn on Windows. This must be set
@@ -18,13 +19,13 @@ from apsu.optimizers.sa_optimizer import SAOptimizer
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-def fitness_function_wrapper(eval_args):
+def fitness_function_wrapper(args):
     """
     A top-level wrapper to unpack arguments for multiprocessing.Pool.imap.
     This function must be at the top level to be pickleable by multiprocessing.
     """
-    weights, config, seed = eval_args
-    return evaluate_fitness(weights, config, seed, return_diagnostics=True)
+    individual, eval_config = args
+    return evaluate_fitness(individual, eval_config, return_full_results=True)
 
 def get_optimizer(optimizer_config, dimension, run_path) -> BaseOptimizer:
     """Factory function to get the appropriate optimizer."""
@@ -46,15 +47,22 @@ def run_experiment(config_path):
         with open(config_path, 'r') as f:
             config = json.load(f)
 
-        run_id = f"apsu_experiment_{int(datetime.now().timestamp())}"
-        results_dir = config.get("results_dir", "results")
-        run_path = os.path.join(results_dir, run_id)
-        os.makedirs(run_path, exist_ok=True)
+        # Create a unique directory for this run's results
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        run_name = f"apsu_experiment_{timestamp}"
+        run_path = Path(config.get("results_dir", "results")) / run_name
+        run_path.mkdir(parents=True, exist_ok=True)
+
+        # Save the configuration used for this run
+        with open(run_path / 'config.json', 'w') as f:
+            json.dump(config, f, indent=4)
+
+        log_file_handler = logging.FileHandler(run_path / 'run.log')
+        log_file_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+        logging.getLogger().addHandler(log_file_handler)
+
         logging.info(f"Results will be saved in: {run_path}")
 
-        with open(os.path.join(run_path, 'config.json'), 'w') as f:
-            json.dump(config, f, indent=4)
-        
         device = config.get('device', 'cpu')
         temp_controller = _create_controller(config, device)
         n_params = temp_controller.get_n_params()

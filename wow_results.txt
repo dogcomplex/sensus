@@ -1,0 +1,597 @@
+
+G:\LOKI\LOCUS\SENSUS\sensus>
+G:\LOKI\LOCUS\SENSUS\sensus>.\.venv\Scripts\python.exe -m apsu.batch_runner --mode smoke --force
+Using Python executable: G:\LOKI\LOCUS\SENSUS\sensus\.venv\Scripts\python.exe
+--- FORCE flag is active. This will ensure all experiments are run, but will no longer clear results. ---
+Starting batch run in 'smoke' mode. Total experiments: 5
+
+--------------------------------------------------------------------------------
+Processing experiment 1/5
+--- RUNNING: G:\LOKI\LOCUS\SENSUS\sensus\.venv\Scripts\python.exe -m apsu.run_phase0 ---
+2025-07-14 00:03:01,576 - INFO - --- Starting Project Apsu: Phase 0 ---
+2025-07-14 00:03:01,576 - INFO - Loaded configuration from apsu/experiments/phase0/phase0_config.json
+2025-07-14 00:03:01,620 - INFO - ClassicalSystem instantiated on device: cpu
+2025-07-14 00:03:01,620 - INFO - Starting diagnostic run for 2000 steps...
+2025-07-14 00:03:02,033 - INFO - Diagnostic run complete. Generating plots...
+2025-07-14 00:03:02,518 - INFO - Diagnostic report saved to apsu/review/phase0/diagnostics_report.png
+2025-07-14 00:03:02,518 - INFO - --- Phase 0 Complete ---
+--- SUCCESS: G:\LOKI\LOCUS\SENSUS\sensus\.venv\Scripts\python.exe -m apsu.run_phase0 ---
+
+--------------------------------------------------------------------------------
+Processing experiment 2/5
+--- RUNNING: G:\LOKI\LOCUS\SENSUS\sensus\.venv\Scripts\python.exe -m apsu.run_phase1 --config apsu/experiments/phase1/phase1_fast_config.json ---
+2025-07-14 00:03:11,678 - INFO - --- Starting Project Apsu: Phase 1 (Null Experiment) ---
+2025-07-14 00:03:11,678 - INFO - Loaded configuration from apsu/experiments/phase1/phase1_fast_config.json
+
+Running Null Experiment Trials:   0%|          | 0/10 [00:00<?, ?it/s]
+Running Null Experiment Trials:  10%|#         | 1/10 [00:00<00:00,  9.40it/s]
+Running Null Experiment Trials:  30%|###       | 3/10 [00:00<00:00, 10.46it/s]
+Running Null Experiment Trials:  50%|#####     | 5/10 [00:00<00:00, 10.57it/s]
+Running Null Experiment Trials:  70%|#######   | 7/10 [00:00<00:00, 10.56it/s]
+Running Null Experiment Trials:  90%|######### | 9/10 [00:00<00:00, 11.08it/s]
+Running Null Experiment Trials: 100%|##########| 10/10 [00:00<00:00, 10.88it/s]
+2025-07-14 00:03:12,600 - INFO - Completed 10 trials.
+2025-07-14 00:03:12,600 - INFO - S-Score Mean: 2.0000
+2025-07-14 00:03:12,601 - INFO - S-Score Std Dev: 0.0000
+2025-07-14 00:03:12,899 - INFO - Results plot saved to apsu/review/phase1/phase1_null_experiment_results_fast.png
+2025-07-14 00:03:12,899 - INFO - --- Phase 1 Complete ---
+2025-07-14 00:03:12,899 - INFO - VALIDATION PASSED: Mean S-score is within the expected classical range.
+--- SUCCESS: G:\LOKI\LOCUS\SENSUS\sensus\.venv\Scripts\python.exe -m apsu.run_phase1 --config apsu/experiments/phase1/phase1_fast_config.json ---
+
+--------------------------------------------------------------------------------
+Processing experiment 3/5
+--- RUNNING: G:\LOKI\LOCUS\SENSUS\sensus\.venv\Scripts\python.exe -m apsu.harness --config=apsu/experiments/cma_es/smoke_config.json ---
+2025-07-14 00:03:24,586 - INFO - Results will be saved in: apsu/experiments/cma_es/results_smoke\apsu_experiment_1752476604
+2025-07-14 00:03:24,587 - INFO - Controller has 898 parameters.
+2025-07-14 00:03:24,589 - INFO - Using optimizer: CMAESOptimizer
+2025-07-14 00:03:24,589 - INFO - Starting CMA-ES optimization for 2 generations.
+2025-07-14 00:03:24,680 - INFO - --- Generation 1/2 ---
+(2_w,4mirr1)-aCMA-ES (mu_w=1.5,w_1=80%) in dimension 898 (seed=575540, Mon Jul 14 00:03:24 2025)
+   Covariance matrix is diagonal
+
+Gen 1:   0%|          | 0/4 [00:00<?, ?it/s]
+Gen 1:  25%|##5       | 1/4 [00:14<00:42, 14.11s/it]
+Gen 1:  75%|#######5  | 3/4 [00:14<00:03,  3.70s/it]
+Gen 1: 100%|##########| 4/4 [00:14<00:00,  3.57s/it]
+2025-07-14 00:03:38,963 - INFO - Generation 1: Best Fitness=2.1481, Avg Fitness=2.0370
+2025-07-14 00:03:39,251 - INFO - --- Generation 2/2 ---
+G:\LOKI\LOCUS\SENSUS\sensus\.venv\Lib\site-packages\cma\utilities\utils.py:343: UserWarning:   3 special injected samples with popsize 4, popsize 5 will be used ()
+  warnings.warn(msg + ' (' +
+
+Gen 2:   0%|          | 0/4 [00:00<?, ?it/s]
+Gen 2:  50%|#####     | 2/4 [00:00<00:00, 19.89it/s]
+Gen 2: 100%|##########| 4/4 [00:00<00:00, 23.68it/s]
+2025-07-14 00:03:39,432 - INFO - Generation 2: Best Fitness=2.1481, Avg Fitness=2.0289
+2025-07-14 00:03:42,600 - INFO - CMA-ES optimization finished.
+2025-07-14 00:03:42,601 - INFO - Optimization finished.
+--- SUCCESS: G:\LOKI\LOCUS\SENSUS\sensus\.venv\Scripts\python.exe -m apsu.harness --config=apsu/experiments/cma_es/smoke_config.json ---
+
+--------------------------------------------------------------------------------
+Processing experiment 4/5
+--- RUNNING: G:\LOKI\LOCUS\SENSUS\sensus\.venv\Scripts\python.exe -m apsu.harness --config=apsu/experiments/sa/smoke_config.json ---
+2025-07-14 00:03:53,705 - INFO - Results will be saved in: apsu/experiments/sa/results_smoke\apsu_experiment_1752476633
+2025-07-14 00:03:53,706 - INFO - Controller has 898 parameters.
+2025-07-14 00:03:53,706 - INFO - Using optimizer: SAOptimizer
+2025-07-14 00:03:53,706 - INFO - Starting Simulated Annealing optimization for 10 iterations.
+
+Simulated Annealing:   0%|          | 0/10 [00:00<?, ?it/s]2025-07-14 00:03:53,834 - INFO - Iteration 1/10: Best Fitness=2.0000, Current Temp=0.9500
+
+Simulated Annealing:  10%|#         | 1/10 [00:00<00:01,  4.61it/s]
+Simulated Annealing:  40%|####      | 4/10 [00:00<00:00, 12.53it/s]
+Simulated Annealing:  70%|#######   | 7/10 [00:00<00:00, 15.96it/s]
+Simulated Annealing:  90%|######### | 9/10 [00:00<00:00, 16.77it/s]
+Simulated Annealing: 100%|##########| 10/10 [00:00<00:00, 15.17it/s]
+2025-07-14 00:03:54,446 - INFO - Simulated Annealing optimization finished.
+2025-07-14 00:03:54,563 - INFO - Optimization finished.
+--- SUCCESS: G:\LOKI\LOCUS\SENSUS\sensus\.venv\Scripts\python.exe -m apsu.harness --config=apsu/experiments/sa/smoke_config.json ---
+
+--------------------------------------------------------------------------------
+Processing experiment 5/5
+--- RUNNING: G:\LOKI\LOCUS\SENSUS\sensus\.venv\Scripts\python.exe -m apsu.harness --config=apsu/experiments/reservoir/smoke_config.json ---
+2025-07-14 00:03:59,130 - INFO - Results will be saved in: apsu/experiments/reservoir/results_smoke\apsu_experiment_1752476639
+2025-07-14 00:03:59,132 - INFO - Controller has 42 parameters.
+2025-07-14 00:03:59,134 - INFO - Using optimizer: CMAESOptimizer
+2025-07-14 00:03:59,134 - INFO - Starting CMA-ES optimization for 2 generations.
+2025-07-14 00:03:59,224 - INFO - --- Generation 1/2 ---
+(2_w,4mirr1)-aCMA-ES (mu_w=1.5,w_1=80%) in dimension 42 (seed=494431, Mon Jul 14 00:03:59 2025)
+   Covariance matrix is diagonal
+
+Gen 1:   0%|          | 0/4 [00:00<?, ?it/s]
+Gen 1:  25%|##5       | 1/4 [00:15<00:45, 15.12s/it]
+Gen 1:  50%|#####     | 2/4 [00:15<00:12,  6.48s/it]
+Gen 1: 100%|##########| 4/4 [00:15<00:00,  2.47s/it]
+Gen 1: 100%|##########| 4/4 [00:15<00:00,  3.93s/it]
+2025-07-14 00:04:14,946 - INFO - Generation 1: Best Fitness=2.4200, Avg Fitness=2.0274
+2025-07-14 00:04:15,100 - INFO - --- Generation 2/2 ---
+
+Gen 2:   0%|          | 0/4 [00:00<?, ?it/s]
+Gen 2:  25%|##5       | 1/4 [00:00<00:02,  1.37it/s]
+Gen 2: 100%|##########| 4/4 [00:00<00:00,  5.13it/s]
+2025-07-14 00:04:15,882 - INFO - Generation 2: Best Fitness=2.4200, Avg Fitness=1.7660
+2025-07-14 00:04:17,989 - INFO - CMA-ES optimization finished.
+2025-07-14 00:04:17,989 - INFO - Optimization finished.
+--- SUCCESS: G:\LOKI\LOCUS\SENSUS\sensus\.venv\Scripts\python.exe -m apsu.harness --config=apsu/experiments/reservoir/smoke_config.json ---
+
+================================================================================
+BATCH RUN SUMMARY
+================================================================================
+Total experiments attempted: 5
+Succeeded: 5
+Failed: 0
+
+Result: ALL EXPERIMENTS SUCCEEDED
+================================================================================
+
+G:\LOKI\LOCUS\SENSUS\sensus>
+G:\LOKI\LOCUS\SENSUS\sensus>
+
+
+
+
+
+
+
+
+
+
+
+G:\LOKI\LOCUS\SENSUS\sensus>
+G:\LOKI\LOCUS\SENSUS\sensus>.\.venv\Scripts\python.exe -m apsu.batch_runner --mode s_curve --force
+Using Python executable: G:\LOKI\LOCUS\SENSUS\sensus\.venv\Scripts\python.exe
+--- FORCE flag is active. This will ensure all experiments are run, but will no longer clear results. ---
+--- Generating S(R) curve experiment configurations... ---
+Generating config: apsu\experiments\s_curve\d_0_5_config.json for d=0.5
+Generating config: apsu\experiments\s_curve\d_1_config.json for d=1
+Generating config: apsu\experiments\s_curve\d_2_config.json for d=2
+Generating config: apsu\experiments\s_curve\d_3_config.json for d=3
+Generating config: apsu\experiments\s_curve\d_5_config.json for d=5
+Generating config: apsu\experiments\s_curve\d_8_config.json for d=8
+Generating config: apsu\experiments\s_curve\d_13_config.json for d=13
+--- Configuration generation complete. ---
+Starting batch run in 's_curve' mode. Total experiments: 9
+
+--------------------------------------------------------------------------------
+Processing experiment 1/9
+--- RUNNING: G:\LOKI\LOCUS\SENSUS\sensus\.venv\Scripts\python.exe -m apsu.run_phase0 ---
+2025-07-14 00:18:16,155 - INFO - --- Starting Project Apsu: Phase 0 ---
+2025-07-14 00:18:16,155 - INFO - Loaded configuration from apsu/experiments/phase0/phase0_config.json
+2025-07-14 00:18:16,199 - INFO - ClassicalSystem instantiated on device: cpu
+2025-07-14 00:18:16,199 - INFO - Starting diagnostic run for 2000 steps...
+2025-07-14 00:18:16,593 - INFO - Diagnostic run complete. Generating plots...
+2025-07-14 00:18:17,039 - INFO - Diagnostic report saved to apsu/review/phase0/diagnostics_report.png
+2025-07-14 00:18:17,039 - INFO - --- Phase 0 Complete ---
+--- SUCCESS: G:\LOKI\LOCUS\SENSUS\sensus\.venv\Scripts\python.exe -m apsu.run_phase0 ---
+
+--------------------------------------------------------------------------------
+Processing experiment 2/9
+--- RUNNING: G:\LOKI\LOCUS\SENSUS\sensus\.venv\Scripts\python.exe -m apsu.run_phase1 --config apsu\experiments\phase1\phase1_full_config.json ---
+2025-07-14 00:18:24,024 - INFO - --- Starting Project Apsu: Phase 1 (Null Experiment) ---
+2025-07-14 00:18:24,024 - INFO - Loaded configuration from apsu\experiments\phase1\phase1_full_config.json
+
+Running Null Experiment Trials:   0%|          | 0/100 [00:00<?, ?it/s]
+Running Null Experiment Trials:   1%|1         | 1/100 [00:00<00:45,  2.17it/s]
+Running Null Experiment Trials:   2%|2         | 2/100 [00:00<00:48,  2.03it/s]
+Running Null Experiment Trials:   3%|3         | 3/100 [00:01<00:44,  2.16it/s]
+...
+Running Null Experiment Trials:  97%|#########7| 97/100 [00:41<00:01,  2.36it/s]
+Running Null Experiment Trials:  98%|#########8| 98/100 [00:41<00:00,  2.35it/s]
+Running Null Experiment Trials:  99%|#########9| 99/100 [00:42<00:00,  2.32it/s]
+Running Null Experiment Trials: 100%|##########| 100/100 [00:42<00:00,  2.33it/s]
+Running Null Experiment Trials: 100%|##########| 100/100 [00:42<00:00,  2.34it/s]
+2025-07-14 00:19:06,849 - INFO - Completed 100 trials.
+2025-07-14 00:19:06,849 - INFO - S-Score Mean: 1.9803
+2025-07-14 00:19:06,849 - INFO - S-Score Std Dev: 0.1792
+2025-07-14 00:19:07,033 - INFO - Results plot saved to apsu/review/phase1/phase1_null_experiment_results_full.png
+2025-07-14 00:19:07,033 - INFO - --- Phase 1 Complete ---
+2025-07-14 00:19:07,033 - INFO - VALIDATION PASSED: Mean S-score is within the expected classical range.
+--- SUCCESS: G:\LOKI\LOCUS\SENSUS\sensus\.venv\Scripts\python.exe -m apsu.run_phase1 --config apsu\experiments\phase1\phase1_full_config.json ---
+
+--------------------------------------------------------------------------------
+Processing experiment 3/9
+--- RUNNING: G:\LOKI\LOCUS\SENSUS\sensus\.venv\Scripts\python.exe -m apsu.harness --config=apsu\experiments\s_curve\d_0_5_config.json ---
+2025-07-14 00:19:24,567 - INFO - Results will be saved in: apsu/experiments/cma_es/results_full\apsu_experiment_1752477564
+2025-07-14 00:19:24,568 - INFO - Controller has 7554 parameters.
+2025-07-14 00:19:24,570 - INFO - Using optimizer: CMAESOptimizer
+2025-07-14 00:19:24,570 - INFO - Starting CMA-ES optimization for 200 generations.
+2025-07-14 00:19:24,653 - INFO - --- Generation 1/200 ---
+(8_w,16)-aCMA-ES (mu_w=4.8,w_1=32%) in dimension 7554 (seed=554919, Mon Jul 14 00:19:24 2025)
+   Covariance matrix is diagonal
+
+Gen 1:   0%|          | 0/16 [00:00<?, ?it/s]
+Gen 1:   6%|6         | 1/16 [00:13<03:29, 13.99s/it]
+Gen 1:  12%|#2        | 2/16 [00:14<01:24,  6.02s/it]
+Gen 1:  19%|#8        | 3/16 [00:14<00:43,  3.36s/it]
+Gen 1:  25%|##5       | 4/16 [00:14<00:25,  2.12s/it]
+Gen 1:  31%|###1      | 5/16 [00:14<00:15,  1.39s/it]
+Gen 1:  44%|####3     | 7/16 [00:15<00:06,  1.40it/s]
+Gen 1:  56%|#####6    | 9/16 [00:15<00:03,  2.29it/s]
+Gen 1:  69%|######8   | 11/16 [00:15<00:01,  3.28it/s]
+Gen 1:  88%|########7 | 14/16 [00:15<00:00,  5.38it/s]
+Gen 1: 100%|##########| 16/16 [00:15<00:00,  1.04it/s]
+2025-07-14 00:19:40,131 - INFO - Generation 1: Best Fitness=2.1744, Avg Fitness=1.4719
+2025-07-14 00:19:40,288 - INFO - --- Generation 2/200 ---
+
+....
+
+Gen 195:   0%|          | 0/16 [00:00<?, ?it/s]
+Gen 195:   6%|6         | 1/16 [00:00<00:12,  1.23it/s]
+Gen 195: 100%|##########| 16/16 [00:00<00:00, 18.31it/s]
+2025-07-14 00:22:59,034 - INFO - Generation 195: Best Fitness=2.2227, Avg Fitness=1.9109
+2025-07-14 00:22:59,160 - INFO - --- Generation 196/200 ---
+
+Gen 196:   0%|          | 0/16 [00:00<?, ?it/s]
+Gen 196:   6%|6         | 1/16 [00:00<00:12,  1.25it/s]
+Gen 196: 100%|##########| 16/16 [00:00<00:00, 18.19it/s]
+2025-07-14 00:23:00,059 - INFO - Generation 196: Best Fitness=2.2252, Avg Fitness=1.6738
+2025-07-14 00:23:00,189 - INFO - --- Generation 197/200 ---
+
+Gen 197:   0%|          | 0/16 [00:00<?, ?it/s]
+Gen 197:   6%|6         | 1/16 [00:00<00:12,  1.17it/s]
+Gen 197: 100%|##########| 16/16 [00:00<00:00, 18.15it/s]
+2025-07-14 00:23:01,092 - INFO - Generation 197: Best Fitness=2.2252, Avg Fitness=1.7261
+2025-07-14 00:23:01,254 - INFO - --- Generation 198/200 ---
+
+Gen 198:   0%|          | 0/16 [00:00<?, ?it/s]
+Gen 198:   6%|6         | 1/16 [00:00<00:12,  1.21it/s]
+Gen 198: 100%|##########| 16/16 [00:00<00:00, 17.87it/s]
+2025-07-14 00:23:02,171 - INFO - Generation 198: Best Fitness=2.2252, Avg Fitness=1.8394
+2025-07-14 00:23:02,298 - INFO - --- Generation 199/200 ---
+
+Gen 199:   0%|          | 0/16 [00:00<?, ?it/s]
+Gen 199:   6%|6         | 1/16 [00:00<00:12,  1.25it/s]
+Gen 199: 100%|##########| 16/16 [00:00<00:00, 17.97it/s]
+2025-07-14 00:23:03,209 - INFO - Generation 199: Best Fitness=2.2252, Avg Fitness=2.0051
+2025-07-14 00:23:03,350 - INFO - --- Generation 200/200 ---
+
+Gen 200:   0%|          | 0/16 [00:00<?, ?it/s]
+Gen 200:   6%|6         | 1/16 [00:00<00:11,  1.27it/s]
+Gen 200: 100%|##########| 16/16 [00:00<00:00, 18.05it/s]
+2025-07-14 00:23:04,257 - INFO - Generation 200: Best Fitness=2.2252, Avg Fitness=1.6909
+2025-07-14 00:23:06,316 - INFO - CMA-ES optimization finished.
+2025-07-14 00:23:06,317 - INFO - Optimization finished.
+--- SUCCESS: G:\LOKI\LOCUS\SENSUS\sensus\.venv\Scripts\python.exe -m apsu.harness --config=apsu\experiments\s_curve\d_0_5_config.json ---
+
+--------------------------------------------------------------------------------
+Processing experiment 4/9
+--- RUNNING: G:\LOKI\LOCUS\SENSUS\sensus\.venv\Scripts\python.exe -m apsu.harness --config=apsu\experiments\s_curve\d_1_config.json ---
+2025-07-14 00:23:24,348 - INFO - Results will be saved in: apsu/experiments/cma_es/results_full\apsu_experiment_1752477804
+2025-07-14 00:23:24,349 - INFO - Controller has 7554 parameters.
+2025-07-14 00:23:24,352 - INFO - Using optimizer: CMAESOptimizer
+2025-07-14 00:23:24,352 - INFO - Starting CMA-ES optimization for 200 generations.
+2025-07-14 00:23:24,442 - INFO - --- Generation 1/200 ---
+(8_w,16)-aCMA-ES (mu_w=4.8,w_1=32%) in dimension 7554 (seed=556606, Mon Jul 14 00:23:24 2025)
+   Covariance matrix is diagonal
+
+Gen 1:   0%|          | 0/16 [00:00<?, ?it/s]
+Gen 1:   6%|6         | 1/16 [00:14<03:37, 14.53s/it]
+Gen 1:  12%|#2        | 2/16 [00:15<01:29,  6.36s/it]
+Gen 1:  19%|#8        | 3/16 [00:15<00:46,  3.56s/it]
+Gen 1:  31%|###1      | 5/16 [00:15<00:17,  1.60s/it]
+Gen 1:  56%|#####6    | 9/16 [00:15<00:04,  1.56it/s]
+Gen 1:  69%|######8   | 11/16 [00:15<00:02,  2.15it/s]
+Gen 1:  88%|########7 | 14/16 [00:16<00:00,  3.36it/s]
+Gen 1: 100%|##########| 16/16 [00:16<00:00,  1.00s/it]
+2025-07-14 00:23:40,524 - INFO - Generation 1: Best Fitness=2.0170, Avg Fitness=1.8377
+2025-07-14 00:23:40,674 - INFO - --- Generation 2/200 ---
+
+Gen 2:   0%|          | 0/16 [00:00<?, ?it/s]
+Gen 2:   6%|6         | 1/16 [00:00<00:13,  1.08it/s]
+Gen 2:  44%|####3     | 7/16 [00:01<00:01,  8.96it/s]
+Gen 2: 100%|##########| 16/16 [00:01<00:00, 15.60it/s]
+2025-07-14 00:23:41,720 - INFO - Generation 2: Best Fitness=2.0170, Avg Fitness=1.5477
+2025-07-14 00:23:41,836 - INFO - --- Generation 3/200 ---
+
+Gen 3:   0%|          | 0/16 [00:00<?, ?it/s]
+Gen 3:   6%|6         | 1/16 [00:00<00:12,  1.15it/s]
+Gen 3: 100%|##########| 16/16 [00:00<00:00, 17.23it/s]
+2025-07-14 00:23:42,784 - INFO - Generation 3: Best Fitness=2.0804, Avg Fitness=1.6228
+2025-07-14 00:23:42,896 - INFO - --- Generation 4/200 ---
+
+....
+
+Gen 45:   0%|          | 0/16 [00:00<?, ?it/s]
+Gen 45:   6%|6         | 1/16 [00:00<00:13,  1.13it/s]
+Gen 45: 100%|##########| 16/16 [00:00<00:00, 17.53it/s]
+2025-07-14 00:24:28,353 - INFO - Generation 45: Best Fitness=2.2308, Avg Fitness=1.8833
+2025-07-14 00:24:28,479 - INFO - --- Generation 46/200 ---
+
+Gen 46:   0%|          | 0/16 [00:00<?, ?it/s]
+Gen 46:   6%|6         | 1/16 [00:00<00:13,  1.10it/s]
+Gen 46: 100%|##########| 16/16 [00:00<00:00, 17.25it/s]
+2025-07-14 00:24:29,429 - INFO - Generation 46: Best Fitness=2.2308, Avg Fitness=1.6138
+2025-07-14 00:24:29,570 - INFO - --- Generation 47/200 ---
+
+...
+
+Gen 200:   0%|          | 0/16 [00:00<?, ?it/s]
+Gen 200:   6%|6         | 1/16 [00:00<00:13,  1.14it/s]
+Gen 200: 100%|##########| 16/16 [00:00<00:00, 17.51it/s]
+2025-07-14 00:27:15,022 - INFO - Generation 200: Best Fitness=2.2308, Avg Fitness=1.6757
+2025-07-14 00:27:17,121 - INFO - CMA-ES optimization finished.
+2025-07-14 00:27:17,121 - INFO - Optimization finished.
+--- SUCCESS: G:\LOKI\LOCUS\SENSUS\sensus\.venv\Scripts\python.exe -m apsu.harness --config=apsu\experiments\s_curve\d_1_config.json ---
+
+--------------------------------------------------------------------------------
+Processing experiment 5/9
+--- RUNNING: G:\LOKI\LOCUS\SENSUS\sensus\.venv\Scripts\python.exe -m apsu.harness --config=apsu\experiments\s_curve\d_2_config.json ---
+2025-07-14 00:28:12,840 - INFO - Results will be saved in: apsu/experiments/cma_es/results_full\apsu_experiment_1752478092
+2025-07-14 00:28:12,841 - INFO - Controller has 7554 parameters.
+2025-07-14 00:28:12,844 - INFO - Using optimizer: CMAESOptimizer
+2025-07-14 00:28:12,844 - INFO - Starting CMA-ES optimization for 200 generations.
+2025-07-14 00:28:12,923 - INFO - --- Generation 1/200 ---
+(8_w,16)-aCMA-ES (mu_w=4.8,w_1=32%) in dimension 7554 (seed=584369, Mon Jul 14 00:28:12 2025)
+   Covariance matrix is diagonal
+
+Gen 1:   0%|          | 0/16 [00:00<?, ?it/s]
+Gen 1:   6%|6         | 1/16 [00:14<03:34, 14.29s/it]
+Gen 1:  12%|#2        | 2/16 [00:14<01:28,  6.29s/it]
+Gen 1:  19%|#8        | 3/16 [00:15<00:45,  3.51s/it]
+Gen 1:  31%|###1      | 5/16 [00:15<00:17,  1.59s/it]
+Gen 1:  44%|####3     | 7/16 [00:15<00:08,  1.08it/s]
+Gen 1:  75%|#######5  | 12/16 [00:15<00:01,  2.70it/s]
+Gen 1: 100%|##########| 16/16 [00:15<00:00,  1.01it/s]
+2025-07-14 00:28:28,764 - INFO - Generation 1: Best Fitness=2.0000, Avg Fitness=1.6832
+2025-07-14 00:28:28,922 - INFO - --- Generation 2/200 ---
+
+Gen 2:   0%|          | 0/16 [00:00<?, ?it/s]
+Gen 2:   6%|6         | 1/16 [00:01<00:15,  1.03s/it]
+Gen 2: 100%|##########| 16/16 [00:01<00:00, 15.60it/s]
+2025-07-14 00:28:29,969 - INFO - Generation 2: Best Fitness=2.0799, Avg Fitness=1.5168
+2025-07-14 00:28:30,073 - INFO - --- Generation 3/200 ---
+
+...
+
+Gen 108:   0%|          | 0/16 [00:00<?, ?it/s]
+Gen 108:   6%|6         | 1/16 [00:00<00:13,  1.12it/s]
+Gen 108: 100%|##########| 16/16 [00:00<00:00, 17.18it/s]
+2025-07-14 00:30:24,110 - INFO - Generation 108: Best Fitness=2.1919, Avg Fitness=1.6683
+2025-07-14 00:30:24,240 - INFO - --- Generation 109/200 ---
+
+Gen 109:   0%|          | 0/16 [00:00<?, ?it/s]
+Gen 109:   6%|6         | 1/16 [00:00<00:12,  1.17it/s]
+Gen 109: 100%|##########| 16/16 [00:00<00:00, 17.51it/s]
+2025-07-14 00:30:25,176 - INFO - Generation 109: Best Fitness=2.2439, Avg Fitness=1.7455
+2025-07-14 00:30:25,317 - INFO - --- Generation 110/200 ---
+
+...
+
+Gen 200:   0%|          | 0/16 [00:00<?, ?it/s]
+Gen 200:   6%|6         | 1/16 [00:00<00:12,  1.19it/s]
+Gen 200: 100%|##########| 16/16 [00:00<00:00, 17.49it/s]
+2025-07-14 00:32:03,691 - INFO - Generation 200: Best Fitness=2.2512, Avg Fitness=1.7308
+2025-07-14 00:32:05,784 - INFO - CMA-ES optimization finished.
+2025-07-14 00:32:05,784 - INFO - Optimization finished.
+--- SUCCESS: G:\LOKI\LOCUS\SENSUS\sensus\.venv\Scripts\python.exe -m apsu.harness --config=apsu\experiments\s_curve\d_2_config.json ---
+
+--------------------------------------------------------------------------------
+Processing experiment 6/9
+--- RUNNING: G:\LOKI\LOCUS\SENSUS\sensus\.venv\Scripts\python.exe -m apsu.harness --config=apsu\experiments\s_curve\d_3_config.json ---
+2025-07-14 00:32:13,211 - INFO - Results will be saved in: apsu/experiments/cma_es/results_full\apsu_experiment_1752478333
+2025-07-14 00:32:13,212 - INFO - Controller has 7554 parameters.
+2025-07-14 00:32:13,215 - INFO - Using optimizer: CMAESOptimizer
+2025-07-14 00:32:13,215 - INFO - Starting CMA-ES optimization for 200 generations.
+2025-07-14 00:32:13,349 - INFO - --- Generation 1/200 ---
+(8_w,16)-aCMA-ES (mu_w=4.8,w_1=32%) in dimension 7554 (seed=516152, Mon Jul 14 00:32:13 2025)
+   Covariance matrix is diagonal
+
+Gen 1:   0%|          | 0/16 [00:00<?, ?it/s]
+Gen 1:   6%|6         | 1/16 [00:14<03:38, 14.59s/it]
+Gen 1:  12%|#2        | 2/16 [00:15<01:28,  6.30s/it]
+Gen 1:  31%|###1      | 5/16 [00:15<00:20,  1.89s/it]
+Gen 1:  44%|####3     | 7/16 [00:15<00:10,  1.16s/it]
+Gen 1:  69%|######8   | 11/16 [00:15<00:02,  1.80it/s]
+Gen 1: 100%|##########| 16/16 [00:15<00:00,  1.01it/s]
+2025-07-14 00:32:29,246 - INFO - Generation 1: Best Fitness=2.0283, Avg Fitness=1.8467
+2025-07-14 00:32:29,409 - INFO - --- Generation 2/200 ---
+
+Gen 2:   0%|          | 0/16 [00:00<?, ?it/s]
+Gen 2:   6%|6         | 1/16 [00:00<00:14,  1.05it/s]
+Gen 2:  38%|###7      | 6/16 [00:01<00:01,  7.42it/s]
+Gen 2: 100%|##########| 16/16 [00:01<00:00, 15.19it/s]
+2025-07-14 00:32:30,482 - INFO - Generation 2: Best Fitness=2.0283, Avg Fitness=1.5884
+2025-07-14 00:32:30,581 - INFO - --- Generation 3/200 ---
+
+...
+
+Gen 22:   0%|          | 0/16 [00:00<?, ?it/s]
+Gen 22:   6%|6         | 1/16 [00:00<00:13,  1.10it/s]
+Gen 22: 100%|##########| 16/16 [00:00<00:00, 17.39it/s]
+2025-07-14 00:32:51,586 - INFO - Generation 22: Best Fitness=2.2014, Avg Fitness=1.9565
+2025-07-14 00:32:51,705 - INFO - --- Generation 23/200 ---
+
+...
+
+Gen 200:   0%|          | 0/16 [00:00<?, ?it/s]
+Gen 200:   6%|6         | 1/16 [00:00<00:14,  1.04it/s]
+Gen 200: 100%|##########| 16/16 [00:00<00:00, 16.67it/s]
+2025-07-14 00:36:02,272 - INFO - Generation 200: Best Fitness=2.2087, Avg Fitness=1.9405
+2025-07-14 00:36:04,449 - INFO - CMA-ES optimization finished.
+2025-07-14 00:36:04,449 - INFO - Optimization finished.
+--- SUCCESS: G:\LOKI\LOCUS\SENSUS\sensus\.venv\Scripts\python.exe -m apsu.harness --config=apsu\experiments\s_curve\d_3_config.json ---
+
+--------------------------------------------------------------------------------
+Processing experiment 7/9
+--- RUNNING: G:\LOKI\LOCUS\SENSUS\sensus\.venv\Scripts\python.exe -m apsu.harness --config=apsu\experiments\s_curve\d_5_config.json ---
+2025-07-14 00:36:24,357 - INFO - Results will be saved in: apsu/experiments/cma_es/results_full\apsu_experiment_1752478584
+2025-07-14 00:36:24,358 - INFO - Controller has 7554 parameters.
+2025-07-14 00:36:24,361 - INFO - Using optimizer: CMAESOptimizer
+2025-07-14 00:36:24,361 - INFO - Starting CMA-ES optimization for 200 generations.
+2025-07-14 00:36:24,494 - INFO - --- Generation 1/200 ---
+(8_w,16)-aCMA-ES (mu_w=4.8,w_1=32%) in dimension 7554 (seed=579580, Mon Jul 14 00:36:24 2025)
+   Covariance matrix is diagonal
+
+Gen 1:   0%|          | 0/16 [00:00<?, ?it/s]
+Gen 1:   6%|6         | 1/16 [00:13<03:28, 13.89s/it]
+Gen 1:  12%|#2        | 2/16 [00:14<01:25,  6.12s/it]
+Gen 1:  19%|#8        | 3/16 [00:14<00:44,  3.41s/it]
+Gen 1:  38%|###7      | 6/16 [00:15<00:12,  1.23s/it]
+Gen 1:  44%|####3     | 7/16 [00:15<00:08,  1.02it/s]
+Gen 1:  62%|######2   | 10/16 [00:15<00:03,  1.97it/s]
+Gen 1: 100%|##########| 16/16 [00:15<00:00,  1.03it/s]
+2025-07-14 00:36:40,023 - INFO - Generation 1: Best Fitness=2.1239, Avg Fitness=1.4783
+2025-07-14 00:36:40,179 - INFO - --- Generation 2/200 ---
+
+...
+
+Gen 24:   0%|          | 0/16 [00:00<?, ?it/s]
+Gen 24:   6%|6         | 1/16 [00:00<00:12,  1.21it/s]
+Gen 24: 100%|##########| 16/16 [00:00<00:00, 17.60it/s]
+2025-07-14 00:37:04,387 - INFO - Generation 24: Best Fitness=2.1758, Avg Fitness=1.7233
+2025-07-14 00:37:04,515 - INFO - --- Generation 25/200 ---
+...
+
+Gen 116:   0%|          | 0/16 [00:00<?, ?it/s]
+Gen 116:   6%|6         | 1/16 [00:00<00:12,  1.16it/s]
+Gen 116: 100%|##########| 16/16 [00:00<00:00, 17.51it/s]
+2025-07-14 00:38:42,269 - INFO - Generation 116: Best Fitness=2.2720, Avg Fitness=1.5502
+2025-07-14 00:38:42,402 - INFO - --- Generation 117/200 ---
+
+...
+
+Gen 200:   0%|          | 0/16 [00:00<?, ?it/s]
+Gen 200:   6%|6         | 1/16 [00:00<00:13,  1.11it/s]
+Gen 200: 100%|##########| 16/16 [00:00<00:00, 17.64it/s]
+2025-07-14 00:40:58,623 - INFO - Generation 200: Best Fitness=2.2720, Avg Fitness=1.7494
+2025-07-14 00:41:00,779 - INFO - CMA-ES optimization finished.
+2025-07-14 00:41:00,780 - INFO - Optimization finished.
+--- SUCCESS: G:\LOKI\LOCUS\SENSUS\sensus\.venv\Scripts\python.exe -m apsu.harness --config=apsu\experiments\s_curve\d_5_config.json ---
+
+--------------------------------------------------------------------------------
+Processing experiment 8/9
+--- RUNNING: G:\LOKI\LOCUS\SENSUS\sensus\.venv\Scripts\python.exe -m apsu.harness --config=apsu\experiments\s_curve\d_8_config.json ---
+2025-07-14 00:41:14,551 - INFO - Results will be saved in: apsu/experiments/cma_es/results_full\apsu_experiment_1752478874
+2025-07-14 00:41:14,552 - INFO - Controller has 7554 parameters.
+2025-07-14 00:41:14,554 - INFO - Using optimizer: CMAESOptimizer
+2025-07-14 00:41:14,554 - INFO - Starting CMA-ES optimization for 200 generations.
+2025-07-14 00:41:14,641 - INFO - --- Generation 1/200 ---
+(8_w,16)-aCMA-ES (mu_w=4.8,w_1=32%) in dimension 7554 (seed=576712, Mon Jul 14 00:41:14 2025)
+   Covariance matrix is diagonal
+
+Gen 1:   0%|          | 0/16 [00:00<?, ?it/s]
+Gen 1:   6%|6         | 1/16 [00:15<03:47, 15.17s/it]
+Gen 1:  12%|#2        | 2/16 [00:16<01:34,  6.77s/it]
+Gen 1:  19%|#8        | 3/16 [00:16<00:48,  3.73s/it]
+Gen 1:  25%|##5       | 4/16 [00:16<00:28,  2.36s/it]
+Gen 1:  31%|###1      | 5/16 [00:16<00:17,  1.55s/it]
+Gen 1:  50%|#####     | 8/16 [00:16<00:05,  1.56it/s]
+Gen 1:  69%|######8   | 11/16 [00:16<00:01,  2.73it/s]
+Gen 1: 100%|##########| 16/16 [00:16<00:00,  1.06s/it]
+2025-07-14 00:41:31,612 - INFO - Generation 1: Best Fitness=2.1266, Avg Fitness=1.6883
+2025-07-14 00:41:31,784 - INFO - --- Generation 2/200 ---
+
+Gen 2:   0%|          | 0/16 [00:00<?, ?it/s]
+Gen 2:   6%|6         | 1/16 [00:01<00:15,  1.03s/it]
+Gen 2: 100%|##########| 16/16 [00:01<00:00, 14.70it/s]
+2025-07-14 00:41:32,893 - INFO - Generation 2: Best Fitness=2.1266, Avg Fitness=1.5572
+2025-07-14 00:41:32,991 - INFO - --- Generation 3/200 ---
+
+...
+
+Gen 32:   0%|          | 0/16 [00:00<?, ?it/s]
+Gen 32:   6%|6         | 1/16 [00:00<00:13,  1.14it/s]
+Gen 32: 100%|##########| 16/16 [00:00<00:00, 17.71it/s]
+2025-07-14 00:42:05,210 - INFO - Generation 32: Best Fitness=2.1763, Avg Fitness=1.8044
+2025-07-14 00:42:05,327 - INFO - --- Generation 33/200 ---
+
+...
+
+Gen 122:   0%|          | 0/16 [00:00<?, ?it/s]
+Gen 122:   6%|6         | 1/16 [00:00<00:12,  1.18it/s]
+Gen 122: 100%|##########| 16/16 [00:00<00:00, 17.19it/s]
+2025-07-14 00:43:41,984 - INFO - Generation 122: Best Fitness=2.2331, Avg Fitness=1.6303
+2025-07-14 00:43:42,095 - INFO - --- Generation 123/200 ---
+
+...
+
+Gen 200:   0%|          | 0/16 [00:00<?, ?it/s]
+Gen 200:   6%|6         | 1/16 [00:00<00:12,  1.19it/s]
+Gen 200: 100%|##########| 16/16 [00:00<00:00, 17.81it/s]
+2025-07-14 00:45:05,830 - INFO - Generation 200: Best Fitness=2.2966, Avg Fitness=1.6042
+2025-07-14 00:45:07,956 - INFO - CMA-ES optimization finished.
+2025-07-14 00:45:07,956 - INFO - Optimization finished.
+--- SUCCESS: G:\LOKI\LOCUS\SENSUS\sensus\.venv\Scripts\python.exe -m apsu.harness --config=apsu\experiments\s_curve\d_8_config.json ---
+
+--------------------------------------------------------------------------------
+Processing experiment 9/9
+--- RUNNING: G:\LOKI\LOCUS\SENSUS\sensus\.venv\Scripts\python.exe -m apsu.harness --config=apsu\experiments\s_curve\d_13_config.json ---
+2025-07-14 00:45:24,390 - INFO - Results will be saved in: apsu/experiments/cma_es/results_full\apsu_experiment_1752479124
+2025-07-14 00:45:24,391 - INFO - Controller has 7554 parameters.
+2025-07-14 00:45:24,394 - INFO - Using optimizer: CMAESOptimizer
+2025-07-14 00:45:24,394 - INFO - Starting CMA-ES optimization for 200 generations.
+2025-07-14 00:45:24,481 - INFO - --- Generation 1/200 ---
+(8_w,16)-aCMA-ES (mu_w=4.8,w_1=32%) in dimension 7554 (seed=572136, Mon Jul 14 00:45:24 2025)
+   Covariance matrix is diagonal
+
+Gen 1:   0%|          | 0/16 [00:00<?, ?it/s]
+Gen 1:   6%|6         | 1/16 [00:13<03:27, 13.83s/it]
+Gen 1:  12%|#2        | 2/16 [00:14<01:21,  5.80s/it]
+Gen 1:  19%|#8        | 3/16 [00:14<00:44,  3.42s/it]
+Gen 1:  25%|##5       | 4/16 [00:14<00:25,  2.14s/it]
+Gen 1:  38%|###7      | 6/16 [00:15<00:11,  1.19s/it]
+Gen 1:  62%|######2   | 10/16 [00:15<00:03,  1.95it/s]
+Gen 1:  81%|########1 | 13/16 [00:15<00:01,  2.98it/s]
+Gen 1: 100%|##########| 16/16 [00:15<00:00,  1.00it/s]
+2025-07-14 00:45:40,459 - INFO - Generation 1: Best Fitness=2.1160, Avg Fitness=1.9022
+2025-07-14 00:45:40,602 - INFO - --- Generation 2/200 ---
+
+Gen 2:   0%|          | 0/16 [00:00<?, ?it/s]
+Gen 2:   6%|6         | 1/16 [00:00<00:14,  1.05it/s]
+Gen 2:  50%|#####     | 8/16 [00:01<00:00,  9.73it/s]
+Gen 2: 100%|##########| 16/16 [00:01<00:00, 14.84it/s]
+2025-07-14 00:45:41,700 - INFO - Generation 2: Best Fitness=2.1160, Avg Fitness=1.8306
+2025-07-14 00:45:41,806 - INFO - --- Generation 3/200 ---
+...
+
+Gen 21:   0%|          | 0/16 [00:00<?, ?it/s]
+Gen 21:   6%|6         | 1/16 [00:00<00:13,  1.15it/s]
+Gen 21: 100%|##########| 16/16 [00:00<00:00, 17.45it/s]
+2025-07-14 00:46:01,730 - INFO - Generation 21: Best Fitness=2.1620, Avg Fitness=1.8714
+2025-07-14 00:46:01,854 - INFO - --- Generation 22/200 ---
+
+...
+
+Gen 45:   0%|          | 0/16 [00:00<?, ?it/s]
+Gen 45:   6%|6         | 1/16 [00:00<00:12,  1.16it/s]
+Gen 45: 100%|##########| 16/16 [00:00<00:00, 17.75it/s]
+2025-07-14 00:46:27,070 - INFO - Generation 45: Best Fitness=2.1620, Avg Fitness=1.6888
+2025-07-14 00:46:27,189 - INFO - --- Generation 46/200 ---
+
+Gen 46:   0%|          | 0/16 [00:00<?, ?it/s]
+Gen 46:   6%|6         | 1/16 [00:00<00:12,  1.17it/s]
+Gen 46: 100%|##########| 16/16 [00:00<00:00, 17.54it/s]
+2025-07-14 00:46:28,122 - INFO - Generation 46: Best Fitness=2.1791, Avg Fitness=1.7352
+2025-07-14 00:46:28,258 - INFO - --- Generation 47/200 ---
+
+Gen 47:   0%|          | 0/16 [00:00<?, ?it/s]
+Gen 47:   6%|6         | 1/16 [00:00<00:13,  1.15it/s]
+Gen 47: 100%|##########| 16/16 [00:00<00:00, 17.73it/s]
+2025-07-14 00:46:29,180 - INFO - Generation 47: Best Fitness=2.1791, Avg Fitness=1.9989
+2025-07-14 00:46:29,319 - INFO - --- Generation 48/200 ---
+
+Gen 48:   0%|          | 0/16 [00:00<?, ?it/s]
+Gen 48:   6%|6         | 1/16 [00:00<00:13,  1.10it/s]
+Gen 48: 100%|##########| 16/16 [00:00<00:00, 17.52it/s]
+2025-07-14 00:46:30,251 - INFO - Generation 48: Best Fitness=2.1997, Avg Fitness=1.6702
+2025-07-14 00:46:30,386 - INFO - --- Generation 49/200 ---
+
+...
+
+Gen 200:   0%|          | 0/16 [00:00<?, ?it/s]
+Gen 200:   6%|6         | 1/16 [00:00<00:13,  1.10it/s]
+Gen 200: 100%|##########| 16/16 [00:00<00:00, 17.39it/s]
+2025-07-14 00:49:13,536 - INFO - Generation 200: Best Fitness=2.2080, Avg Fitness=1.6397
+2025-07-14 00:49:15,778 - INFO - CMA-ES optimization finished.
+2025-07-14 00:49:15,778 - INFO - Optimization finished.
+--- SUCCESS: G:\LOKI\LOCUS\SENSUS\sensus\.venv\Scripts\python.exe -m apsu.harness --config=apsu\experiments\s_curve\d_13_config.json ---
+
+================================================================================
+BATCH RUN SUMMARY
+================================================================================
+Total experiments attempted: 9
+Succeeded: 9
+Failed: 0
+
+Result: ALL EXPERIMENTS SUCCEEDED
+================================================================================
+
+G:\LOKI\LOCUS\SENSUS\sensus>

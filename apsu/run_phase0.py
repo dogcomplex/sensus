@@ -49,7 +49,8 @@ def run_phase0(config_path):
     # Run the diagnostic pre-flight check
     system.diagnose(
         steps=diagnostic_config.get('steps', 2000),
-        plot_path=diagnostic_config.get('plot_path', 'apsu/diagnostics_report.png')
+        plot_path=diagnostic_config.get('plot_path', 'apsu/diagnostics_report.png'),
+        input_scaling=system_config.get('input_scaling', 1.0) # Pass scaling from config
     )
     
     logging.info("--- Phase 0 Complete ---")

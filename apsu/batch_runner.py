@@ -76,6 +76,43 @@ def generate_s_curve_commands():
     print("--- Configuration generation complete. ---")
     return commands
 
+def generate_reservoir_sweep_commands():
+    """Generates experiment configurations for a sweep of reservoir controller sizes."""
+    print("--- Generating Reservoir Controller sweep configurations... ---")
+    base_config_path = Path("apsu/experiments/reservoir/smoke_config.json")
+    if not base_config_path.exists():
+        print(f"ERROR: Base reservoir config '{base_config_path}' not found!")
+        sys.exit(1)
+
+    with open(base_config_path, 'r') as f:
+        base_config = json.load(f)
+
+    # Sweep from 50 down to 5 units
+    controller_sizes = [50, 40, 30, 20, 15, 10, 5]
+    commands = []
+    
+    output_dir = Path("apsu/experiments/reservoir_sweep")
+    output_dir.mkdir(exist_ok=True)
+    
+    base_config["optimizer"]["config"]["n_generations"] = 200 # Full run
+
+    for size in controller_sizes:
+        config_filename = output_dir / f"res_controller_{size}_units_config.json"
+        
+        if not config_filename.exists():
+            print(f"Generating config: {config_filename} for controller size={size}")
+            new_config = base_config.copy()
+            # Set the controller's reservoir size
+            new_config["controller"]["config"]["units"] = size
+            
+            with open(config_filename, 'w') as f:
+                json.dump(new_config, f, indent=4)
+        
+        command = f"{PYTHON_EXECUTABLE} -m apsu.harness --config={config_filename}"
+        commands.append(command)
+        
+    return commands
+
 def get_experiment_commands(mode):
     """Gets a list of experiment commands based on the mode."""
     if mode == 'smoke':
@@ -92,6 +129,8 @@ def get_experiment_commands(mode):
         # A "full" run is now defined as the s_curve run.
         print("INFO: 'full' mode is an alias for 's_curve'. Running the S-curve experiment.")
         return generate_s_curve_commands()
+    elif mode == 'reservoir_sweep':
+        return generate_reservoir_sweep_commands()
     else:
         print(f"ERROR: Unknown mode '{mode}'")
         sys.exit(1)
@@ -132,7 +171,7 @@ def main():
         '--mode',
         type=str,
         default='smoke',
-        choices=['smoke', 'full', 's_curve'],
+        choices=['smoke', 'full', 's_curve', 'reservoir_sweep'],
         help="The batch of experiments to run: 'smoke' for quick checks, 's_curve' for the main experiment, 'full' is an alias for 's_curve'."
     )
     parser.add_argument(

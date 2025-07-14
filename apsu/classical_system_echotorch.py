@@ -172,20 +172,31 @@ class ClassicalSystemEchoTorch:
             raise ValueError("Readouts have not been trained or used yet.")
         return self.readout_outputs_A, self.readout_outputs_B
 
-    def diagnose(self, steps=2000, plot_path="diagnostics_report.png"):
+    def diagnose(self, steps=2000, plot_path="diagnostics_report.png", input_scaling=1.0):
         """
         Runs diagnostic checks on the reservoirs and generates a report.
         """
         logging.info(f"Starting diagnostic run for {steps} steps...")
         self.reset()
-        inputs = torch.randn(steps, 2).to(self.device)
         
+        # Ensure the output directory exists
+        output_dir = os.path.dirname(plot_path)
+        if output_dir:
+            os.makedirs(output_dir, exist_ok=True)
+
+        # Generate random input signals for both reservoirs and apply scaling
+        input_A = torch.randn(1, steps, 1, device=self.device) * input_scaling
+        input_B = torch.randn(1, steps, 1, device=self.device) * input_scaling
+        
+        # Collect states
         states_A_diag = []
         states_B_diag = []
 
         with torch.no_grad():
             for i in range(steps):
-                self.step(inputs[i:i+1, 0:1], inputs[i:i+1, 1:2])
+                # We call the ESN cells directly to bypass the system's own input_scaling
+                self.reservoir_A(input_A[:, i:i+1, :])
+                self.reservoir_B(input_B[:, i:i+1, :])
                 states_A_diag.append(self.reservoir_A.hidden.squeeze().cpu().numpy())
                 states_B_diag.append(self.reservoir_B.hidden.squeeze().cpu().numpy())
 
@@ -198,10 +209,6 @@ class ClassicalSystemEchoTorch:
         
         self._plot_diagnosis(axes[0, :], states_A_diag, "Reservoir A", 'skyblue', 'darkviolet')
         self._plot_diagnosis(axes[1, :], states_B_diag, "Reservoir B", 'salmon', 'darkgreen')
-
-        output_dir = os.path.dirname(plot_path)
-        if output_dir:
-            os.makedirs(output_dir, exist_ok=True)
 
         plt.savefig(plot_path)
         plt.close()

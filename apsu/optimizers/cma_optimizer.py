@@ -6,6 +6,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import multiprocessing
 from tqdm import tqdm
+import time
+from multiprocessing import Pool
 
 from .base_optimizer import BaseOptimizer
 
@@ -16,22 +18,26 @@ class CMAESOptimizer(BaseOptimizer):
     Covariance Matrix Adaptation Evolution Strategy (CMA-ES) optimizer.
     """
 
-    def __init__(self, dimension, log_dir, sigma0=0.5, population_size=None, n_generations=100, **kwargs):
-        super().__init__(dimension, log_dir, **kwargs)
-        self.sigma0 = sigma0
-        self.population_size = population_size
+    def __init__(self, dimension, log_dir, population_size=None, n_generations=100, sigma0=0.5, num_workers=None):
+        super().__init__(dimension)
+        self.population_size = population_size if population_size is not None else 4 + int(3 * np.log(dimension))
         self.n_generations = n_generations
-        
+        self.sigma0 = sigma0
+        self.num_workers = num_workers if num_workers is not None else multiprocessing.cpu_count()
+
         # CMA-ES specific initialization
         self.es = cma.CMAEvolutionStrategy(
             dimension * [0], 
             self.sigma0, 
             {
                 'popsize': self.population_size,
-                'CMA_diagonal': True  # Use diagonal covariance matrix to save memory
+                'CMA_diagonal': True,
+                'seed': int(time.time())
             }
         )
-        self.logger = cma.CMADataLogger(os.path.join(self.log_dir, "cma_")).register(self.es)
+        # The cma library expects a string for the log directory, not a Path object.
+        log_dir_str = str(log_dir)
+        self.logger = cma.CMADataLogger(log_dir_str).register(self.es)
         self.history = []
 
     def ask(self):
@@ -48,43 +54,32 @@ class CMAESOptimizer(BaseOptimizer):
         self.best_solution = self.es.result.xbest
         self.history.append(self.best_fitness)
 
-    def run(self, fitness_function_wrapper, config):
-        """
-        Runs the full CMA-ES optimization loop.
-        """
-        logger.info(f"Starting CMA-ES optimization for {self.n_generations} generations.")
-        
-        if multiprocessing.get_start_method(allow_none=True) != 'spawn':
-            multiprocessing.set_start_method('spawn', force=True)
-            
-        num_workers = config.get("num_workers", os.cpu_count())
-        pool = multiprocessing.Pool(processes=num_workers)
-
-        try:
+    def run(self, fitness_function, config):
+        """Runs the CMA-ES optimization loop."""
+        with Pool(self.num_workers) as pool:
             for generation in range(self.n_generations):
-                logger.info(f"--- Generation {generation+1}/{self.n_generations} ---")
+                logging.info(f"--- Generation {generation + 1}/{self.n_generations} ---")
+                solutions = self.es.ask()
                 
-                self.solutions = self.ask()
+                # Package arguments for the wrapper
+                eval_args = [(sol, config) for sol in solutions]
                 
-                eval_args = [(sol, config, (generation * len(self.solutions)) + i) for i, sol in enumerate(self.solutions)]
+                results = list(tqdm(pool.imap(fitness_function, eval_args), total=len(solutions), desc=f"Gen {generation+1}"))
                 
-                results = list(tqdm(pool.imap(fitness_function_wrapper, eval_args), total=len(self.solutions), desc=f"Gen {generation+1}"))
-                
+                # Process results and tell the optimizer
                 fitness_values = [res['fitness'] for res in results]
-                self.tell(fitness_values)
+                self.es.tell(solutions, fitness_values)
+                
+                best_fitness_this_gen = self.es.result.fbest
+                logging.info(f"Generation {generation + 1}: Best Fitness={best_fitness_this_gen:.4f}, Avg Fitness={np.mean(fitness_values):.4f}")
+                self.logger.add()
+                self.es.disp()
 
-                avg_fitness_in_gen = np.mean(fitness_values) if fitness_values else -1
-                logger.info(f"Generation {generation+1}: Best Fitness={self.best_fitness:.4f}, Avg Fitness={avg_fitness_in_gen:.4f}")
-
-                self.save_state()
-                self.plot_progress(os.path.join(self.log_dir, "cma_progress.png"))
-
-        finally:
-            pool.close()
-            pool.join()
-        
-        logger.info("CMA-ES optimization finished.")
-        return self.best_solution, self.best_fitness
+        logging.info("CMA-ES optimization finished.")
+        return self.es.result.xbest, self.es.result.fbest
+    
+    def stop(self):
+        return self.es.stop()
 
     def save_state(self):
         """Saves the optimizer state to a pickle file."""

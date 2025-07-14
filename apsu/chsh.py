@@ -5,6 +5,7 @@ from .classical_system_echotorch import ClassicalSystemEchoTorch
 from .non_local_coordinator import NonLocalCoordinator
 from .reservoir_controller import ReservoirController
 import matplotlib.pyplot as plt
+import os
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -39,7 +40,26 @@ def _create_controller(config, device):
     else:
         raise ValueError(f"Unknown controller type: {controller_type}")
 
-def _compute_s_score(outputs_A, outputs_B, settings_A, settings_B):
+def _get_chsh_settings(n_steps, seed=None, settings_path=None):
+    """
+    Generates or loads the random settings for the CHSH test.
+    Returns two numpy arrays (a_settings, b_settings) of 0s and 1s.
+    """
+    if settings_path and os.path.exists(settings_path):
+        # Load from a pre-generated file for maximum rigor
+        # The file is expected to be a simple text file with two columns of 0s and 1s
+        settings = np.loadtxt(settings_path, dtype=int)
+        if len(settings) < n_steps:
+             raise ValueError(f"Random settings file {settings_path} is too short.")
+        return settings[:n_steps, 0], settings[:n_steps, 1]
+    else:
+        # Generate pseudo-randomly for standard runs
+        rng = np.random.default_rng(seed)
+        a_settings = rng.integers(0, 2, size=n_steps)
+        b_settings = rng.integers(0, 2, size=n_steps)
+        return a_settings, b_settings
+
+def _compute_s_score(outputs_A, outputs_B, a_settings, b_settings):
     """
     Computes the CHSH S-score.
     S = |E(a,b) - E(a,b')| + |E(a',b) + E(a',b')|
@@ -63,15 +83,15 @@ def _compute_s_score(outputs_A, outputs_B, settings_A, settings_B):
         "ab": [], "ab_prime": [], "a_prime_b": [], "a_prime_b_prime": []
     }
 
-    for i in range(len(settings_A)):
+    for i in range(len(a_settings)):
         product = outcomes_A_bin[i] * outcomes_B_bin[i]
-        if settings_A[i] == 0 and settings_B[i] == 0:
+        if a_settings[i] == 0 and b_settings[i] == 0:
             outcomes["ab"].append(product)
-        elif settings_A[i] == 0 and settings_B[i] == 1:
+        elif a_settings[i] == 0 and b_settings[i] == 1:
             outcomes["ab_prime"].append(product)
-        elif settings_A[i] == 1 and settings_B[i] == 0:
+        elif a_settings[i] == 1 and b_settings[i] == 0:
             outcomes["a_prime_b"].append(product)
-        elif settings_A[i] == 1 and settings_B[i] == 1:
+        elif a_settings[i] == 1 and b_settings[i] == 1:
             outcomes["a_prime_b_prime"].append(product)
 
     E_ab = np.mean(outcomes["ab"]) if outcomes["ab"] else 0
@@ -109,27 +129,27 @@ def _generate_chsh_data(n_bits, seed):
     return {"settings_A": settings_A, "settings_B": settings_B, "y_A": y_A, "y_B": y_B}
 
 
-def evaluate_fitness(weights, config, chsh_seed, return_diagnostics=False):
+def evaluate_fitness(individual, eval_config, return_full_results=False):
     """
-    Evaluates the fitness of a given set of controller weights.
+    Evaluates the fitness of an individual (a set of controller weights).
     """
     try:
         # --- 1. Setup ---
         # This section is now robust to different config structures from different runners.
-        device = config.get('device', 'cpu')
+        device = eval_config.get('device', 'cpu')
 
-        system_config = config.get('classical_system', config.get('classical_system_config', {}))
-        controller_config = config.get('controller', {})
-        eval_config = config.get('chsh_evaluation', config.get('simulation_config', {}))
+        system_config = eval_config.get('classical_system', eval_config.get('classical_system_config', {}))
+        controller_config = eval_config.get('controller', {})
+        eval_config = eval_config.get('chsh_evaluation', eval_config.get('simulation_config', {}))
 
         system = ClassicalSystemEchoTorch(device=device, **system_config)
         
         # Pass the full controller config to the factory
         controller = None
-        if weights is not None:
+        if individual is not None:
             # Pass the full config object to the factory
-            controller = _create_controller(config, device)
-            controller.set_weights(weights)
+            controller = _create_controller(eval_config, device)
+            controller.set_weights(individual)
             controller.to(device)
             controller.eval()
 
@@ -142,14 +162,19 @@ def evaluate_fitness(weights, config, chsh_seed, return_diagnostics=False):
         eval_time = eval_config.get('eval_time', eval_config.get('eval_block_size', 1000))
         total_time = washout_time + eval_time
 
-        chsh_settings = _generate_chsh_data(n_bits=total_time, seed=chsh_seed)
+        # --- 3. Get CHSH Settings ---
+        chsh_seed = eval_config.get('chsh_seed', None)
+        settings_path = eval_config.get('chsh_settings_path', None)
+        a_settings, b_settings = _get_chsh_settings(total_time, seed=chsh_seed, settings_path=settings_path)
         
-        input_A_stream = torch.tensor(chsh_settings['settings_A'], dtype=torch.float32).view(-1, 1)
-        input_B_stream = torch.tensor(chsh_settings['settings_B'], dtype=torch.float32).view(-1, 1)
+        # --- 4. Simulation Loop ---
+        system.reset()
+        controller.reset()
+
+        input_A_stream = torch.tensor(a_settings, dtype=torch.float32).view(-1, 1)
+        input_B_stream = torch.tensor(b_settings, dtype=torch.float32).view(-1, 1)
         
         correction_buffer = torch.zeros((delay, 2), device=device)
-
-        system.reset()
 
         with torch.no_grad():
             for k in range(total_time):
@@ -174,19 +199,19 @@ def evaluate_fitness(weights, config, chsh_seed, return_diagnostics=False):
                 system.step(input_A, input_B, collect=(k >= washout_time))
 
         # --- 3. Readout Training ---
-        readout_targets_A = chsh_settings['y_A'][washout_time:]
-        readout_targets_B = chsh_settings['y_B'][washout_time:]
+        readout_targets_A = a_settings[washout_time:]
+        readout_targets_B = b_settings[washout_time:]
         readout_mse_A, readout_mse_B = system.train_readouts(readout_targets_A, readout_targets_B)
 
         # --- 4. Scoring ---
         y_pred_A, y_pred_B = system.get_readout_outputs()
         
-        eval_settings_A = chsh_settings['settings_A'][washout_time:]
-        eval_settings_B = chsh_settings['settings_B'][washout_time:]
+        eval_settings_A = a_settings[washout_time:]
+        eval_settings_B = b_settings[washout_time:]
         
         s_score, correlations = _compute_s_score(y_pred_A, y_pred_B, eval_settings_A, eval_settings_B)
 
-        if return_diagnostics:
+        if return_full_results:
             return {
                 "fitness": s_score,
                 "s_value": s_score,
@@ -199,6 +224,6 @@ def evaluate_fitness(weights, config, chsh_seed, return_diagnostics=False):
     except Exception as e:
         logging.error(f"Error in fitness evaluation for seed {chsh_seed}: {e}", exc_info=True)
         # Return a very poor fitness score
-        if return_diagnostics:
+        if return_full_results:
             return {"fitness": -1.0, "s_value": -1.0}
         return -1.0
