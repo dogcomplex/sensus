@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
 import logging
 
-from .utils import get_chsh_targets
+from .utils.core_utils import get_chsh_targets
 from reservoirpy.nodes import Reservoir, Ridge
 
 class ClassicalSystemReservoirPy:
@@ -32,9 +32,13 @@ class ClassicalSystemReservoirPy:
         self.readouts_B = [Ridge(ridge=1e-7) for _ in range(4)]
 
     def reset(self):
-        # reservoirpy nodes are stateful and are reset implicitly when .run() is called
-        # on a new sequence. No explicit reset is needed for this design.
-        pass
+        """
+        Explicitly reset the internal state of the reservoirpy nodes.
+        This is crucial to prevent state leakage between the calibration
+        and evaluation phases.
+        """
+        self.reservoir_A.reset()
+        self.reservoir_B.reset()
 
     def step(self, input_A, input_B):
         # For reservoirpy, we typically run over sequences, not single steps.
@@ -77,9 +81,11 @@ class ClassicalSystemReservoirPy:
         readout_A = self.readouts_A[setting_index]
         readout_B = self.readouts_B[setting_index]
         
-        # Use the .run() method to get the output
-        output_A = readout_A.run(state_A)
-        output_B = readout_B.run(state_B)
+        # Use the .call() method for a stateless operation to get the output.
+        # Using .run() would update the readout's internal state, which is
+        # a form of information leak we must prevent during evaluation.
+        output_A = readout_A.call(state_A)
+        output_B = readout_B.call(state_B)
         
         return output_A.flatten(), output_B.flatten()
 

@@ -80,7 +80,7 @@ def run_chsh_trial_echotorch(controller, system, seed, device, delay=1):
     # 3. Readout Training Phase - FOR FOUR INDEPENDENT READOUTS
     targets_by_setting = chsh.get_chsh_targets_by_setting(alice_settings, bob_settings)
     system.train_four_readouts(eval_states_A, eval_states_B, targets_by_setting)
-    
+
     # 4. Scoring Phase - EVALUATE EACH SETTING INDEPENDENTLY
     correlations = {}
     setting_map = {'00': 0, '01': 1, '10': 2, '11': 3} # Map from string key to index
@@ -115,5 +115,5 @@ def run_chsh_trial_echotorch(controller, system, seed, device, delay=1):
     # Clean up collected states to free memory
     system.states_A.clear()
     system.states_B.clear()
-
+    
     return s_score 

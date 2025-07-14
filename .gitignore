@@ -91,6 +91,10 @@ ENV/
 # mypy
 .mypy_cache/
 
+# .env file
+.env
+.env.*
+
 # IDE settings
 .vscode/
 .idea/

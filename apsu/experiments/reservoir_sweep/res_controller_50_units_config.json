@@ -1,6 +1,6 @@
 {
     "experiment_description": "Phase 2 (Smoke Test): A minimal run using CMA-ES to optimize a Reservoir Controller.",
-    "results_dir": "apsu/experiments/reservoir/results_smoke",
+    "results_dir": "apsu\\experiments\\reservoir_sweep\\results\\controller_size_50",
     "device": "cpu",
     "classical_system": {
         "units": 50,
@@ -21,15 +21,16 @@
         "washout_time": 50,
         "eval_time": 100,
         "delay": 1,
-        "chsh_seed_base": 42
+        "chsh_seed": 1249231796
     },
     "optimizer": {
         "type": "CMAES",
         "config": {
-            "n_generations": 200,
+            "n_generations": 100,
             "population_size": 4,
             "sigma0": 0.5,
-            "num_workers": 2
+            "num_workers": 2,
+            "disable_early_stopping": true
         }
     }
 }

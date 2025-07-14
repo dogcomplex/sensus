@@ -29,6 +29,7 @@ class CMAESOptimizer(BaseOptimizer):
         opts.set('popsize', self.population_size)
         opts.set('CMA_diagonal', True)
         opts.set('seed', int(time.time()))
+        opts.set('verbose', -9)
         # Set the log path for CMA's own log files
         # CMA logs to the current directory by default, so we give it a prefix
         # inside the designated log directory.

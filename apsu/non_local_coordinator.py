@@ -11,12 +11,12 @@ class NonLocalCoordinator(nn.Module):
         super(NonLocalCoordinator, self).__init__()
         self.network = nn.Sequential(
             nn.Linear(input_dim, hidden_dim, bias=use_bias),
-            nn.ReLU(),
+                nn.ReLU(),
             nn.Linear(hidden_dim, hidden_dim, bias=use_bias),
-            nn.ReLU(),
+                nn.ReLU(),
             nn.Linear(hidden_dim, output_dim, bias=use_bias),
-            nn.Tanh()
-        )
+                nn.Tanh()
+            )
         self.init_weights()
 
     def init_weights(self):
@@ -34,10 +34,10 @@ class NonLocalCoordinator(nn.Module):
     def forward(self, x):
         """
         Performs the forward pass of the controller.
-        
+
         Args:
             x (torch.Tensor): The combined state of the two reservoirs.
-            
+
         Returns:
             torch.Tensor: The corrective signals, bounded between [-1, 1].
         """

@@ -113,3 +113,4 @@ class SAOptimizer(BaseOptimizer):
         ax.grid(True, which='both', linestyle='--')
         plt.savefig(save_path)
         plt.close()
+ 

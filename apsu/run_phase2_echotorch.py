@@ -77,7 +77,7 @@ def evaluate_fitness(weights, device, delay, n_avg):
             s = run_chsh_trial_echotorch(controller, system, seed=trial_seed, device=device, delay=delay)
             scores.append(s)
         s_score = np.mean(scores)
-
+    
     return -s_score
 
 def main(delay, is_linear_controller, hidden_dim, n_avg, run_id):
@@ -138,7 +138,7 @@ def main(delay, is_linear_controller, hidden_dim, n_avg, run_id):
 
     if not es:
         print("No compatible state found. Starting new optimization.")
-        es = cma.CMAEvolutionStrategy(n_params * [0], 0.5, cma_options)
+    es = cma.CMAEvolutionStrategy(n_params * [0], 0.5, cma_options)
     
     print(f"Running CMA-ES for {MAX_GENERATIONS} generations with population size {es.popsize}.")
 

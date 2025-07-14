@@ -23,7 +23,7 @@ def run_phase1(config_path):
     fitness evaluation with a "zero" controller that provides no corrective
     feedback. The resulting distribution of S-scores should be centered at or
     below the classical limit of 2.0.
-    
+
     Args:
         config_path (str): Path to the JSON configuration file for Phase 1.
     """
@@ -71,13 +71,13 @@ def run_phase1(config_path):
         mean_s = np.nan
         std_s = np.nan
     else:
-        mean_s = np.mean(s_scores)
-        std_s = np.std(s_scores)
-
+    mean_s = np.mean(s_scores)
+    std_s = np.std(s_scores)
+    
     logging.info(f"Completed {len(s_scores)} trials.")
     logging.info(f"S-Score Mean: {mean_s:.4f}")
     logging.info(f"S-Score Std Dev: {std_s:.4f}")
-
+    
     plt.style.use('seaborn-v0_8-whitegrid')
     fig, ax = plt.subplots(figsize=(10, 6))
     
@@ -108,7 +108,7 @@ def run_phase1(config_path):
         logging.warning(f"VALIDATION WARNING: Mean S-score ({mean_s:.4f}) is unexpectedly high for a null experiment.")
     else:
         logging.info("VALIDATION PASSED: Mean S-score is within the expected classical range.")
-
+        
 def main():
     parser = argparse.ArgumentParser(description="Run Phase 1 null experiment for the Apsu project.")
     parser.add_argument(
@@ -122,4 +122,4 @@ def main():
     run_phase1(args.config)
 
 if __name__ == "__main__":
-    main()
+    main() 

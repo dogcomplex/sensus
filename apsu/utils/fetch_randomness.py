@@ -1,116 +1,101 @@
 import requests
 import numpy as np
-import argparse
 import os
-import time # Added for retry loop
+import argparse
+import logging
+import getpass
+from dotenv import load_dotenv
 
-ANU_API_URL = "https://qrng.anu.edu.au/API/jsonI.php"
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 
-def fetch_anu_randomness(n_numbers, data_type='uint16', block_size=1024):
+# Constants
+API_URL = "https://api.quantumnumbers.anu.edu.au/"
+MAX_LENGTH_PER_REQUEST = 1024
+
+def fetch_quantum_randomness(n_bytes, api_key):
     """
-    Fetches high-quality random numbers from the ANU Quantum Random Number Generator.
+    Fetches a specified number of random bytes from the ANU Quantum Numbers API.
     
     Args:
-        n_numbers (int): The total number of random numbers to fetch.
-        data_type (str): The data type to request ('uint16' or 'hex16').
-        block_size (int): The number of values to fetch per API call (max 1024).
-
+        n_bytes (int): The total number of random bytes to fetch.
+        api_key (str): The API key for the ANU service.
+        
     Returns:
-        np.array: An array of random numbers.
+        np.ndarray: An array of random bytes, or None if the fetch fails.
     """
-    print(f"Fetching {n_numbers} quantum random numbers from ANU...")
-    random_numbers = []
-    remaining = n_numbers
-    retries = 3
+    if not api_key:
+        logging.error("API key is missing.")
+        return None
 
-    while remaining > 0:
-        fetch_count = min(remaining, block_size)
-        params = {'length': fetch_count, 'type': data_type, 'size': 1} # size=1 is ignored for this API but good practice
+    headers = {"x-api-key": api_key}
+    random_bytes = []
+    
+    logging.info(f"Fetching {n_bytes} bytes from ANU Quantum Random Numbers API...")
+    
+    for i in range(0, n_bytes, MAX_LENGTH_PER_REQUEST):
+        bytes_to_fetch = min(MAX_LENGTH_PER_REQUEST, n_bytes - i)
+        params = {"length": bytes_to_fetch, "type": "uint8"}
         
         try:
-            response = requests.get(ANU_API_URL, params=params, timeout=60) # Increased timeout
+            response = requests.get(API_URL, headers=headers, params=params, timeout=10)
             response.raise_for_status()  # Raise an exception for bad status codes
-            data = response.json()
             
-            if not data['success']:
-                raise ConnectionError(f"ANU API reported failure: {data}")
-
-            random_numbers.extend(data['data'])
-            remaining -= fetch_count
-            retries = 3 # Reset retries on success
-            if remaining > 0:
-                print(f"  ... {len(random_numbers)}/{n_numbers} fetched.")
-
-        except requests.exceptions.RequestException as e:
-            retries -= 1
-            print(f"Error fetching data from ANU API: {e}. Retries left: {retries}")
-            if retries <= 0:
-                print("Max retries reached. Aborting fetch from ANU.")
+            js = response.json()
+            if js.get("success"):
+                random_bytes.extend(js["data"])
+            else:
+                logging.error(f"API returned an error: {js.get('message', 'Unknown error')}")
                 return None
-            time.sleep(5) # Wait 5 seconds before retrying
+        except requests.exceptions.RequestException as e:
+            logging.error(f"An error occurred during API request: {e}")
+            return None
             
-    print("Fetch complete.")
-    return np.array(random_numbers, dtype=np.uint16)
-
-def generate_chsh_settings_file(output_path, n_steps):
-    """
-    Generates a CHSH settings file (a, b) from the fetched randomness.
-    We only need one bit per setting, so we can get many settings from one number.
-    """
-    # Each uint16 gives us 16 bits. We need 2 bits per step (one for a, one for b).
-    # So we need n_steps / 8 numbers. Add buffer.
-    n_to_fetch = int(np.ceil(n_steps / 8)) + 1 
-    
-    random_data = fetch_anu_randomness(n_to_fetch)
-    if random_data is None:
-        print("WARNING: Falling back to pseudo-random number generator (numpy.random).")
-        print("         The generated file will not be from a true quantum source.")
-        rng = np.random.default_rng()
-        # Generate enough bytes for the bit stream directly
-        n_bytes_needed = int(np.ceil(n_steps * 2 / 8))
-        random_data = rng.bytes(n_bytes_needed)
-        # Convert bytes to numpy array of uint8 for unpackbits
-        random_data = np.frombuffer(random_data, dtype=np.uint8)
-
-    # Unpack the uint16/uint8 numbers into a stream of bits
-    bit_stream = np.unpackbits(random_data.view(np.uint8))
-    
-    if len(bit_stream) < n_steps * 2:
-        print("Error: Did not fetch enough random bits.")
-        return
-        
-    # Create the two columns for a_settings and b_settings
-    a_settings = bit_stream[0:n_steps]
-    b_settings = bit_stream[n_steps:n_steps*2]
-    
-    settings_matrix = np.vstack((a_settings, b_settings)).T
-    
-    # Save to file
-    np.savetxt(output_path, settings_matrix, fmt='%d')
-    print(f"Successfully saved {n_steps} CHSH settings to {output_path}")
-
+    logging.info(f"Successfully fetched {len(random_bytes)} bytes.")
+    return np.array(random_bytes, dtype=np.uint8)
 
 def main():
-    parser = argparse.ArgumentParser(description="Fetch true random numbers from ANU and create a CHSH settings file.")
+    """Main function to fetch and save randomness."""
+    parser = argparse.ArgumentParser(description="Fetch true quantum randomness from ANU API.")
     parser.add_argument(
-        '--steps',
+        "--bytes",
         type=int,
-        required=True,
-        help="The number of simulation steps (i.e., rows of settings) to generate."
+        default=16384,
+        help="Number of random bytes to fetch."
     )
     parser.add_argument(
-        '--output',
+        "--out",
         type=str,
-        default='apsu/random_settings.txt',
-        help="Path to save the output settings file."
+        default="apsu/experiments/qrng_chsh_settings.bin",
+        help="Output file path to save the random bytes."
     )
     args = parser.parse_args()
+
+    # Load environment variables from .env file
+    load_dotenv()
+
+    # Get API key from environment variable or prompt the user
+    api_key = os.environ.get("AQN_API_KEY")
+    if not api_key:
+        logging.warning("AQN_API_KEY environment variable not set.")
+        try:
+            api_key = getpass.getpass("Please enter your ANU QRNG API key: ")
+        except (EOFError, KeyboardInterrupt):
+            logging.error("\nCould not read API key. Aborting.")
+            return
+
+    random_data = fetch_quantum_randomness(args.bytes, api_key)
     
-    output_dir = os.path.dirname(args.output)
-    if output_dir:
-        os.makedirs(output_dir, exist_ok=True)
-        
-    generate_chsh_settings_file(args.output, args.steps)
+    if random_data is not None:
+        # Ensure the output directory exists
+        output_dir = os.path.dirname(args.out)
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+            
+        # Save the data
+        with open(args.out, 'wb') as f:
+            f.write(random_data.tobytes())
+        logging.info(f"Saved {len(random_data)} random bytes to {args.out}")
 
 if __name__ == "__main__":
     main() 

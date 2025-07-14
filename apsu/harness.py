@@ -13,8 +13,12 @@ import uuid
 # before any libraries that might use OpenMP are imported.
 os.environ['OMP_NUM_THREADS'] = '1'
 
+# Disable reservoirpy progress bars
+from reservoirpy.utils import verbosity
+verbosity(0)
+
 from apsu.chsh import evaluate_fitness, _create_controller
-from apsu.classical_system_echotorch import ClassicalSystemEchoTorch
+from apsu.classical_system_reservoirpy import ClassicalSystemReservoirPy
 from apsu.optimizers.base_optimizer import BaseOptimizer
 from apsu.optimizers.cma_optimizer import CMAESOptimizer
 from apsu.optimizers.sa_optimizer import SAOptimizer
@@ -92,7 +96,7 @@ def run_experiment(config):
         if 'seed' not in system_config:
             system_config['seed'] = 999
 
-        temp_system = ClassicalSystemEchoTorch(device=device, **system_config)
+        temp_system = ClassicalSystemReservoirPy(device=device, **system_config)
         temp_controller = _create_controller(controller_config, temp_system)
         
         n_params = temp_controller.get_n_params()

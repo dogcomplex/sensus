@@ -77,6 +77,39 @@ def generate_s_curve_commands():
     print("--- Configuration generation complete. ---")
     return commands
 
+def _fetch_true_randomness():
+    """
+    Calls the fetch_randomness.py script to ensure a block of true quantum
+    randomness is available for the experiments. Skips if the file already exists.
+    """
+    settings_file = Path("apsu/experiments/qrng_chsh_settings.bin")
+    if not settings_file.exists():
+        print("--- Fetching true quantum randomness from ANU API... ---")
+        command = [
+            PYTHON_EXECUTABLE,
+            "-m", "apsu.utils.fetch_randomness",
+            "--bytes", "16384",
+            "--out", str(settings_file)
+        ]
+        try:
+            # Use a short timeout; the user can enter the key if needed.
+            # If the key is in env, this should be fast.
+            subprocess.run(command, check=True, timeout=120)
+            print("--- Randomness fetch complete. ---")
+        except FileNotFoundError:
+            print("ERROR: Could not find the fetch_randomness.py script.")
+            sys.exit(1)
+        except subprocess.CalledProcessError as e:
+            print(f"ERROR: The randomness fetch script failed with exit code {e.returncode}.")
+            print("       Please ensure your AQN_API_KEY is set correctly or enter it when prompted.")
+            sys.exit(1)
+        except subprocess.TimeoutExpired:
+            print("ERROR: Randomness fetch timed out. Please check your network connection.")
+            sys.exit(1)
+    else:
+        print("--- Using existing quantum randomness file. ---")
+
+
 def generate_reservoir_sweep_commands():
     """Generates experiment configurations for a sweep of reservoir controller sizes."""
     print("--- Generating Reservoir Controller sweep configurations... ---")
@@ -309,6 +342,12 @@ def main():
         action='store_true',
         help='Clears all caches and experiment results for the selected mode before running.'
     )
+    parser.add_argument(
+        '--workers',
+        type=int,
+        default=None,
+        help="Number of parallel processes to use for running experiments. Defaults to os.cpu_count()."
+    )
     args = parser.parse_args()
 
     print(f"Using Python executable: {PYTHON_EXECUTABLE}")
@@ -328,6 +367,8 @@ def main():
         else:
             print(f"Warning: Could not find experiment directory for mode '{args.mode}' to clean.")
 
+    # Fetch true randomness if the file is missing.
+    _fetch_true_randomness()
 
     commands = get_experiment_commands(args.mode)
     total_experiments = len(commands)
