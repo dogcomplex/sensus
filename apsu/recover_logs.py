@@ -34,7 +34,7 @@ def recover_from_run_log(run_log_path):
     return "\n".join(cma_log_data)
 
 def main():
-    base_results_dir = Path("apsu/experiments/goldilocks_sweep/results")
+    base_results_dir = Path("apsu/experiments/s_curve_sweep/results")
     if not base_results_dir.exists():
         print(f"ERROR: The base results directory was not found at '{base_results_dir}'")
         return
@@ -42,26 +42,30 @@ def main():
     print(f"--- Starting Recovery from run.log files in '{base_results_dir}' ---")
     recovered_files = 0
     
-    for experiment_dir in base_results_dir.iterdir():
-        if not experiment_dir.is_dir():
+    for delay_dir in base_results_dir.iterdir():
+        if not delay_dir.is_dir():
             continue
 
-        run_log_file = experiment_dir / "run.log"
-        config_file = experiment_dir / "config.json"
-        cma_fit_file = experiment_dir / "cma_fit.dat"
+        for experiment_dir in delay_dir.iterdir():
+            if not experiment_dir.is_dir():
+                continue
 
-        if run_log_file.exists() and config_file.exists() and not cma_fit_file.exists():
-            print(f"Found missing log in: {experiment_dir}. Attempting recovery...")
-            
-            cma_data = recover_from_run_log(run_log_file)
-            
-            if cma_data:
-                with open(cma_fit_file, 'w') as f:
-                    f.write(cma_data)
-                print(f"  -> Successfully recovered and wrote: {cma_fit_file}")
-                recovered_files += 1
-            else:
-                print(f"  -> FAILED: No fitness data found in {run_log_file}")
+            run_log_file = experiment_dir / "run.log"
+            config_file = experiment_dir / "config.json"
+            cma_fit_file = experiment_dir / "cma_fit.dat"
+
+            if run_log_file.exists() and config_file.exists() and not cma_fit_file.exists():
+                print(f"Found missing log in: {experiment_dir}. Attempting recovery...")
+                
+                cma_data = recover_from_run_log(run_log_file)
+                
+                if cma_data:
+                    with open(cma_fit_file, 'w') as f:
+                        f.write(cma_data)
+                    print(f"  -> Successfully recovered and wrote: {cma_fit_file}")
+                    recovered_files += 1
+                else:
+                    print(f"  -> FAILED: No fitness data found in {run_log_file}")
         
     print(f"--- Recovery Complete. ---")
     print(f"Total files recovered: {recovered_files}")

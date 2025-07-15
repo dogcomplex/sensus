@@ -21,7 +21,7 @@
         "eval_time": 1000,
         "delay": 3,
         "chsh_seed_base": 42,
-        "chsh_seed": 4068060091
+        "chsh_seed": 3119821384
     },
     "optimizer": {
         "type": "CMAES",

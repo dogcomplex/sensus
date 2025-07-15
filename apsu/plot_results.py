@@ -245,60 +245,64 @@ def main():
         print(f"Error: Unknown mode '{args.mode}'")
         return
 
-    # Override results_dir for specific modes if the user hasn't provided a custom one.
-    is_default_results_dir = 'cma_es' in args.results_dir
-    if args.mode == 'high_res_sweep' and is_default_results_dir:
-        results_path = Path('apsu/experiments/high_res_sweep/results')
-        print(f"INFO: --mode high_res_sweep selected, overriding results directory to {results_path}")
-    elif args.mode == 'goldilocks_sweep':
-        # Always override for goldilocks_sweep as it has its own dedicated folder.
-        results_path = Path('apsu/experiments/goldilocks_sweep/results')
-        print(f"INFO: --mode goldilocks_sweep selected, overriding results directory to {results_path}")
+    # Use rglob to find all config.json files recursively, which is robust
+    # to the extra directory layer created by the harness.
+    config_files = list(results_path.rglob('config.json'))
 
+    if not config_files:
+        print(f"Error: No config.json files found in subdirectories of {results_path}")
+        return
 
-    # This loop iterates through the results_path directly,
-    # which contains the timestamped experiment folders.
-    for experiment_dir in results_path.iterdir():
-        if experiment_dir.is_dir():
-            log_file_to_use = experiment_dir / 'cma_fit.dat'
-            config_file = experiment_dir / 'config.json'
-            
-            if log_file_to_use.exists() and config_file.exists():
-                param_value = param_getter(config_file)
-                if param_value != 'N/A':
-                    df = parse_cma_log(log_file_to_use)
-                    if not df.empty:
-                        df[param_name] = param_value
-                        all_results.append(df)
+    for config_path in config_files:
+        exp_dir = config_path.parent
+        param_val = param_getter(config_path)
+        if param_val == 'N/A':
+            continue
+
+        # Look for CMA logs in the config file's directory AND its parent.
+        # This is robust to the harness creating an extra timestamped folder
+        # while the CMA logger logs to the parent.
+        log_files = list(exp_dir.glob('cma_*.dat'))
+        if not log_files:
+            log_files = list(exp_dir.parent.glob('cma_*.dat'))
+
+        if not log_files:
+            print(f"Warning: No cma_*.dat log file found for config {config_path}")
+            continue
+        
+        # We assume the most recent .dat file is the one of interest if there are multiple.
+        log_path = max(log_files, key=os.path.getmtime)
+        
+        df = parse_cma_log(log_path)
+        if not df.empty:
+            df[param_name] = param_val
+            all_results.append(df)
 
     if not all_results:
         print(f"Error: No valid CMA-ES log files and config.json pairs found in subdirectories of {results_path}")
         return
 
-    full_df = pd.concat(all_results, ignore_index=True)
-
-    # --- Start of section to add for debugging ---
-    print("\n--- Compact Raw Data Summary ---")
-    final_scores_df = full_df.loc[full_df.groupby(param_name)['best_fitness'].idxmax()]
-    final_scores_df = final_scores_df.sort_values(param_name)
-    print(final_scores_df[[param_name, 'best_fitness']].to_string(index=False))
-    print("--------------------------------\n")
-    # --- End of section to add for debugging ---
-
-
-    # Call the correct plotting function based on the mode
+    results_df = pd.concat(all_results)
+    
+    # Generate the main plot based on the mode
     if args.mode == 's_curve':
-        plot_s_curve(full_df, output_path / 's_curve_summary.png')
+        plot_s_curve(results_df, output_path / 's_curve_summary.png')
     elif args.mode == 'reservoir_sweep':
-        plot_reservoir_sweep(full_df, output_path / 'reservoir_sweep_summary.png')
+        plot_reservoir_sweep(results_df, output_path / 'reservoir_sweep_summary.png')
     elif args.mode == 'high_res_sweep':
-        plot_high_res_sweep(full_df, output_path / 'high_res_sweep_summary.png')
+        plot_high_res_sweep(results_df, output_path / 'high_res_sweep_summary.png')
     elif args.mode == 'goldilocks_sweep':
-        plot_goldilocks_sweep(full_df, output_path / 'goldilocks_sweep_summary.png')
+        plot_goldilocks_sweep(results_df, output_path / 'goldilocks_sweep_summary.png')
 
-    # Always generate the combined progress plot
-    plot_combined_progress(full_df, output_path / f'{args.mode}_combined_progress.png', group_by=param_name)
+    # Also generate the combined progress plot
+    progress_plot_path = output_path / f'{args.mode}_progress_over_time.png'
+    plot_combined_progress(results_df, progress_plot_path, group_by=param_name)
 
+    # Print a text summary of the final scores
+    print("\n--- Final Scores Summary ---")
+    final_scores = results_df.loc[results_df.groupby(param_name)['best_fitness'].idxmax()]
+    final_scores = final_scores.sort_values(param_name)
+    print(final_scores[[param_name, 'best_fitness']].to_string(index=False))
 
 if __name__ == "__main__":
     main() 

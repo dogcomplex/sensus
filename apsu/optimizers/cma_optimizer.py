@@ -29,7 +29,7 @@ class CMAESOptimizer(BaseOptimizer):
         opts.set('popsize', self.population_size)
         opts.set('CMA_diagonal', True)
         opts.set('seed', int(time.time()))
-        opts.set('verbose', -9)
+        opts.set('verb_disp', 0)  # Disables console display, but keeps file logging.
         # Set the log path for CMA's own log files
         # CMA logs to the current directory by default, so we give it a prefix
         # inside the designated log directory.

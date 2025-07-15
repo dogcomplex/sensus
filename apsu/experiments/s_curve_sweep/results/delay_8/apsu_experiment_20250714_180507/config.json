@@ -1,6 +1,6 @@
 {
     "experiment_description": "Phase 2 (Full): A full-scale run of CMA-ES to find the optimal NonLinear controller. This is the base configuration for the S(R) curve experiment.",
-    "results_dir": "apsu\\experiments\\s_curve_sweep\\results\\delay_0_5",
+    "results_dir": "apsu\\experiments\\s_curve_sweep\\results\\delay_8",
     "device": "cpu",
     "classical_system": {
         "units": 100,
@@ -19,9 +19,9 @@
     "chsh_evaluation": {
         "washout_time": 1000,
         "eval_time": 1000,
-        "delay": 0.5,
+        "delay": 8,
         "chsh_seed_base": 42,
-        "chsh_seed": 3119821384
+        "chsh_seed": 4068060091
     },
     "optimizer": {
         "type": "CMAES",
@@ -32,5 +32,6 @@
             "num_workers": 2,
             "disable_early_stopping": true
         }
-    }
+    },
+    "ablate_controller": false
 }
