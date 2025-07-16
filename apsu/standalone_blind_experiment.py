@@ -127,6 +127,7 @@ def main():
     # Args are the same as the non-blind version for consistency
     parser.add_argument('--controller-units', type=int, default=1, help="Override the number of controller units.")
     parser.add_argument('--seed', type=int, default=42, help="Override the main random seed.")
+    parser.add_argument('--delay', type=int, default=1, help='Delay for the controller feedback loop in simulation steps.')
     args = parser.parse_args()
 
     # --- Configuration ---
@@ -134,7 +135,7 @@ def main():
         "seed": args.seed,
         "classical_system": {"units": 50, "sr": 0.95, "lr": 0.3},
         "controller": {"units": args.controller_units},
-        "chsh_evaluation": {"delay": 1},
+        "chsh_evaluation": {"delay": args.delay},
         "simulation": {"T_total": 4000, "generations": 100, "population_size": 10}
     }
 
@@ -174,7 +175,11 @@ def main():
     num_params = sum(p.numel() for p in temp_controller.parameters())
     logging.info(f"Total parameters to optimize: {num_params}")
 
-    es = cma.CMAEvolutionStrategy(num_params * [0], 0.5, {'popsize': config['simulation']['population_size'], 'seed': config['seed'], 'verb_disp': 0, 'verb_log': 0})
+    es = cma.CMAEvolutionStrategy(
+        num_params * [0], 
+        0.5,
+        {'CMA_diagonal': True, 'seed': config['seed']}
+    )
 
     # --- Main Optimization Loop ---
     history = {'train_s': [], 'test_s': []}

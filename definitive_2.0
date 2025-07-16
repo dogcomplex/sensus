@@ -1,0 +1,32 @@
+G:\LOKI\LOCUS\SENSUS\sensus>.\.venv\Scripts\python.exe -m apsu.standalone_blind_experiment --controller-units 64 --delay 0
+2025-07-16 11:55:50,449 - INFO - --- Starting Standalone DOUBLE-BLIND Experiment ---
+2025-07-16 11:55:50,449 - INFO - Results will be saved to: apsu\standalone_blind_results\exp_20250716_115550
+2025-07-16 11:55:50,450 - INFO - Configuration:
+{
+  "seed": 42,
+  "classical_system": {
+    "units": 50,
+    "sr": 0.95,
+    "lr": 0.3
+  },
+  "controller": {
+    "units": 64
+  },
+  "chsh_evaluation": {
+    "delay": 0
+  },
+  "simulation": {
+    "T_total": 4000,
+    "generations": 100,
+    "population_size": 10
+  }
+}
+2025-07-16 11:55:50,450 - INFO - Successfully loaded 8704 training and 8704 testing points.
+2025-07-16 11:55:50,451 - INFO - Total parameters to optimize: 10752
+(15_w,31)-aCMA-ES (mu_w=8.9,w_1=20%) in dimension 10752 (seed=42, Wed Jul 16 11:55:50 2025)
+   Covariance matrix is diagonal
+Optimizing (Double-Blind): 100%|███████████| 100/100 [32:11<00:00, 19.32s/it, Train S=2.0075, Test S=2.0075, Best Test S=2.0075]
+2025-07-16 12:28:02,200 - INFO - --- Experiment Complete ---
+2025-07-16 12:28:02,200 - INFO - Final Best TRAINING S-Score: 2.0075
+2025-07-16 12:28:02,200 - INFO - Final Best TESTING S-Score: 2.0075
+2025-07-16 12:28:02,201 - INFO - Saved final results to apsu\standalone_blind_results\exp_20250716_115550\results.json

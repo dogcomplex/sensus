@@ -1,0 +1,5 @@
+vuhub.sys + 0
+ntoskrnl.exe + 9d1e44
+
+fffff80b`0c7f0000
+fffff80b`0c811000
