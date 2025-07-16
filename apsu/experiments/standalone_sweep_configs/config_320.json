@@ -1,0 +1,19 @@
+{
+  "seed": 42,
+  "classical_system": {
+    "units": 50,
+    "sr": 0.95,
+    "lr": 0.3
+  },
+  "controller": {
+    "units": 320
+  },
+  "chsh_evaluation": {
+    "delay": 1
+  },
+  "simulation": {
+    "T_total": 4000,
+    "generations": 100,
+    "population_size": 10
+  }
+} 
