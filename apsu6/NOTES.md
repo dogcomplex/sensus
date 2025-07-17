@@ -1,4 +1,4 @@
-Please use the /apsu folder for all files related to software development for the APSU project.  The root directory contains additional background documentation, software libraries, and other resources.
+Please use the /apsu6 folder for all files related to software development for the APSU project.  The root directory contains additional background documentation, software libraries, and other resources.
 
 ---
 ### Developer Note: Accessing the Environment
@@ -7,7 +7,7 @@ To work on this project, you must first activate the Python virtual environment.
 
 From the project root directory, run: `.\.venv\Scripts\activate` (on Windows) or `source .venv/bin/activate` (on macOS/Linux).
 
-All subsequent commands (e.g., `python -m apsu.standalone_blind_experiment`) should be run within this activated shell.
+All subsequent commands (e.g., `python -m apsu6.standalone_blind_experiment`) should be run within this activated shell.
 See the main `README.md` for full setup instructions.
 
 
