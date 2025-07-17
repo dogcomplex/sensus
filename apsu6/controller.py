@@ -78,12 +78,14 @@ class UniversalController(nn.Module):
             self.head_A = nn.Sequential(
                 nn.Linear(head_input_dim + N_A + 1, K_controller),
                 nn.ReLU(),
-                nn.Linear(K_controller, 1)
+                nn.Linear(K_controller, 1),
+                nn.Tanh() # Bound the output for stability
             )
             self.head_B = nn.Sequential(
                 nn.Linear(head_input_dim + N_B + 1, K_controller),
                 nn.ReLU(),
-                nn.Linear(K_controller, 1)
+                nn.Linear(K_controller, 1),
+                nn.Tanh() # Bound the output for stability
             )
 
         elif self.protocol == 'Absurdist':
@@ -111,9 +113,20 @@ class UniversalController(nn.Module):
                  cell_input = torch.cat([x_A, x_B, settings_A, settings_B], dim=-1)
 
             hidden_state = torch.zeros(x_A.size(0), self.internal_cell.hidden_size, device=self.device)
+            
+            # --- Generous Thinking Loop ---
+            # Collect the hidden state at every step of the internal loop.
+            all_hidden_states = []
             for _ in range(internal_iterations):
                 hidden_state = self.internal_cell(cell_input, hidden_state)
-            thought_vector = self.internal_decoder(hidden_state)
+                all_hidden_states.append(hidden_state)
+
+            # Use max-pooling to find the "strongest" thought across all steps.
+            # This allows a "moment of clarity" to drive the final decision.
+            stacked_states = torch.stack(all_hidden_states, dim=0)
+            pooled_hidden_state, _ = torch.max(stacked_states, dim=0)
+            
+            thought_vector = self.internal_decoder(pooled_hidden_state)
         else:
             thought_vector = None
 
