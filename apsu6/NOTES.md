@@ -7,9 +7,10 @@ To work on this project, you must first activate the Python virtual environment.
 
 From the project root directory, run: `.\.venv\Scripts\activate` (on Windows) or `source .venv/bin/activate` (on macOS/Linux).
 
-All subsequent commands (e.g., `python -m apsu6.standalone_blind_experiment`) should be run within this activated shell.
+All subsequent commands (e.g., `.\.venv\Scripts\python.exe  -m apsu6.standalone_blind_experiment`) should be run within this activated shell.
 See the main `README.md` for full setup instructions.
 
+All script or batch files should similarly use the full path to the python executable, e.g. `.\.venv\Scripts\python.exe  -m apsu6.standalone_blind_experiment`
 
 ------
 ### Developer Note: Timeouts
@@ -24,6 +25,15 @@ Please treat development review and scientific review as separate streams, with 
 
 For reservoirpy documentation, please search the `/software/lib/reservoirpy/docs` folder
 
+---- PYTORCH AND CUDA  ---
+
+Please use the following versions of pytorch and cuda, and keep everything else consistent and compatible with them.  We are stuck with these to maintain 5090rtx compatibility.
+torch                     2.9.0.dev20250711+cu128
+torchaudio                2.8.0.dev20250712+cu128
+torchvision               0.24.0.dev20250712+cu128
 
 
+--- HANDY COMMANDS ---
 
+# kill all python processes
+taskkill /F /IM python.exe /T

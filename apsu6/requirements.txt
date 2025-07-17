@@ -1,0 +1,14 @@
+# Core scientific libraries
+numpy
+torch
+scipy
+
+# Optimization
+cma
+
+# Reservoir computing
+reservoirpy
+
+# Utilities
+tqdm
+python-dotenv 
