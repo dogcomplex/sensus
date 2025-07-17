@@ -5,12 +5,14 @@ import json
 import time
 import argparse
 import logging
+import os
 from pathlib import Path
 from tqdm import tqdm
 import torch.multiprocessing as mp
 from functools import partial
 
 from apsu6.harness import ExperimentHarness
+from apsu6.controller import UniversalController
 
 # --- Globals for Multiprocessing ---
 # These will be initialized once per worker process to avoid re-creating
@@ -58,8 +60,9 @@ def get_config(args):
             "R_speed": 1.0 / args.delay if args.delay > 0 else float('inf'),
             "signaling_bits": 0,
             "internal_cell_config": {
-                "enabled": True, "type": "gru",
-                "hidden_size": args.controller_units
+                "enabled": True, "type": "gru_layer", # Changed from 'gru' to 'gru_layer'
+                "hidden_size": args.controller_units,
+                "num_layers": max(1, int(round(1.0 / args.delay))) if args.delay > 0 else 1
             }
         },
         "optimizer": {"generations": 100, "population_size": 12},
@@ -75,10 +78,21 @@ def get_config(args):
 def init_worker(config):
     """Initializer for each worker process."""
     global harness, temp_controller
+    # Diagnostic print
+    print(f"[Worker {os.getpid()}] Initializing...")
+    # Seed each worker process independently for reproducibility.
+    # This is crucial for multiprocessing with CUDA.
+    worker_seed = config['seed'] + os.getpid()
+    torch.manual_seed(worker_seed)
+    np.random.seed(worker_seed)
+    
     # Each worker gets its own harness and controller instance.
     # This is crucial to avoid CUDA errors with forked processes.
     harness = ExperimentHarness(config)
     temp_controller = harness.controller
+    # Diagnostic print
+    print(f"[Worker {os.getpid()}] Initialization COMPLETE.")
+
 
 def evaluate_fitness_parallel(params, current_lambda, current_noise, config):
     """
@@ -87,12 +101,16 @@ def evaluate_fitness_parallel(params, current_lambda, current_noise, config):
     """
     global harness, temp_controller
     
+    # Get the target dtype from the model, which might be float16
+    target_dtype = next(temp_controller.parameters()).dtype
+
     # Reconstruct the weights dictionary
     controller_weights = {}
     start_idx = 0
     for name, param in temp_controller.named_parameters():
         n_params = param.numel()
-        p_slice = torch.from_numpy(params[start_idx : start_idx + n_params]).view(param.shape).float().to(harness.device)
+        # Ensure the slice is created with the correct dtype
+        p_slice = torch.from_numpy(params[start_idx : start_idx + n_params]).view(param.shape).to(dtype=target_dtype, device=harness.device)
         controller_weights[name] = p_slice
         start_idx += n_params
 
@@ -104,6 +122,7 @@ def evaluate_fitness_parallel(params, current_lambda, current_noise, config):
     
     teacher_loss = diagnostics.get("pr_box_teacher_loss", 0.0)
     fitness = -s_score + (current_lambda * teacher_loss)
+    
     return fitness, s_score, diagnostics
 
 def main():
@@ -116,14 +135,17 @@ def main():
     parser.add_argument('--device', type=str, default='cuda', help="Device ('cuda' or 'cpu').")
     parser.add_argument('--num-avg', type=int, default=10, help="Runs to average per evaluation.")
     parser.add_argument('--workers', type=int, default=4, help="Number of parallel worker processes.")
+    parser.add_argument('--half-precision', action='store_true', help="Use float16 for GPU acceleration.")
     args = parser.parse_args()
 
     # --- Enforce reproducibility ---
-    torch.use_deterministic_algorithms(True)
+    # torch.use_deterministic_algorithms(True) # NOTE: This can cause issues with half-precision and is disabled for performance.
     # It's important to set the start method for CUDA compatibility
     mp.set_start_method('spawn', force=True)
 
     config = get_config(args)
+    # Add the half-precision flag to the config
+    config['half_precision'] = args.half_precision
     timestamp = time.strftime("%Y%m%d_%H%M%S")
     results_dir = Path(f"apsu6/results/mannequin_{timestamp}")
     results_dir.mkdir(parents=True, exist_ok=True)
@@ -136,9 +158,13 @@ def main():
         json.dump(config, f, indent=2)
     logging.info("Configuration: \n" + json.dumps(config, indent=2))
 
-    temp_harness = ExperimentHarness(config)
-    num_params = sum(p.numel() for p in temp_harness.controller.parameters())
-    del temp_harness
+    # Create a temporary controller on the CPU just to count parameters.
+    # This avoids initializing the CUDA context in the main process before spawning.
+    temp_controller_cpu = UniversalController(**config['controller_params'], device=torch.device('cpu'))
+    if config['half_precision']:
+        temp_controller_cpu.half()
+    num_params = sum(p.numel() for p in temp_controller_cpu.parameters())
+    del temp_controller_cpu
     logging.info(f"Total parameters to optimize: {num_params}")
 
     es = cma.CMAEvolutionStrategy(num_params * [0], 0.5, {
@@ -189,7 +215,6 @@ def main():
                 best_weights_params = es.result.xbest
                 
                 # Save the best model's raw parameter vector.
-                # This is more robust than reconstructing the state_dict in the main loop.
                 save_path = results_dir / "best_controller_weights.npy"
                 np.save(save_path, best_weights_params)
 

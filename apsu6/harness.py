@@ -1,89 +1,16 @@
 import torch
-import torch.nn as nn
 import numpy as np
 from collections import Counter
 import logging
-from typing import List, Tuple, Optional
 
 from apsu6.substrate import ClassicalSubstrate
 from apsu6.controller import UniversalController
 from apsu6.metrics import calculate_chsh_score, calculate_nonsignaling_metric
 from apsu6.utils import load_chsh_settings, bits_to_spins
 
-
-# @torch.jit.script # Decorator is removed from class definition
-class CausalLoopJIT(nn.Module):
-    """
-    A JIT-compiled module to run the entire causal simulation loop efficiently on the GPU.
-    """
-    def __init__(self, substrate: ClassicalSubstrate, controller: UniversalController, delay_buffer: 'DelayBuffer'):
-        super().__init__()
-        self.substrate = substrate
-        self.controller = controller
-        self.delay_buffer = delay_buffer
-
-    def forward(self, settings_seq: torch.Tensor, noise_seq_A: torch.Tensor, noise_seq_B: torch.Tensor, 
-                T_total: int, washout_steps: int) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-        
-        batch_size = settings_seq.shape[0]
-        
-        self.substrate.reset(batch_size)
-        self.delay_buffer.reset(batch_size)
-        
-        outputs_A: List[torch.Tensor] = []
-        outputs_B: List[torch.Tensor] = []
-        logged_settings: List[torch.Tensor] = []
-
-        for t in range(T_total):
-            state_A, state_B = self.substrate.get_current_state()
-            
-            noisy_state_A = state_A + noise_seq_A[:, t, :]
-            noisy_state_B = state_B + noise_seq_B[:, t, :]
-            
-            setting_A_bit = settings_seq[:, t, 0].unsqueeze(-1)
-            setting_B_bit = settings_seq[:, t, 1].unsqueeze(-1)
-            setting_A_spin = bits_to_spins(setting_A_bit)
-            setting_B_spin = bits_to_spins(setting_B_bit)
-            
-            R_speed = self.controller.R
-            thought_h_state: torch.Tensor | None = None
-            correction_logits: torch.Tensor | None = None
-
-            if R_speed > 1.0:
-                internal_iterations = int(round(R_speed))
-                for _ in range(internal_iterations):
-                    correction_logits, thought_h_state = self.controller.forward(
-                        noisy_state_A, noisy_state_B, setting_A_spin, setting_B_spin, thought_h_in=thought_h_state
-                    )
-            else:
-                correction_logits, _ = self.controller.forward(
-                    noisy_state_A, noisy_state_B, setting_A_spin, setting_B_spin
-                )
-            
-            # This assert is essential for the JIT compiler to resolve types
-            assert correction_logits is not None
-
-            if t >= washout_steps:
-                outputs_A.append(torch.sign(correction_logits[:, 0]))
-                outputs_B.append(torch.sign(correction_logits[:, 1]))
-                logged_settings.append(torch.cat([setting_A_bit, setting_B_bit], dim=-1))
-            
-            # The DelayBuffer now expects a 3D tensor: [1, Batch, Channels]
-            delayed_logits = self.delay_buffer(correction_logits.unsqueeze(0)) 
-            
-            substrate_input_A = torch.cat((setting_A_bit.float(), delayed_logits[:, 0].unsqueeze(-1)), dim=-1)
-            substrate_input_B = torch.cat((setting_B_bit.float(), delayed_logits[:, 1].unsqueeze(-1)), dim=-1)
-            self.substrate.step(substrate_input_A, substrate_input_B)
-
-        return torch.stack(outputs_A, dim=1), torch.stack(outputs_B, dim=1), torch.stack(logged_settings, dim=1)
-
-
-class DelayBuffer(nn.Module):
+class DelayBuffer:
     """Handles the delay `d` for the controller's correction signals for a batch."""
-    buffer: Optional[torch.Tensor]
-
     def __init__(self, delay: int, num_channels: int = 2, device: torch.device = 'cpu', dtype: torch.dtype = torch.float32):
-        super().__init__()
         self.delay = int(delay)
         if self.delay < 0:
             raise ValueError("Delay cannot be negative.")
@@ -92,28 +19,22 @@ class DelayBuffer(nn.Module):
         self.dtype = dtype
         self.buffer = None
     
-    def forward(self, signal_batch: torch.Tensor) -> torch.Tensor:
+    def push(self, signal_batch: torch.Tensor) -> torch.Tensor:
         """Pushes a new batch of signals in, returns the oldest batch."""
         if self.delay == 0:
             return signal_batch
         
-        buffer = self.buffer
-        if buffer is None:
+        if self.buffer is None:
              raise RuntimeError("Buffer must be reset with a batch size before use.")
         
-        # JIT-compatible circular buffer update. This pattern avoids in-place
-        # assignment to a slice, which is not supported by the JIT compiler.
-        oldest_signal = buffer[0, :, :].clone()
+        assert signal_batch.shape[0] == self.buffer.shape[1], "Signal batch size must match buffer's."
 
-        # Reshape signal from (B, C) to (1, B, C) for concatenation
-        reshaped_signal = signal_batch.unsqueeze(0)
-        
-        new_buffer_part = buffer[1:]
-        self.buffer = torch.cat((new_buffer_part, reshaped_signal), dim=0)
-        
+        oldest_signal = self.buffer[0, :, :].clone()
+        self.buffer = torch.roll(self.buffer, shifts=-1, dims=0)
+        self.buffer[-1, :, :] = signal_batch
         return oldest_signal
         
-    def reset(self, batch_size: int = 1):
+    def reset(self, batch_size=1):
         """Resets the buffer for a new batch size."""
         self.buffer = torch.zeros(self.delay, batch_size, self.num_channels, device=self.device, dtype=self.dtype)
 
@@ -130,54 +51,111 @@ class ExperimentHarness:
         self.substrate = ClassicalSubstrate(**config['substrate_params'], device=self.device).to(self.device)
         self.controller = UniversalController(**config['controller_params'], device=self.device).to(self.device)
         
+        # --- Handle half-precision ---
+        if config.get('half_precision', False) and self.device.type == 'cuda':
+            logging.info("Using half-precision (float16) for accelerated training.")
+            self.substrate.half()
+            self.controller.half()
+        
         controller_delay = config.get('controller_delay', 1.0)
+        # The buffer must match the precision of the controller that feeds it.
+        buffer_dtype = next(self.controller.parameters()).dtype
         self.delay_buffer = DelayBuffer(
             delay=int(controller_delay) if controller_delay >= 1 else 0, 
-            device=self.device
+            device=self.device,
+            dtype=buffer_dtype
         )
         
         self.chsh_settings = load_chsh_settings(config.get('randomness_file'))
-        self.noise_rng = torch.Generator(device=self.device)
-        self.noise_rng.manual_seed(config.get('noise_seed', 42))
 
     def evaluate_fitness(self, controller_weights: dict, sensor_noise_std: float = 0.0, num_avg: int = 1) -> tuple[float, dict]:
         """
-        Performs one full, JIT-compiled fitness evaluation.
+        Performs one full, sequential fitness evaluation for a given set of controller weights.
+        This version correctly models the step-by-step evolution of the system to prevent
+        causality violations.
         """
         batch_size = num_avg
-        self.controller.load_state_dict(controller_weights)
-        self.controller.eval()
-        
         T_total = self.config.get('T_total', 4000)
         washout_steps = self.config.get('washout_steps', 100)
-        
-        # Pre-generate all data for the JIT module
-        # Use .copy() to avoid the non-writable numpy array warning
-        settings_seq = torch.from_numpy(self.chsh_settings.copy()).long().to(self.device).unsqueeze(0).repeat(batch_size, 1, 1)
-        
-        noise_shape = (batch_size, T_total, self.substrate.N_A)
-        noise_seq_A = torch.randn(noise_shape, device=self.device, generator=self.noise_rng) * sensor_noise_std
-        noise_seq_B = torch.randn(noise_shape, device=self.device, generator=self.noise_rng) * sensor_noise_std
 
-        # Instantiate the module, then script the instance
-        causal_loop_module = CausalLoopJIT(self.substrate, self.controller, self.delay_buffer)
-        causal_loop = torch.jit.script(causal_loop_module)
+        # --- Pre-computation and GPU pre-allocation ---
+        # 1. Pre-transfer all CHSH settings to the GPU at once.
+        all_settings_gpu = torch.from_numpy(self.chsh_settings.copy()).long().to(self.device)
+        
+        # 2. Pre-generate all sensor noise required for the entire simulation at once.
+        noise_shape_A = (T_total, batch_size, self.substrate.N_A)
+        noise_shape_B = (T_total, batch_size, self.substrate.N_B)
+        buffer_dtype = next(self.controller.parameters()).dtype
+        # Use the default, per-worker-seeded RNG.
+        all_noise_A_gpu = torch.randn(noise_shape_A, device=self.device).to(buffer_dtype) * sensor_noise_std
+        all_noise_B_gpu = torch.randn(noise_shape_B, device=self.device).to(buffer_dtype) * sensor_noise_std
+        
+        # --- Reset stateful components ---
+        self.substrate.reset(batch_size=batch_size)
+        self.controller.load_state_dict(controller_weights)
+        self.controller.eval()
+        self.delay_buffer.reset(batch_size=batch_size)
+
+        # Get the correct dtype from the model, in case we are in half-precision mode
+        controller_dtype = next(self.controller.parameters()).dtype
+
+        outputs_A, outputs_B, settings_log = [], [], []
 
         with torch.no_grad():
-            outputs_A_seq, outputs_B_seq, settings_log_seq = causal_loop(
-                settings_seq, noise_seq_A, noise_seq_B, T_total, washout_steps
-            )
+            for t in range(T_total):
+                # 1. Get the current, clean state from the substrate
+                state_A, state_B = self.substrate.get_current_state()
+                
+                # 2. Apply pre-generated sensor noise by slicing the GPU tensor
+                noisy_state_A = state_A + all_noise_A_gpu[t]
+                noisy_state_B = state_B + all_noise_B_gpu[t]
+                
+                # 3. Get CHSH settings by slicing the pre-allocated GPU tensor
+                setting_A_bit = all_settings_gpu[t, 0].expand(batch_size, 1)
+                setting_B_bit = all_settings_gpu[t, 1].expand(batch_size, 1)
+                # Ensure the spin tensors match the controller's precision
+                setting_A_spin = bits_to_spins(setting_A_bit).to(controller_dtype)
+                setting_B_spin = bits_to_spins(setting_B_bit).to(controller_dtype)
+                
+                # 4. Compute controller output. The controller now handles the "thinking loop" internally.
+                correction_logits, _ = self.controller.forward(
+                    noisy_state_A, noisy_state_B, 
+                    setting_A_spin, setting_B_spin
+                )
 
-        # Flatten results for scoring
-        final_outputs_A = outputs_A_seq.reshape(-1)
-        final_outputs_B = outputs_B_seq.reshape(-1)
-        final_settings_log = settings_log_seq.reshape(-1, 2)
+                # 5. Record the CHSH outcome for this step *before* any delay
+                if t >= washout_steps:
+                    # Binarize and store results for each item in the batch
+                    y_A = torch.sign(correction_logits[:, 0]).cpu().tolist()
+                    y_B = torch.sign(correction_logits[:, 1]).cpu().tolist()
+                    outputs_A.extend(y_A)
+                    outputs_B.extend(y_B)
+                    # Log the settings for each item in the batch
+                    settings_for_step = all_settings_gpu[t].expand(batch_size, 2).cpu().numpy()
+                    settings_log.extend(map(tuple, settings_for_step))
+                
+                # 6. Apply delay `d` for the substrate's actuation signal
+                delayed_logits = self.delay_buffer.push(correction_logits)
+                
+                # 7. Evolve substrate using the (potentially delayed) correction
+                # Ensure input to substrate matches its precision. It might be different from controller.
+                substrate_dtype = next(self.substrate.reservoir_A.parameters()).dtype
+                substrate_input_A = self._build_input(setting_A_bit, delayed_logits[:, 0].unsqueeze(-1).to(substrate_dtype))
+                substrate_input_B = self._build_input(setting_B_bit, delayed_logits[:, 1].unsqueeze(-1).to(substrate_dtype))
+                self.substrate.step(substrate_input_A, substrate_input_B)
+
+        # 8. Scoring (after the loop)
+        # Convert collected lists to GPU tensors for fast scoring
+        final_outputs_A = torch.tensor(outputs_A, device=self.device, dtype=torch.float32)
+        final_outputs_B = torch.tensor(outputs_B, device=self.device, dtype=torch.float32)
+        final_settings_log = torch.tensor(settings_log, device=self.device, dtype=torch.long)
 
         return self._compute_results(final_outputs_A, final_outputs_B, final_settings_log)
 
     def _build_input(self, setting_bit: torch.Tensor, correction_val: torch.Tensor) -> torch.Tensor:
         """Composes the substrate drive vector [setting_bit, correction_val] for a batch."""
-        return torch.cat((setting_bit.float(), correction_val), dim=-1)
+        # Cast setting_bit to the same dtype as correction_val to avoid mixed precision issues.
+        return torch.cat((setting_bit.to(correction_val.dtype), correction_val), dim=-1)
 
     def _compute_results(self, outputs_A_gpu: torch.Tensor, outputs_B_gpu: torch.Tensor, settings_log_gpu: torch.Tensor) -> tuple[float, dict]:
         # The S-score is calculated directly on the GPU.

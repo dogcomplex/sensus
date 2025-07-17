@@ -1,8 +1,7 @@
 import torch
-import torch.nn as nn
 from apsu6.torch_substrate import StatefulReservoir
 
-class ClassicalSubstrate(nn.Module):
+class ClassicalSubstrate:
     """
     Encapsulates the two Echo State Network (ESN) reservoirs representing the
     "slow medium" of the experiment. This implementation uses a pure PyTorch
@@ -11,7 +10,6 @@ class ClassicalSubstrate(nn.Module):
     def __init__(self, N_A: int, N_B: int, sr_A: float, sr_B: float, 
                  lr_A: float, lr_B: float, seed_A: int, seed_B: int, 
                  device: torch.device, **kwargs):
-        super().__init__()
         self.device = device
         self.N_A, self.N_B = N_A, N_B
         self.input_dim = 2 # [setting, correction]
@@ -36,13 +34,11 @@ class ClassicalSubstrate(nn.Module):
 
     def get_current_state(self) -> tuple[torch.Tensor, torch.Tensor]:
         """Returns the current internal states of the reservoirs."""
-        state_A = self.reservoir_A.state
-        state_B = self.reservoir_B.state
-        if state_A is None or state_B is None:
+        if self.reservoir_A.state is None or self.reservoir_B.state is None:
             raise RuntimeError("Reservoir states are not initialized. Call reset() first.")
-        return state_A, state_B
+        return self.reservoir_A.state, self.reservoir_B.state
 
-    def reset(self, batch_size: int = 1):
+    def reset(self, batch_size=1):
         """
         Resets the internal state of both reservoirs for a new batch.
         """
@@ -52,8 +48,15 @@ class ClassicalSubstrate(nn.Module):
     def to(self, device):
         """Moves the substrate and its components to the specified device."""
         self.device = device
-        # Let the parent nn.Module handle moving sub-modules
-        return super().to(device)
+        self.reservoir_A.to(device)
+        self.reservoir_B.to(device)
+        return self
+
+    def half(self):
+        """Converts internal reservoirs to half precision."""
+        self.reservoir_A.half()
+        self.reservoir_B.half()
+        return self
 
     def diagnose(self):
         """
