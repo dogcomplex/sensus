@@ -20,9 +20,12 @@ class ClassicalSystem:
         self.reservoir_A = Reservoir(units, sr=sr, lr=lr, seed=seed)
         self.reservoir_B = Reservoir(units, sr=sr, lr=lr, seed=seed + 1)
 
-    def step(self, input_A, input_B):
-        state_A = self.reservoir_A.run(np.array([[input_A]]))
-        state_B = self.reservoir_B.run(np.array([[input_B]]))
+    def step(self, input_A, input_B, phi_A, phi_B):
+        # The external randomness 'phi' is added to the controller's input
+        drive_A = np.array([[input_A + phi_A]])
+        drive_B = np.array([[input_B + phi_B]])
+        state_A = self.reservoir_A.run(drive_A)
+        state_B = self.reservoir_B.run(drive_B)
         return torch.from_numpy(state_A).float().squeeze(0), torch.from_numpy(state_B).float().squeeze(0)
 
     def reset(self):
@@ -113,7 +116,8 @@ def evaluate_chsh(weights_vector, config, phi_sequence, chsh_seed):
             c_a, c_b, y_a, y_b = controller(x_a, x_b)
             outputs_A.append(np.sign(y_a.item()))
             outputs_B.append(np.sign(y_b.item()))
-            x_a, x_b = classical_system.step(c_a.item(), c_b.item())
+            # Use the phi sequence to drive the reservoirs
+            x_a, x_b = classical_system.step(c_a.item(), c_b.item(), phi[t], phi[t])
 
     s_score = calculate_s_score(np.array(outputs_A), np.array(outputs_B), theta_a, theta_b)
     return s_score

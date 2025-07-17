@@ -1,62 +1,46 @@
 import numpy as np
+import torch
 
 def calculate_chsh_score(
-    outputs_A: list[int], 
-    outputs_B: list[int], 
-    settings: list[tuple[int, int]],
+    outputs_A: torch.Tensor, 
+    outputs_B: torch.Tensor, 
+    settings: torch.Tensor,
     bootstrap_seed: int | None = None,
     n_boot: int = 1000
-) -> tuple[float, dict[tuple[int, int], float]]:
+) -> tuple[torch.Tensor, dict[tuple[int, int], torch.Tensor]]:
     """
-    Calculates the S-score from lists of outcomes and settings.
+    Calculates the S-score from tensors of outcomes and settings on the GPU.
 
     Args:
-        outputs_A: List of {-1, +1} outcomes for party A.
-        outputs_B: List of {-1, +1} outcomes for party B.
-        settings: List of (a, b) tuples where a,b are in {0, 1}.
+        outputs_A: {-1, +1} outcomes for party A. Shape: (n_trials,)
+        outputs_B: {-1, +1} outcomes for party B. Shape: (n_trials,)
+        settings: (a, b) tuples where a,b are in {0, 1}. Shape: (n_trials, 2)
+        bootstrap_seed: Seed for bootstrap CI calculation (currently unused for optimizer).
+        n_boot: Number of bootstrap resamples.
 
     Returns:
         A tuple containing:
-        - The calculated S-score.
-        - A dictionary of the four correlation values E(a,b).
+        - The calculated S-score as a scalar tensor.
+        - A dictionary of the four correlation values E(a,b) as scalar tensors.
     """
-    yA = np.asarray(outputs_A)
-    yB = np.asarray(outputs_B)
-    s = np.asarray(settings)
+    if not (outputs_A.shape[0] == outputs_B.shape[0] == settings.shape[0]):
+        raise ValueError("All input tensors must have the same length.")
+
+    correlations = {}
+    for a_val in (0, 1):
+        for b_val in (0, 1):
+            mask = (settings[:, 0] == a_val) & (settings[:, 1] == b_val)
+            if not torch.any(mask):
+                correlations[(a_val, b_val)] = torch.tensor(0.0, device=outputs_A.device)
+            else:
+                correlations[(a_val, b_val)] = torch.mean((outputs_A[mask] * outputs_B[mask]).float())
+
+    s_score = (correlations.get((0, 0), 0) + 
+               correlations.get((0, 1), 0) + 
+               correlations.get((1, 0), 0) - 
+               correlations.get((1, 1), 0))
     
-    if not (len(yA) == len(yB) == len(s)):
-        raise ValueError("All input lists must have the same length.")
-
-    def get_s_from_indices(indices):
-        yA_s = yA[indices]
-        yB_s = yB[indices]
-        s_s = s[indices]
-        correlations = {}
-        for a_val in (0, 1):
-            for b_val in (0, 1):
-                mask = (s_s[:, 0] == a_val) & (s_s[:, 1] == b_val)
-                if not np.any(mask):
-                    correlations[(a_val, b_val)] = 0.0
-                else:
-                    correlations[(a_val, b_val)] = np.mean(yA_s[mask] * yB_s[mask])
-
-        s_score = (correlations.get((0, 0), 0) + 
-                   correlations.get((0, 1), 0) + 
-                   correlations.get((1, 0), 0) - 
-                   correlations.get((1, 1), 0))
-        return abs(s_score), correlations
-
-    # Calculate S-score for the original data
-    s_score_observed, correlations_observed = get_s_from_indices(np.arange(len(yA)))
-
-    if bootstrap_seed is not None:
-        rng = np.random.default_rng(bootstrap_seed)
-        bootstrap_scores = [get_s_from_indices(rng.choice(len(yA), len(yA), replace=True))[0] for _ in range(n_boot)]
-        # For now, just return the observed score, but one could return CIs as well
-        # In the context of the optimizer, we want the point estimate.
-        # The CI is more for final analysis.
-    
-    return s_score_observed, correlations_observed
+    return torch.abs(s_score), correlations
 
 
 def calculate_nonsignaling_metric(

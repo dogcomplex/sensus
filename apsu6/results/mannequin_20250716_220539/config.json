@@ -1,0 +1,53 @@
+{
+  "protocol": "Mannequin",
+  "seed": 42,
+  "noise_seed": 43,
+  "bootstrap_seed": 44,
+  "controller_delay": 0.1,
+  "T_total": 4000,
+  "washout_steps": 100,
+  "randomness_file": "apsu6/data/chsh_settings.bin",
+  "actuation_scale": 1.0,
+  "epsilon_ns": 0.02,
+  "use_pr_box_teacher": true,
+  "device": "cuda",
+  "substrate_params": {
+    "N_A": 50,
+    "N_B": 50,
+    "sr_A": 0.7,
+    "sr_B": 0.7,
+    "lr_A": 0.7,
+    "lr_B": 0.7,
+    "noise_A": 0.0,
+    "noise_B": 0.0,
+    "seed_A": 52,
+    "seed_B": 53
+  },
+  "controller_params": {
+    "protocol": "Mannequin",
+    "N_A": 50,
+    "N_B": 50,
+    "K_controller": 32,
+    "R_speed": 10.0,
+    "signaling_bits": 0,
+    "internal_cell_config": {
+      "enabled": true,
+      "type": "gru",
+      "hidden_size": 32
+    }
+  },
+  "optimizer": {
+    "generations": 100,
+    "population_size": 12
+  },
+  "evaluation": {
+    "num_avg": 3
+  },
+  "curriculum": {
+    "enabled": true,
+    "teacher_lambda_start": 5.0,
+    "teacher_lambda_end": 0.5,
+    "sensor_noise_start": 0.05,
+    "sensor_noise_end": 0.0
+  }
+}

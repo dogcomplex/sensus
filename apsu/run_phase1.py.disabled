@@ -71,8 +71,8 @@ def run_phase1(config_path):
         mean_s = np.nan
         std_s = np.nan
     else:
-    mean_s = np.mean(s_scores)
-    std_s = np.std(s_scores)
+        mean_s = np.mean(s_scores)
+        std_s = np.std(s_scores)
     
     logging.info(f"Completed {len(s_scores)} trials.")
     logging.info(f"S-Score Mean: {mean_s:.4f}")

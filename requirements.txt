@@ -1,0 +1,9 @@
+torch==2.9.0.dev20250711+cu128
+torchaudio==2.8.0.dev20250712+cu128
+torchvision==0.24.0.dev20250712+cu128
+cma==3.3.0
+numpy==2.3.1
+reservoirpy==0.3.13
+tqdm==4.67.1
+python-dotenv==1.1.1
+requests==2.32.4 

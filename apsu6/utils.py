@@ -1,6 +1,7 @@
 import numpy as np
 from pathlib import Path
 import logging
+import torch
 
 def bit_to_spin(bit: int) -> int:
     """Map {0,1} -> {-1,+1}; raises on invalid."""
@@ -10,15 +11,15 @@ def bit_to_spin(bit: int) -> int:
         return -1
     raise ValueError(f"Input bit must be 0 or 1, but got {bit}")
 
-def bits_to_spins(bits: tuple[int, int]) -> tuple[int, int]:
+def bits_to_spins(bits: torch.Tensor) -> torch.Tensor:
     """
-    Accepts iterable/tuple of length 2 of {0,1}.
-    Returns (spin_A, spin_B) in {-1,+1}.
+    Vectorized conversion of a tensor of bits {0, 1} to spins {-1, +1}.
+    Args:
+        bits (torch.Tensor): A tensor of any shape containing 0s and 1s.
+    Returns:
+        A tensor of the same shape with 0s mapped to -1 and 1s to +1.
     """
-    if len(bits) != 2:
-        raise ValueError(f"Input must be a tuple of length 2, but got {len(bits)}")
-    a, b = bits
-    return bit_to_spin(a), bit_to_spin(b)
+    return 2 * bits.float() - 1
 
 def load_chsh_settings(filepath: str | Path) -> np.ndarray:
     """
