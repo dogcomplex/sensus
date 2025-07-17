@@ -59,9 +59,10 @@ class ExperimentHarness:
         """Composes the substrate drive vector [setting_bit, correction_val]."""
         return np.array([[setting_bit, correction_val]], dtype=np.float32)
 
-    def evaluate_fitness(self, controller_weights: dict) -> tuple[float, dict]:
+    def evaluate_fitness(self, controller_weights: dict, sensor_noise_std: float = 0.0) -> tuple[float, dict]:
         """
         Performs one full fitness evaluation for a given set of controller weights.
+        The noise level can be set dynamically for curriculum learning.
         """
         self.substrate.reset()
         self.controller.reset()
@@ -69,7 +70,7 @@ class ExperimentHarness:
         self.controller.load_state_dict(controller_weights)
         self.controller.eval()
         
-        sensor_noise_std = self.config.get('sensor_noise', 0.0)
+        # sensor_noise_std is now passed in as an argument.
         actuation_scale = self.config.get('actuation_scale', 1.0)
         
         T_total = self.config.get('T_total', 4000)

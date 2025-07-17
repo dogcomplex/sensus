@@ -61,8 +61,15 @@ def get_config(args):
         
         "optimizer": {
             "generations": 100,
-            "population_size": 12,
-            "teacher_lambda": 1.0 # Weight for the PR-Box teacher loss
+            "population_size": 12
+        },
+        
+        "curriculum": {
+            "enabled": args.curriculum,
+            "teacher_lambda_start": 5.0,
+            "teacher_lambda_end": 0.5,
+            "sensor_noise_start": 0.05,
+            "sensor_noise_end": 0.0
         }
     }
     return config
@@ -74,6 +81,7 @@ def main():
     parser.add_argument('--seed', type=int, default=42, help="Main random seed.")
     parser.add_argument('--delay', type=float, default=0.1, help="Controller delay 'd' for Speed Ratio R=1/d.")
     parser.add_argument('--teacher', action='store_true', help="Use the PR-Box teacher to guide the optimizer.")
+    parser.add_argument('--curriculum', action='store_true', help="Enable curriculum learning (annealing).")
     args = parser.parse_args()
 
     config = get_config(args)
@@ -104,6 +112,23 @@ def main():
     pbar = tqdm(total=config['optimizer']['generations'], desc="Optimizing (Protocol M)")
 
     for generation in range(config['optimizer']['generations']):
+        # --- Curriculum Learning: Anneal parameters over generations ---
+        progress = generation / (config['optimizer']['generations'] - 1) if config['optimizer']['generations'] > 1 else 1.0
+        
+        if config['curriculum']['enabled']:
+            # Linearly anneal from start to end values using the correct formula
+            lambda_start = config['curriculum']['teacher_lambda_start']
+            lambda_end = config['curriculum']['teacher_lambda_end']
+            current_lambda = lambda_start + progress * (lambda_end - lambda_start)
+
+            noise_start = config['curriculum']['sensor_noise_start']
+            noise_end = config['curriculum']['sensor_noise_end']
+            current_noise = noise_start + progress * (noise_end - noise_start)
+        else:
+            # Use fixed values if curriculum is disabled
+            current_lambda = config['curriculum']['teacher_lambda_end'] if config['use_pr_box_teacher'] else 0.0
+            current_noise = 0.0
+
         solutions_params = es.ask()
         fitness_scores = []
 
@@ -116,13 +141,11 @@ def main():
                 controller_weights[name] = p_slice
                 start_idx += n_params
             
-            s_score, diagnostics = harness.evaluate_fitness(controller_weights)
+            s_score, diagnostics = harness.evaluate_fitness(controller_weights, sensor_noise_std=current_noise)
             
             # Combine S-score with teacher loss for the final fitness
             teacher_loss = diagnostics.get("pr_box_teacher_loss", 0.0)
-            teacher_lambda = config['optimizer'].get('teacher_lambda', 0.0)
-            
-            fitness = -s_score + (teacher_lambda * teacher_loss)
+            fitness = -s_score + (current_lambda * teacher_loss)
             fitness_scores.append(fitness)
 
         es.tell(solutions_params, fitness_scores)
@@ -139,7 +162,7 @@ def main():
             best_weights_for_eval[name] = p_slice
             start_idx += num_params
 
-        s_score_of_best, diags_of_best = harness.evaluate_fitness(best_weights_for_eval)
+        s_score_of_best, diags_of_best = harness.evaluate_fitness(best_weights_for_eval, sensor_noise_std=current_noise)
 
         best_s_in_gen = s_score_of_best
         history['s_scores'].append(best_s_in_gen)
@@ -158,7 +181,13 @@ def main():
 
             torch.save(best_weights_dict, results_dir / "best_controller.pth")
 
-        pbar.set_postfix({"S": f"{best_s_in_gen:.4f}", "Best S": f"{history['best_s']:.4f}", "Teacher Loss": f"{diags_of_best.get('pr_box_teacher_loss', 0.0):.4f}"})
+        pbar.set_postfix({
+            "S": f"{best_s_in_gen:.4f}", 
+            "Best S": f"{history['best_s']:.4f}", 
+            "Loss": f"{diags_of_best.get('pr_box_teacher_loss', 0.0):.4f}",
+            "λ": f"{current_lambda:.2f}",
+            "σ": f"{current_noise:.3f}"
+        })
         pbar.update(1)
 
     pbar.close()
