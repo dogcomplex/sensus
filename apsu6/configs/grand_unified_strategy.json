@@ -1,60 +1,43 @@
 {
   "protocol": "Mannequin",
-  "anneal_substrate": false,
   "seed": 42,
-  "noise_seed": 43,
-  "bootstrap_seed": 44,
   "controller_delay": 1.0,
   "T_total": 4000,
   "washout_steps": 100,
   "randomness_file": "apsu6/data/chsh_settings.bin",
-  "actuation_scale": 1.0,
-  "epsilon_ns": 0.02,
-  "use_pr_box_teacher": true,
   "device": "cuda",
   "substrate_params": {
     "N_A": 50,
     "N_B": 50,
-    "sr_A": 0.1,
-    "sr_B": 0.1,
-    "lr_A": 0.1,
-    "lr_B": 0.1,
-    "noise_A": 0.0,
-    "noise_B": 0.0,
+    "sr_A": 0.95, "sr_B": 0.95,
+    "lr_A": 0.3, "lr_B": 0.3,
     "seed_A": 52,
     "seed_B": 53
   },
   "controller_params": {
     "protocol": "Mannequin",
+    "architecture": "cross_product",
     "N_A": 50,
     "N_B": 50,
     "K_controller": 32,
     "R_speed": 1.0,
     "signaling_bits": 0,
-    "internal_cell_config": {
-      "enabled": false
-    }
+    "internal_cell_config": { "enabled": false }
   },
   "optimizer": {
-    "generations": 100,
+    "generations_phase1": 50,
+    "generations_phase2": 100,
     "population_size": 36
   },
   "evaluation": {
-    "num_avg": 128
-  },
-  "curriculum": {
-    "enabled": true,
-    "teacher_lambda_start": 5.0,
-    "teacher_lambda_end": 0.5,
-    "sensor_noise_start": 0.05,
-    "sensor_noise_end": 0.0
+    "num_avg": 128,
+    "post_hoc_batch_size": 2048
   },
   "reward_shaping": {
     "enabled": true,
     "classical_bound": 2.0,
-    "tsirelson_bound": 2.828427,
+    "tsirelson_bound": 2.828,
     "classical_bonus": 1.0,
     "quantum_bonus": 2.0
-  },
-  "half_precision": false
+  }
 } 

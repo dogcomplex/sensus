@@ -1,0 +1,11 @@
+{
+  "S_score": 1.6955784679226942,
+  "S_score_ci": [
+    1.5487829193472862,
+    1.8556169763207435
+  ],
+  "p_classical": 0.0,
+  "p_tsirelson": 0.0,
+  "pr_box_teacher_loss": 0.0,
+  "correlations": {
+    

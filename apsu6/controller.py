@@ -1,101 +1,130 @@
 import torch
 import torch.nn as nn
+from apsu6.minimal_reservoir import MinimalESN as ESN
 
 class UniversalController(nn.Module):
+    """
+    A polymorphic controller that can be configured to emulate different
+    physical realities (Quantum, Mannequin, Absurdist).
+    """
     def __init__(self, protocol: str, N_A: int, N_B: int, K_controller: int, 
                  R_speed: float, signaling_bits: int, 
-                 internal_cell_config: dict, device: torch.device):
+                 internal_cell_config: dict, architecture: str = "mlp", device: torch.device = 'cpu'):
         super().__init__()
         self.protocol = protocol
         self.device = device
         self.R = R_speed
+        self.signaling_bits = signaling_bits
         self.internal_cell_config = internal_cell_config
+        self.architecture = architecture
 
         self._build_network(N_A, N_B, K_controller)
         self.to(self.device)
 
     def _build_network(self, N_A: int, N_B: int, K_controller: int):
+        """Helper method to construct the appropriate NN architecture."""
         if self.protocol != 'Mannequin':
-            raise NotImplementedError("Only Protocol M is supported for this controller version.")
+            raise NotImplementedError(f"Protocol '{self.protocol}' is not yet supported.")
 
-        self.substrate_encoder = nn.Linear(N_A + N_B, K_controller)
+        # --- Shared Encoder ---
+        if self.architecture == "cross_product":
+            encoder_input_size = N_A * N_B
+            self.shared_encoder = nn.Sequential(
+                nn.Linear(encoder_input_size, K_controller),
+                nn.ReLU()
+            )
+        elif self.architecture == "esn":
+            # For the ESN controller, the "encoder" is the ESN itself.
+            esn_units = self.internal_cell_config.get('hidden_size', K_controller)
+            self.esn_controller = ESN(
+                input_dim=N_A + N_B,
+                hidden_dim=esn_units,
+                output_dim=K_controller, # The ESN's output is our shared latent vector
+                spectral_radius=self.internal_cell_config.get('sr', 1.1),
+                leaky_rate=self.internal_cell_config.get('lr', 0.5),
+                input_scaling=self.internal_cell_config.get('input_scaling', 0.9),
+                device=self.device
+            )
+            # The ESN class in EchoTorch includes the readout, so shared_encoder is not needed.
+            self.shared_encoder = None
+        else: # Default MLP architecture
+            encoder_input_size = N_A + N_B
+            self.shared_encoder = nn.Sequential(
+                nn.Linear(encoder_input_size, K_controller),
+                nn.ReLU()
+            )
 
+        # --- Internal Recurrent Cell (for R > 1) ---
+        self.internal_gru = None
+        self.internal_decoder = None
+        head_input_dim = K_controller
         if self.R > 1 and self.internal_cell_config.get('enabled', False):
             hidden_size = self.internal_cell_config.get('hidden_size', K_controller)
             num_layers = self.internal_cell_config.get('num_layers', 1)
             
-            # Use a single, optimized GRU layer instead of a GRUCell loop in the harness
             self.internal_gru = nn.GRU(
                 input_size=K_controller, 
                 hidden_size=hidden_size, 
                 num_layers=num_layers,
-                batch_first=False # We process one time-step at a time, but GRU expects (seq, batch, feature)
+                batch_first=False
             )
             self.internal_decoder = nn.Linear(hidden_size, K_controller)
             head_input_dim = K_controller * 2 # substrate_latent + thought_latent
-        else:
-            head_input_dim = K_controller # substrate_latent only
 
+        # --- Output Heads ---
         self.head_A = nn.Sequential(
-            nn.Linear(head_input_dim + N_A + 1, K_controller),
+            nn.Linear(head_input_dim + N_A + 1, K_controller), # combined_latent + x_a + setting_a
             nn.ReLU(),
             nn.Linear(K_controller, 1),
             nn.Tanh()
         )
         self.head_B = nn.Sequential(
-            nn.Linear(head_input_dim + N_B + 1, K_controller),
+            nn.Linear(head_input_dim + N_B + 1, K_controller), # combined_latent + x_b + setting_b
             nn.ReLU(),
             nn.Linear(K_controller, 1),
             nn.Tanh()
         )
-    
+
     def forward(self, x_A: torch.Tensor, x_B: torch.Tensor, 
                 settings_A: torch.Tensor, settings_B: torch.Tensor,
-                thought_h_in: torch.Tensor = None) -> tuple[torch.Tensor, torch.Tensor]:
-        """
-        The main forward pass for a single time step.
-        Args:
-            x_A, x_B: Current substrate states, shape (B, N_A/N_B)
-            settings_A, settings_B: Current settings, shape (B, 1)
-            thought_h_in: Optional incoming hidden state for the thinking loop.
-        Returns:
-            A tuple of (correction_logits, thought_h_out)
-        """
+                h_prev: torch.Tensor | None = None) -> tuple[torch.Tensor, torch.Tensor | None]:
         
-        # Combine states for substrate encoder: (B, N_A+N_B)
-        substrate_state = torch.cat([x_A, x_B], dim=-1)
-        # Encode the current state: (B, N_A+N_B) -> (B, K)
-        substrate_latent = torch.relu(self.substrate_encoder(substrate_state))
-        
-        thought_h_out = None # Default return for hidden state
-        if self.R > 1 and self.internal_cell_config.get('enabled', False):
-            # The "thinking" is now a single, highly optimized multi-layer GRU operation.
-            # We add a dummy sequence dimension of 1.
-            cell_input = substrate_latent.unsqueeze(0) # (1, B, K)
-            
-            # The harness is no longer responsible for the loop, only the hidden state.
-            hidden_state = thought_h_in if thought_h_in is not None else \
-                         torch.zeros(self.internal_gru.num_layers, x_A.size(0), self.internal_gru.hidden_size, device=self.device, dtype=cell_input.dtype)
-            
-            # The GRU layer handles the "thinking loop" internally in optimized code.
-            gru_output, thought_h_out = self.internal_gru(cell_input, hidden_state)
-            
-            # We take the output of the final layer
-            thought_latent = torch.relu(self.internal_decoder(gru_output.squeeze(0)))
-            shared_latent = torch.cat([substrate_latent, thought_latent], dim=-1)
-        else:
-            shared_latent = substrate_latent
+        # --- 1. Substrate Encoding ---
+        if self.architecture == "cross_product":
+            # x_A is (B, N_A), x_B is (B, N_B) -> outer_product is (B, N_A, N_B)
+            outer_product = torch.bmm(x_A.unsqueeze(2), x_B.unsqueeze(1))
+            encoder_input = outer_product.view(outer_product.size(0), -1)
+            substrate_latent = torch.relu(self.shared_encoder(encoder_input))
+        elif self.architecture == "esn":
+            # EchoTorch runs natively on GPU tensors, no CPU round-trip needed.
+            encoder_input = torch.cat([x_A, x_B], dim=-1)
+            # The ESN handles its own state internally.
+            substrate_latent, _ = self.esn_controller(encoder_input)
+        else: # Default MLP
+            encoder_input = torch.cat([x_A, x_B], dim=-1)
+            substrate_latent = torch.relu(self.shared_encoder(encoder_input))
 
-        # Combine all inputs for the final heads
-        # Shapes: (B, K_shared), (B, N_A), (B, 1) -> (B, K_shared+N_A+1)
-        input_A = torch.cat([shared_latent, x_A, settings_A], dim=-1)
+        # --- 2. Internal "Thinking" Loop (R > 1) ---
+        h_out = h_prev
+        if self.R > 1 and self.internal_gru is not None:
+            cell_input = substrate_latent.unsqueeze(0)
+            gru_output, h_out = self.internal_gru(cell_input, h_prev)
+            thought_latent = torch.relu(self.internal_decoder(gru_output.squeeze(0)))
+            combined_latent = torch.cat([substrate_latent, thought_latent], dim=-1)
+        else:
+            combined_latent = substrate_latent
+
+        # --- 3. Output Calculation ---
+        input_A = torch.cat([combined_latent, x_A, settings_A], dim=-1)
         correction_A = self.head_A(input_A)
 
-        input_B = torch.cat([shared_latent, x_B, settings_B], dim=-1)
+        input_B = torch.cat([combined_latent, x_B, settings_B], dim=-1)
         correction_B = self.head_B(input_B)
-            
-        correction_logits = torch.cat([correction_A, correction_B], dim=-1)
-        return correction_logits, thought_h_out
+        
+        return torch.cat([correction_A, correction_B], dim=-1), h_out
 
     def reset(self):
-        pass 
+        """Resets the internal hidden state of the GRU or ESN controller."""
+        if hasattr(self, 'esn_controller'):
+            self.esn_controller.reset_hidden()
+        self.h_state = None 

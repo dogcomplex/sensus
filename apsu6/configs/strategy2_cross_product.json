@@ -15,10 +15,10 @@
   "substrate_params": {
     "N_A": 50,
     "N_B": 50,
-    "sr_A": 0.1,
-    "sr_B": 0.1,
-    "lr_A": 0.1,
-    "lr_B": 0.1,
+    "sr_A": 0.95,
+    "sr_B": 0.95,
+    "lr_A": 0.3,
+    "lr_B": 0.3,
     "noise_A": 0.0,
     "noise_B": 0.0,
     "seed_A": 52,
@@ -26,6 +26,7 @@
   },
   "controller_params": {
     "protocol": "Mannequin",
+    "architecture": "cross_product",
     "N_A": 50,
     "N_B": 50,
     "K_controller": 32,

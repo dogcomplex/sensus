@@ -3,10 +3,19 @@ import json
 import argparse
 from pathlib import Path
 import numpy as np
+import torch
+import os
 
 from apsu6.harness import ExperimentHarness
 
 def main():
+    # Set the environment variable for deterministic CuBLAS operations.
+    # This must be done *before* any CUDA operations are initialized.
+    os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
+
+    # Enforce deterministic calculations for a stable, final analysis.
+    torch.use_deterministic_algorithms(True)
+
     parser = argparse.ArgumentParser(description="Analyze the best solution from a completed CMA-ES run.")
     parser.add_argument('results_dir', type=str, help="Path to the experiment results directory (e.g., 'apsu6/results/mannequin_...').")
     args = parser.parse_args()
@@ -22,36 +31,14 @@ def main():
         print(f"Error: Could not find config.json in {results_path}")
         return
     
-    # CMA-ES saves its state in a directory named 'cma_es_out' by default
-    # within the working directory at the time of the run. Since our main
-    # script runs from the root, it should be in the root.
-    # We need to find the specific file corresponding to the run.
-    # The default logger name is 'cma_es_logger'.
-    # This part is tricky as we don't know the exact run name.
-    # Let's assume for now the user can find the .pkl file.
-    # A more robust solution would be to save the CMA output path in the main script.
+    weights_path = results_path / "best_controller_weights.npy"
+    if not weights_path.exists():
+        print(f"Error: Could not find best_controller_weights.npy in {results_path}")
+        return
+
+    print(f"--- Loading Best Solution from {weights_path} ---")
+    best_solution = np.load(weights_path)
     
-    print("--- Loading CMA-ES Data ---")
-    print("Please locate the '.pkl' file from the CMA-ES output.")
-    # For now, we will assume a default path structure for the analysis
-    cma_output_dir = Path("cma_es_out")
-    if not cma_output_dir.exists():
-        print(f"Error: Default CMA output directory '{cma_output_dir}' not found.")
-        print("CMA-ES might have saved its data elsewhere. You may need to specify the path.")
-        return
-
-    # Find the most recent pickle file in the output directory
-    try:
-        es_files = sorted(cma_output_dir.glob('*.pkl'), key=lambda p: p.stat().st_mtime, reverse=True)
-        latest_es_file = es_files[0]
-        print(f"Found latest CMA-ES state file: {latest_es_file}")
-    except IndexError:
-        print(f"Error: No .pkl files found in {cma_output_dir}")
-        return
-
-    es = cma.CMAEvolutionStrategy.load(latest_es_file)
-    best_solution = es.result.xbest
-
     print("\n--- Re-evaluating Best Solution ---")
     
     # We need to run a single evaluation to get the diagnostics.
@@ -66,7 +53,8 @@ def main():
     print(f"Best S-Score: {s_score:.6f}")
     
     print("\nFull Diagnostics:")
-    # Pretty print the diagnostics dictionary
+    # Pretty print the diagnostics dictionary, converting tuple keys to strings for JSON compatibility.
+    diagnostics['correlations'] = {str(k): v for k, v in diagnostics['correlations'].items()}
     print(json.dumps(diagnostics, indent=2))
 
     # --- Extract and display the discovered substrate parameters ---

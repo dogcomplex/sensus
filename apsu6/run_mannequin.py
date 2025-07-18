@@ -277,6 +277,9 @@ def main():
     logging.info("--- Experiment Complete ---")
     logging.info(f"Final Best S-Score: {history['best_s']:.4f}")
     logging.info("\nDiagnostics for Best Solution Found:")
+    # Convert tuple keys in correlations to strings for JSON serialization
+    if 'correlations' in history['best_diagnostics']:
+        history['best_diagnostics']['correlations'] = {str(k): v for k, v in history['best_diagnostics']['correlations'].items()}
     logging.info(json.dumps(history['best_diagnostics'], indent=2))
     
     # Save final results

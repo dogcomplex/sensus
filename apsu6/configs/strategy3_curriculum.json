@@ -1,0 +1,37 @@
+{
+  "protocol": "Mannequin",
+  "anneal_substrate": false,
+  "seed": 42,
+  "controller_delay": 1.0,
+  "T_total": 4000,
+  "washout_steps": 100,
+  "randomness_file": "apsu6/data/chsh_settings.bin",
+  "device": "cuda",
+  "substrate_params": {
+    "N_A": 50,
+    "N_B": 50,
+    "sr_A": 0.95,
+    "sr_B": 0.95,
+    "lr_A": 0.3,
+    "lr_B": 0.3
+  },
+  "controller_params": {
+    "protocol": "Mannequin",
+    "architecture": "cross_product",
+    "N_A": 50,
+    "N_B": 50,
+    "K_controller": 32,
+    "R_speed": 1.0,
+    "internal_cell_config": {
+      "enabled": false
+    }
+  },
+  "optimizer": {
+    "generations_phase1": 50,
+    "generations_phase2": 100,
+    "population_size": 36
+  },
+  "evaluation": {
+    "num_avg": 128
+  }
+} 

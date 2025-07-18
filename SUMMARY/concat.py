@@ -1,6 +1,7 @@
 import os
 import sys
 import json
+import re
 from datetime import datetime
 
 # Define encodings globally for use in multiple functions
@@ -143,6 +144,52 @@ def generate_tree_summary(root_dir_path):
     summary_string += "\n".join(child_lines)
     return summary_string
 
+def filter_base64(content):
+    """
+    More robust filter to remove lines that appear to contain large base64 encoded data blobs.
+    It checks for long strings of base64 characters, often found as values in key-value pairs.
+    """
+    # Regex to match a string that is composed almost entirely of base64 characters.
+    # Allows for some non-base64 characters for robustness.
+    base64_pattern = re.compile(r"^[A-Za-z0-9+/=]+$")
+    lines = content.split('\n')
+    filtered_lines = []
+    
+    for line in lines:
+        stripped_line = line.strip()
+        
+        # Heuristic 1: The entire line is just a very long base64 string.
+        if len(stripped_line) > 200 and base64_pattern.match(stripped_line):
+            continue
+
+        # Heuristic 2: The line contains a key-value pair where the value is a base64 string.
+        # This is designed to catch patterns like: "key": "iVBORw0KGgo..."
+        try:
+            # Find the position of the last colon, which typically separates key from value.
+            last_colon_pos = stripped_line.rfind(':')
+            if last_colon_pos > 0:
+                # Extract the potential value part after the colon.
+                value_part = stripped_line[last_colon_pos + 1:].strip()
+                
+                # Clean up potential surrounding characters like quotes and commas.
+                if value_part.startswith('"'):
+                    value_part = value_part[1:]
+                if value_part.endswith('"') or value_part.endswith('",'):
+                    value_part = value_part[:-1]
+                    if value_part.endswith('"'):
+                         value_part = value_part[:-1]
+                
+                # Check if the cleaned value part is a long base64 string.
+                if len(value_part) > 200 and base64_pattern.match(value_part):
+                    continue # Skip the entire line if it matches.
+        except Exception:
+            # If any string processing fails, just keep the line.
+            pass
+
+        filtered_lines.append(line)
+            
+    return '\n'.join(filtered_lines)
+
 def concatenate_files_and_split(root_dir, tree_content, base_prompt_text, output_name):
     global encodings, max_file_size_bytes, total_size_hard_cap_bytes, output_folder
 
@@ -220,7 +267,9 @@ def concatenate_files_and_split(root_dir, tree_content, base_prompt_text, output
                         continue
                 
                 if file_content is not None:
-                    outfile.write(f"{header_path_str}\n{file_content}\n\n")
+                    # Filter out base64 content before writing
+                    filtered_content = filter_base64(file_content)
+                    outfile.write(f"{header_path_str}\n{filtered_content}\n\n")
                 else:
                     outfile.write(f"{header_path_str}\n```\nUnable to decode file content.\n```\n")
 
