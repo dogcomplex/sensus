@@ -5,23 +5,11 @@ def calculate_chsh_score(
     outputs_A: torch.Tensor, 
     outputs_B: torch.Tensor, 
     settings: torch.Tensor,
-    bootstrap_seed: int | None = None,
+    bootstrap_seed: int | None = None, # Keep for potential future use
     n_boot: int = 1000
 ) -> tuple[torch.Tensor, dict[tuple[int, int], torch.Tensor]]:
     """
     Calculates the S-score from tensors of outcomes and settings on the GPU.
-
-    Args:
-        outputs_A: {-1, +1} outcomes for party A. Shape: (n_trials,)
-        outputs_B: {-1, +1} outcomes for party B. Shape: (n_trials,)
-        settings: (a, b) tuples where a,b are in {0, 1}. Shape: (n_trials, 2)
-        bootstrap_seed: Seed for bootstrap CI calculation (currently unused for optimizer).
-        n_boot: Number of bootstrap resamples.
-
-    Returns:
-        A tuple containing:
-        - The calculated S-score as a scalar tensor.
-        - A dictionary of the four correlation values E(a,b) as scalar tensors.
     """
     if not (outputs_A.shape[0] == outputs_B.shape[0] == settings.shape[0]):
         raise ValueError("All input tensors must have the same length.")
@@ -33,6 +21,7 @@ def calculate_chsh_score(
             if not torch.any(mask):
                 correlations[(a_val, b_val)] = torch.tensor(0.0, device=outputs_A.device)
             else:
+                # Use .float() on the multiplication result, not individual tensors
                 correlations[(a_val, b_val)] = torch.mean((outputs_A[mask] * outputs_B[mask]).float())
 
     s_score = (correlations.get((0, 0), 0) + 
@@ -43,62 +32,71 @@ def calculate_chsh_score(
     return torch.abs(s_score), correlations
 
 
-def calculate_nonsignaling_metric(
-    outputs_local: list[int], 
-    settings_local: list[int], 
-    settings_remote: list[int],
+def calculate_teacher_loss_gpu(
+    outputs_A: torch.Tensor, 
+    outputs_B: torch.Tensor, 
+    settings: torch.Tensor
+) -> torch.Tensor:
+    """Calculates the PR-Box teacher loss entirely on the GPU."""
+    o_A_bits = (outputs_A.float() + 1) / 2
+    o_B_bits = (outputs_B.float() + 1) / 2
+    s_A_bits = settings[:, 0]
+    s_B_bits = settings[:, 1]
+    
+    actual_xor = torch.bitwise_xor(o_A_bits.long(), o_B_bits.long())
+    target_and = torch.bitwise_and(s_A_bits.long(), s_B_bits.long())
+    
+    return torch.mean((actual_xor - target_and).float()**2)
+
+
+def calculate_nonsignaling_metric_gpu(
+    outputs_local: torch.Tensor, 
+    settings_local: torch.Tensor, 
+    settings_remote: torch.Tensor,
     n_boot: int = 1000,
     ci: float = 0.95,
     seed: int = 42
-) -> tuple[float, tuple[float, float]]:
+) -> tuple[torch.Tensor, torch.Tensor]:
     """
-    Calculates the non-signaling deviation metric (Delta_NS) for one party.
-    It measures the maximum change in the local party's output probability
-    when the remote party's setting changes.
-
-    Args:
-        outputs_local: {-1, +1} outcomes for the local party.
-        settings_local: {0, 1} settings for the local party.
-        settings_remote: {0, 1} settings for the remote party.
-        n_boot: Number of bootstrap resamples for confidence interval.
-        ci: Confidence interval level.
-        seed: Seed for the bootstrap RNG.
-
-    Returns:
-        A tuple containing:
-        - The calculated Delta_NS metric.
-        - A tuple with the (lower, upper) bounds of the confidence interval.
+    Vectorized, GPU-based calculation of the non-signaling metric and its CI.
     """
-    out = np.asarray(outputs_local)
-    s_loc = np.asarray(settings_local)
-    s_rem = np.asarray(settings_remote)
+    device = outputs_local.device
+    out_prob = (outputs_local.float() + 1) / 2
 
-    # Convert {-1,+1} to {0,1} for probability calculation
-    out_prob = (out + 1) / 2 
+    def get_delta_vectorized(indices_batch):
+        # indices_batch shape: (n_boot, n_trials)
+        n_boot_local, n_trials = indices_batch.shape
+        
+        # Gather the data for all bootstrap samples at once
+        s_loc_boot = settings_local[indices_batch] # (n_boot, n_trials)
+        s_rem_boot = settings_remote[indices_batch] # (n_boot, n_trials)
+        out_prob_boot = out_prob[indices_batch]     # (n_boot, n_trials)
 
-    def get_delta(indices):
-        max_delta = 0.0
-        # Iterate over local settings
+        max_deltas = torch.zeros(n_boot_local, device=device)
         for a_val in (0, 1):
-            # P(y=+1 | a, b=0)
-            mask0 = (s_loc[indices] == a_val) & (s_rem[indices] == 0)
-            p0 = np.mean(out_prob[indices][mask0]) if np.any(mask0) else 0.5
+            mask0 = (s_loc_boot == a_val) & (s_rem_boot == 0)
+            mask1 = (s_loc_boot == a_val) & (s_rem_boot == 1)
             
-            # P(y=+1 | a, b=1)
-            mask1 = (s_loc[indices] == a_val) & (s_rem[indices] == 1)
-            p1 = np.mean(out_prob[indices][mask1]) if np.any(mask1) else 0.5
+            # Calculate means for all bootstrap samples in parallel
+            p0 = (out_prob_boot * mask0).sum(dim=1) / mask0.sum(dim=1).clamp(min=1)
+            p1 = (out_prob_boot * mask1).sum(dim=1) / mask1.sum(dim=1).clamp(min=1)
             
-            max_delta = max(max_delta, abs(p0 - p1))
-        return max_delta
+            deltas = torch.abs(p0 - p1)
+            max_deltas = torch.maximum(max_deltas, deltas)
+            
+        return max_deltas
 
     # Calculate metric for the original data
-    delta_ns_observed = get_delta(np.arange(len(out)))
+    observed_indices = torch.arange(len(out_prob), device=device).unsqueeze(0)
+    delta_ns_observed = get_delta_vectorized(observed_indices)[0]
 
     # Bootstrap for confidence interval
-    rng = np.random.default_rng(seed)
-    bootstrap_deltas = [get_delta(rng.choice(len(out), len(out), replace=True)) for _ in range(n_boot)]
+    generator = torch.Generator(device=device).manual_seed(seed)
+    bootstrap_indices = torch.randint(0, len(out_prob), (n_boot, len(out_prob)), generator=generator, device=device)
+    bootstrap_deltas = get_delta_vectorized(bootstrap_indices)
     
-    lower_bound = np.percentile(bootstrap_deltas, (1 - ci) / 2 * 100)
-    upper_bound = np.percentile(bootstrap_deltas, (1 + ci) / 2 * 100)
-
-    return delta_ns_observed, (lower_bound, upper_bound) 
+    # Calculate CI bounds using torch.quantile
+    q = torch.tensor([(1 - ci) / 2, (1 + ci) / 2], device=device)
+    ci_bounds = torch.quantile(bootstrap_deltas, q)
+    
+    return delta_ns_observed, ci_bounds 
