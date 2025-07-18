@@ -34,8 +34,9 @@ def setup_logging(results_dir: Path, is_main_process: bool = True):
     )
 
 def get_config_from_args(args):
-    """Creates the main configuration dictionary FROM ARGS ONLY. Legacy path."""
-    # This function remains largely the same
+    """Creates the main configuration dictionary from command-line arguments."""
+    # This was the original get_config function, now used as a fallback
+    # when no --config file is specified.
     config = {
         "protocol": "Mannequin",
         "seed": args.seed,
@@ -75,119 +76,104 @@ def get_config_from_args(args):
     }
     return config
 
-def init_worker(config_data):
+
+def init_worker(config):
     """Initializer for each worker process."""
     global harness, temp_controller
     # Diagnostic print
     print(f"[Worker {os.getpid()}] Initializing...")
     # Seed each worker process independently for reproducibility.
     # This is crucial for multiprocessing with CUDA.
-    worker_seed = config_data['seed'] + os.getpid()
+    worker_seed = config['seed'] + os.getpid()
     torch.manual_seed(worker_seed)
     np.random.seed(worker_seed)
     
     # Each worker gets its own harness and controller instance.
     # This is crucial to avoid CUDA errors with forked processes.
-    harness = ExperimentHarness(config_data)
+    harness = ExperimentHarness(config)
     temp_controller = harness.controller
     # Diagnostic print
     print(f"[Worker {os.getpid()}] Initialization COMPLETE.")
 
 
-def evaluate_fitness_parallel(weights_vector, current_lambda, current_noise, config):
+def evaluate_fitness_parallel(params, current_lambda, current_noise, config):
     """
     Fitness function to be executed by each worker.
-    It takes a parameter vector and returns a single fitness score.
+    It uses the persistent harness from the worker's global scope.
     """
-    if harness is None or temp_controller is None:
-        # This will be called by the first evaluation in a new process.
-        init_worker(config)
-
-    # We need to manually load the weights into the controller model
-    # for each evaluation, as the model state is not shared across processes.
-    controller_weights = temp_controller.state_dict()
-    start_idx = 0
+    global harness, temp_controller
     
-    target_dtype = torch.float16 if config.get('half_precision', False) else torch.float32
+    # Get the target dtype from the model, which might be float16
+    target_dtype = next(temp_controller.parameters()).dtype
 
+    # Reconstruct the weights dictionary
+    controller_weights = {}
+    start_idx = 0
     for name, param in temp_controller.named_parameters():
-        if param.requires_grad:
-            n_params = param.numel()
-            # Ensure the slice is created with the correct dtype
-            p_slice = torch.from_numpy(weights_vector[start_idx : start_idx + n_params]).view(param.shape).to(dtype=target_dtype, device=harness.device)
-            controller_weights[name] = p_slice
-            start_idx += n_params
+        n_params = param.numel()
+        # Ensure the slice is created with the correct dtype
+        p_slice = torch.from_numpy(params[start_idx : start_idx + n_params]).view(param.shape).to(dtype=target_dtype, device=harness.device)
+        controller_weights[name] = p_slice
+        start_idx += n_params
 
-    temp_controller.load_state_dict(controller_weights)
-
-    # Now, run the actual evaluation
     s_score, diagnostics = harness.evaluate_fitness(
-        temp_controller, 
-        current_lambda=current_lambda,
-        current_noise=current_noise
+        controller_weights, 
+        sensor_noise_std=current_noise,
+        num_avg=config['evaluation']['num_avg']
     )
-
-    # CMA-ES minimizes, so we return the negative of the S-score.
-    # We add the teacher loss to the primary objective.
-    return -s_score + diagnostics.get("teacher_loss", 0.0)
-
+    
+    teacher_loss = diagnostics.get("pr_box_teacher_loss", 0.0)
+    fitness = -s_score + (current_lambda * teacher_loss)
+    
+    return fitness, s_score, diagnostics
 
 def main():
     parser = argparse.ArgumentParser(description="Run a Protocol M (Mannequin) CHSH experiment.")
-    parser.add_argument('--config', type=str, default=None, help="Path to a JSON config file. If provided, this is the primary source of configuration.")
-    # Add [Override] to help text to clarify behavior
-    parser.add_argument('--controller-units', type=int, help="[Override] Controller units (K).")
-    parser.add_argument('--seed', type=int, help="[Override] Main random seed.")
-    parser.add_argument('--delay', type=float, help="[Override] Controller delay 'd' (R=1/d).")
-    parser.add_argument('--teacher', action='store_true', help="[Override] Use PR-Box teacher.")
-    parser.add_argument('--curriculum', action='store_true', help="[Override] Enable curriculum learning.")
-    parser.add_argument('--device', type=str, help="[Override] Device ('cuda' or 'cpu').")
-    parser.add_argument('--num-avg', type=int, help="[Override] Runs to average per evaluation.")
+    parser.add_argument('--config', type=str, default=None, help="Path to a JSON config file. If provided, most other arguments are ignored.")
+    parser.add_argument('--controller-units', type=int, default=32, help="[No-config fallback] Controller units (K).")
+    parser.add_argument('--seed', type=int, default=42, help="Main random seed. Overrides config file if provided.")
+    parser.add_argument('--delay', type=float, default=0.1, help="[No-config fallback] Controller delay 'd' (R=1/d).")
+    parser.add_argument('--teacher', action='store_true', help="[No-config fallback] Use PR-Box teacher.")
+    parser.add_argument('--curriculum', action='store_true', help="[No-config fallback] Enable curriculum learning.")
+    parser.add_argument('--device', type=str, default='cuda', help="Device ('cuda' or 'cpu'). Overrides config file if provided.")
+    parser.add_argument('--num-avg', type=int, default=12, help="Runs to average per evaluation. Overrides config file if provided.")
     parser.add_argument('--workers', type=int, default=4, help="Number of parallel worker processes.")
-    parser.add_argument('--half-precision', action='store_true', help="[Override] Use float16 for GPU acceleration.")
-    parser.add_argument('--population-size', type=int, help="[Override] Optimizer population size.")
+    parser.add_argument('--half-precision', action='store_true', help="Use float16 for GPU acceleration. Overrides config file if provided.")
+    parser.add_argument('--population-size', type=int, default=12, help="Optimizer population size. Overrides config file if provided.")
     args = parser.parse_args()
 
     # --- Enforce reproducibility ---
+    # torch.use_deterministic_algorithms(True) # NOTE: This can cause issues with half-precision and is disabled for performance.
     # It's important to set the start method for CUDA compatibility
     mp.set_start_method('spawn', force=True)
 
     if args.config:
-        # --- Config file is the primary source of truth ---
         try:
             with open(args.config, 'r') as f:
                 config = json.load(f)
-            logging.info(f"Loaded configuration from {args.config}")
+            print(f"--- Loaded configuration from {args.config} ---")
         except FileNotFoundError:
             logging.error(f"Config file not found: {args.config}")
             return
         except json.JSONDecodeError:
             logging.error(f"Error decoding JSON from config file: {args.config}")
             return
-            
-        # --- Apply command-line overrides for tuning ---
-        if args.population_size is not None:
-            config['optimizer']['population_size'] = args.population_size
-        if args.num_avg is not None:
-            config['evaluation']['num_avg'] = args.num_avg
-        if args.seed is not None:
-            config['seed'] = args.seed
-        # The action='store_true' args are special. We only override if the flag is explicitly set.
-        if args.half_precision:
-             config['half_precision'] = True
-        if args.teacher:
-             config['use_pr_box_teacher'] = True
-        if args.curriculum:
-             config['curriculum']['enabled'] = True
+        
+        # --- Apply safe, intentional overrides from command line ---
+        config['seed'] = args.seed
+        config['noise_seed'] = args.seed + 1
+        config['bootstrap_seed'] = args.seed + 2
+        config['optimizer']['population_size'] = args.population_size
+        config['evaluation']['num_avg'] = args.num_avg
+        config['device'] = args.device
+        config['half_precision'] = args.half_precision
 
     else:
-        # --- Legacy path: build config from all arguments ---
-        logging.warning("No --config file provided. Building configuration from command-line arguments.")
+        # Fallback to old behavior if no --config is provided
+        print("--- No config file provided. Building configuration from command-line arguments. ---")
         config = get_config_from_args(args)
+        config['half_precision'] = args.half_precision
 
-    # Add the half-precision flag to the config if not already present
-    config.setdefault('half_precision', args.half_precision)
-    
     timestamp = time.strftime("%Y%m%d_%H%M%S")
     results_dir = Path(f"apsu6/results/mannequin_{timestamp}")
     results_dir.mkdir(parents=True, exist_ok=True)
