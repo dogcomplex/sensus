@@ -21,15 +21,79 @@ def calculate_chsh_score(
             if not torch.any(mask):
                 correlations[(a_val, b_val)] = torch.tensor(0.0, device=outputs_A.device)
             else:
-                # Use .float() on the multiplication result, not individual tensors
-                correlations[(a_val, b_val)] = torch.mean((outputs_A[mask] * outputs_B[mask]).float())
+                # Use .double() for high-precision calculation of the mean
+                correlations[(a_val, b_val)] = torch.mean((outputs_A[mask] * outputs_B[mask]).double())
 
-    s_score = (correlations.get((0, 0), 0) + 
-               correlations.get((0, 1), 0) + 
-               correlations.get((1, 0), 0) - 
-               correlations.get((1, 1), 0))
+    s_score = (correlations.get((0, 0), 0).double() + 
+               correlations.get((0, 1), 0).double() + 
+               correlations.get((1, 0), 0).double() - 
+               correlations.get((1, 1), 0).double())
     
     return torch.abs(s_score), correlations
+
+
+def calculate_s_score_with_bootstrap(
+    outputs_A: torch.Tensor,
+    outputs_B: torch.Tensor,
+    settings: torch.Tensor,
+    n_boot: int = 1000,
+    ci: float = 0.95,
+    seed: int = 42
+) -> tuple[torch.Tensor, dict, torch.Tensor, torch.Tensor]:
+    """
+    Calculates the S-score and uses a bootstrap test to determine its
+    statistical significance against the classical and Tsirelson bounds.
+    """
+    device = outputs_A.device
+    
+    def get_s_score_vectorized(indices_batch):
+        # indices_batch shape: (n_boot, n_trials)
+        s_A_boot = outputs_A[indices_batch]
+        s_B_boot = outputs_B[indices_batch]
+        settings_boot = settings[indices_batch]
+        
+        s_scores = torch.zeros(indices_batch.shape[0], device=device, dtype=torch.double)
+        
+        for a_val in (0, 1):
+            for b_val in (0, 1):
+                mask = (settings_boot[..., 0] == a_val) & (settings_boot[..., 1] == b_val)
+                # Ensure we handle cases where a setting pair is missing in a bootstrap sample
+                has_items = mask.any(dim=1)
+                safe_mask_sum = mask.sum(dim=1).clamp(min=1)
+                
+                products = s_A_boot * s_B_boot
+                masked_products = products * mask
+                
+                correlations = (masked_products.sum(dim=1) / safe_mask_sum) * has_items
+                
+                if a_val == 1 and b_val == 1:
+                    s_scores -= correlations
+                else:
+                    s_scores += correlations
+                    
+        return torch.abs(s_scores)
+
+    # Calculate metric for the original data
+    observed_indices = torch.arange(len(outputs_A), device=device).unsqueeze(0)
+    s_score_observed, correlations_observed = calculate_chsh_score(outputs_A, outputs_B, settings)
+
+    # Bootstrap for confidence interval and p-values
+    generator = torch.Generator(device=device).manual_seed(seed)
+    bootstrap_indices = torch.randint(0, len(outputs_A), (n_boot, len(outputs_A)), generator=generator, device=device)
+    bootstrap_s_scores = get_s_score_vectorized(bootstrap_indices)
+    
+    # P-value for violating classical bound S > 2.0
+    p_classical = (bootstrap_s_scores > 2.0).double().mean()
+    # P-value for violating Tsirelson bound S > 2.828427
+    p_tsirelson = (bootstrap_s_scores > 2.828427).double().mean()
+
+    # The p-value we care about is how likely it is to get this score from a system
+    # whose TRUE score is the bound itself. A simpler and more common metric is just
+    # checking if the confidence interval excludes the bound.
+    q = torch.tensor([(1 - ci) / 2, (1 + ci) / 2], device=device, dtype=bootstrap_s_scores.dtype)
+    ci_bounds = torch.quantile(bootstrap_s_scores, q)
+    
+    return s_score_observed, correlations_observed, ci_bounds, p_classical, p_tsirelson
 
 
 def calculate_teacher_loss_gpu(

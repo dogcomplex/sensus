@@ -79,7 +79,7 @@ def get_config_from_args(args):
 
 def init_worker(config):
     """Initializer for each worker process."""
-    global harness, temp_controller
+    global harness
     # Diagnostic print
     print(f"[Worker {os.getpid()}] Initializing...")
     # Seed each worker process independently for reproducibility.
@@ -88,36 +88,22 @@ def init_worker(config):
     torch.manual_seed(worker_seed)
     np.random.seed(worker_seed)
     
-    # Each worker gets its own harness and controller instance.
-    # This is crucial to avoid CUDA errors with forked processes.
+    # Each worker gets its own harness instance.
+    # The harness no longer creates expensive components on init.
     harness = ExperimentHarness(config)
-    temp_controller = harness.controller
     # Diagnostic print
     print(f"[Worker {os.getpid()}] Initialization COMPLETE.")
 
 
-def evaluate_fitness_parallel(params, current_lambda, current_noise, config):
+def evaluate_fitness_parallel(solution_vector, current_lambda, current_noise, config):
     """
     Fitness function to be executed by each worker.
     It uses the persistent harness from the worker's global scope.
     """
-    global harness, temp_controller
+    global harness
     
-    # Get the target dtype from the model, which might be float16
-    target_dtype = next(temp_controller.parameters()).dtype
-
-    # Reconstruct the weights dictionary
-    controller_weights = {}
-    start_idx = 0
-    for name, param in temp_controller.named_parameters():
-        n_params = param.numel()
-        # Ensure the slice is created with the correct dtype
-        p_slice = torch.from_numpy(params[start_idx : start_idx + n_params]).view(param.shape).to(dtype=target_dtype, device=harness.device)
-        controller_weights[name] = p_slice
-        start_idx += n_params
-
     s_score, diagnostics = harness.evaluate_fitness(
-        controller_weights, 
+        solution_vector, 
         sensor_noise_std=current_noise,
         num_avg=config['evaluation']['num_avg']
     )
@@ -125,6 +111,20 @@ def evaluate_fitness_parallel(params, current_lambda, current_noise, config):
     teacher_loss = diagnostics.get("pr_box_teacher_loss", 0.0)
     fitness = -s_score + (current_lambda * teacher_loss)
     
+    # --- Reward Shaping ---
+    # Apply large fitness bonuses for crossing physically significant boundaries.
+    # This creates a strong incentive for the optimizer to find these regions.
+    reward_config = config.get("reward_shaping", {"enabled": False})
+    if reward_config.get("enabled", False):
+        s_score_lower_bound = diagnostics.get("S_score_ci", (0.0, 0.0))[0]
+        classical_bound = reward_config.get("classical_bound", 2.0)
+        tsirelson_bound = reward_config.get("tsirelson_bound", 2.828427)
+
+        if s_score_lower_bound > tsirelson_bound:
+            fitness -= reward_config.get("quantum_bonus", 2.0)
+        elif s_score_lower_bound > classical_bound:
+            fitness -= reward_config.get("classical_bonus", 1.0)
+
     return fitness, s_score, diagnostics
 
 def main():
@@ -186,21 +186,26 @@ def main():
         json.dump(config, f, indent=2)
     logging.info("Configuration: \n" + json.dumps(config, indent=2))
 
-    # Create a temporary controller on the CPU just to count parameters.
-    # This avoids initializing the CUDA context in the main process before spawning.
-    temp_controller_cpu = UniversalController(**config['controller_params'], device=torch.device('cpu'))
-    if config['half_precision']:
-        temp_controller_cpu.half()
-    num_params = sum(p.numel() for p in temp_controller_cpu.parameters())
-    del temp_controller_cpu
+    # --- STRATEGY 1 MODIFICATION ---
+    # Create a temporary harness on the CPU to get the solution dimension.
+    # This is cheap as it doesn't initialize GPU components.
+    temp_harness = ExperimentHarness(config)
+    num_params = temp_harness.get_solution_dimension()
+    del temp_harness
     logging.info(f"Total parameters to optimize: {num_params}")
+
+    # --- CMA-ES Setup ---
+    # Ensure the output directory for CMA-ES is inside our results folder
+    cma_output_dir = results_dir / "cma_es_out"
+    cma_output_dir.mkdir(exist_ok=True)
 
     es = cma.CMAEvolutionStrategy(num_params * [0], 0.5, {
         'popsize': config['optimizer']['population_size'],
-        'seed': config['seed'], 'CMA_diagonal': True
+        'seed': config['seed'], 'CMA_diagonal': True,
+        'verb_filenameprefix': str(cma_output_dir) + os.sep
     })
 
-    history = {'s_scores': [], 'best_s': -4.0}
+    history = {'s_scores': [], 'best_s': -4.0, 'best_diagnostics': {}}
     pbar = tqdm(total=config['optimizer']['generations'], desc="Optimizing (Parallel)")
 
     # Create the multiprocessing pool
@@ -213,6 +218,7 @@ def main():
         logging.info("Performing warm-up run on all workers...")
         warmup_config = config.copy()
         warmup_config['evaluation']['num_avg'] = 1 # Use a tiny batch size
+        # For warmup, we can just pass a zero vector of the correct dimension.
         warmup_params = [np.zeros(num_params)] * args.workers
         
         warmup_eval_func = partial(evaluate_fitness_parallel,
@@ -235,47 +241,56 @@ def main():
                 current_lambda = config['curriculum']['teacher_lambda_end'] if config['use_pr_box_teacher'] else 0.0
                 current_noise = 0.0
 
-            solutions_params = es.ask()
+            solutions = es.ask()
             
-            # Map the evaluation function to the pool of workers
+            # --- Parallel Evaluation ---
             eval_func = partial(evaluate_fitness_parallel, 
                                 current_lambda=current_lambda, 
                                 current_noise=current_noise, 
                                 config=config)
             
-            results = pool.map(eval_func, solutions_params)
+            results = pool.map(eval_func, solutions)
             
+            # Unpack results
             fitness_scores, s_scores, diagnostics_list = zip(*results)
-
-            es.tell(solutions_params, list(fitness_scores))
+            
+            es.tell(solutions, list(fitness_scores))
             
             best_idx_in_gen = np.argmin(fitness_scores)
             best_s_in_gen = s_scores[best_idx_in_gen]
-            best_diags_in_gen = diagnostics_list[best_idx_in_gen]
 
-            history['s_scores'].append(best_s_in_gen)
-            
             if best_s_in_gen > history['best_s']:
                 history['best_s'] = best_s_in_gen
-                best_weights_params = es.result.xbest
-                
-                # Save the best model's raw parameter vector.
-                save_path = results_dir / "best_controller_weights.npy"
-                np.save(save_path, best_weights_params)
+                history['best_diagnostics'] = diagnostics_list[best_idx_in_gen]
 
             pbar.set_postfix({
-                "S": f"{best_s_in_gen:.4f}", "Best S": f"{history['best_s']:.4f}",
-                "Loss": f"{best_diags_in_gen.get('pr_box_teacher_loss', 0.0):.4f}",
+                "S": f"{s_scores[best_idx_in_gen]:.4f}", 
+                "Best S": f"{history['best_s']:.4f}",
+                "Loss": f"{diagnostics_list[best_idx_in_gen].get('pr_box_teacher_loss', 0.0):.4f}",
                 "λ": f"{current_lambda:.2f}", "σ": f"{current_noise:.3f}"
             })
             pbar.update(1)
 
     pbar.close()
+
+    # --- Finalization ---
     logging.info("--- Experiment Complete ---")
     logging.info(f"Final Best S-Score: {history['best_s']:.4f}")
-    # Save history as before
-    with open(results_dir / "history.json", 'w') as f:
-        json.dump(history, f, indent=2)
+    logging.info("\nDiagnostics for Best Solution Found:")
+    logging.info(json.dumps(history['best_diagnostics'], indent=2))
+    
+    # Save final results
+    final_results = {
+        "best_s_score": history['best_s'],
+        "best_diagnostics": history['best_diagnostics'],
+        "config": config,
+        "history": {k: v for k, v in history.items() if k not in ['best_diagnostics']}
+    }
+    with open(results_dir / "results.json", 'w') as f:
+        json.dump(final_results, f, indent=2)
+
+    logging.info(f"Saved final results to {results_dir / 'results.json'}")
+
 
 if __name__ == "__main__":
     main() 
