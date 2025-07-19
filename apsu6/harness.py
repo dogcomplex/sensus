@@ -122,8 +122,8 @@ class ExperimentHarness:
         """
         Runs a single full pass of the simulation. Its behavior is controlled by readout_mode.
         - 'end_to_end': Standard run, returns final outcomes.
-        - 'post_hoc_collect': Collects stats for online regression, returns covariance matrices.
-        - 'post_hoc_apply': Applies provided readout_weights, returns final outcomes.
+        - 'post_hoc_collect': Runs sim, returns state history stored on CPU.
+        - 'post_hoc_apply': This mode is now handled inside evaluate_fitness.
         """
         batch_size = self.config['evaluation']['num_avg']
         T_total = self.config.get('T_total', 4000)
@@ -143,11 +143,10 @@ class ExperimentHarness:
         results_outputs_B = torch.empty(num_total_results, device=self.device, dtype=controller_dtype)
         results_settings = torch.empty(num_total_results, 2, device=self.device, dtype=torch.long)
         
-        # --- Online Regression Setup ---
+        # --- History Storage for Post-Hoc (on CPU to save VRAM) ---
         if readout_mode == 'post_hoc_collect':
-            substrate_dim = substrate.N_A + substrate.N_B
-            XtX = torch.zeros((substrate_dim + 1, substrate_dim + 1), device=self.device, dtype=torch.double)
-            XtY = torch.zeros((substrate_dim + 1, 2), device=self.device, dtype=torch.double)
+            post_hoc_states = []
+            post_hoc_settings = []
 
         h_state = None
         with torch.no_grad():
@@ -174,19 +173,9 @@ class ExperimentHarness:
                         results_outputs_B[start_idx:end_idx] = torch.sign(correction_logits[:, 1])
                     
                     elif readout_mode == 'post_hoc_collect':
-                        current_states = torch.cat([state_A, state_B], dim=-1).double()
-                        current_states_with_bias = torch.cat([current_states, torch.ones(batch_size, 1, device=self.device, dtype=torch.double)], dim=1)
-                        target_and = torch.bitwise_and(all_settings_gpu[t, 0], all_settings_gpu[t, 1]).double()
-                        teacher_signal = (1.0 - 2.0 * target_and).unsqueeze(-1).expand(-1, 2)
-                        XtX += current_states_with_bias.T @ current_states_with_bias
-                        XtY += current_states_with_bias.T @ teacher_signal
-                    
-                    elif readout_mode == 'post_hoc_apply':
-                        current_states = torch.cat([state_A, state_B], dim=-1).double()
-                        current_states_with_bias = torch.cat([current_states, torch.ones(batch_size, 1, device=self.device, dtype=torch.double)], dim=1)
-                        final_logits = current_states_with_bias @ readout_weights
-                        results_outputs_A[start_idx:end_idx] = torch.sign(final_logits[:, 0])
-                        results_outputs_B[start_idx:end_idx] = torch.sign(final_logits[:, 1])
+                        # Store states on CPU to avoid filling VRAM
+                        post_hoc_states.append(torch.cat([state_A, state_B], dim=-1).cpu())
+                        post_hoc_settings.append(all_settings_gpu[t].expand(batch_size, 2).cpu())
 
                 delayed_logits = delay_buffer.push(correction_logits)
                 substrate_dtype = next(substrate.reservoir_A.parameters()).dtype
@@ -195,7 +184,8 @@ class ExperimentHarness:
                 substrate.step(substrate_input_A, substrate_input_B)
 
         if readout_mode == 'post_hoc_collect':
-            return XtX, XtY
+            # Concatenate the list of CPU tensors into a single large CPU tensor
+            return torch.cat(post_hoc_states, dim=0), torch.cat(post_hoc_settings, dim=0)
         else:
             return results_outputs_A, results_outputs_B, results_settings
 
@@ -210,22 +200,38 @@ class ExperimentHarness:
             outputs_A, outputs_B, settings = self._run_simulation_pass(substrate, controller, 'end_to_end')
         
         elif readout_mode == 'post_hoc':
-            # --- Pass 1: Collect regression stats ---
-            XtX, XtY = self._run_simulation_pass(substrate, controller, 'post_hoc_collect')
+            # --- Pass 1: Collect state history on CPU ---
+            state_history_cpu, settings_history_cpu = self._run_simulation_pass(substrate, controller, 'post_hoc_collect')
 
-            # --- Solve for readout weights ---
+            # --- Solve for readout weights on GPU ---
             try:
+                # Move data to GPU for the linear algebra part
+                states_gpu = state_history_cpu.to(self.device).double()
+                settings_gpu = settings_history_cpu.to(self.device)
+
+                # Add bias term
+                states_with_bias = torch.cat([states_gpu, torch.ones(states_gpu.shape[0], 1, device=self.device, dtype=torch.double)], dim=1)
+                
+                # Create teacher signal
+                target_and = torch.bitwise_and(settings_gpu[:, 0], settings_gpu[:, 1]).double()
+                teacher_signal = (1.0 - 2.0 * target_and).unsqueeze(-1).expand(-1, 2)
+
+                # Solve with ridge regression
+                XtX = states_with_bias.T @ states_with_bias
+                XtY = states_with_bias.T @ teacher_signal
                 ridge_alpha = 1e-5
                 identity = torch.eye(XtX.shape[0], device=self.device, dtype=torch.double) * ridge_alpha
                 readout_weights = torch.linalg.solve(XtX + identity, XtY)
+
+                # --- Apply the learned readout ---
+                final_logits = states_with_bias @ readout_weights
+                outputs_A = torch.sign(final_logits[:, 0]).to(next(controller.parameters()).dtype)
+                outputs_B = torch.sign(final_logits[:, 1]).to(next(controller.parameters()).dtype)
+                settings = settings_gpu
+
             except torch.linalg.LinAlgError:
                 return 0.0, {"error": "LinAlgError in post-hoc readout"}
             
-            # --- Pass 2: Apply the learned readout ---
-            # The substrate and controller states were reset inside the first pass, so they are ready.
-            outputs_A, outputs_B, settings = self._run_simulation_pass(
-                substrate, controller, 'post_hoc_apply', readout_weights=readout_weights
-            )
         else:
             raise ValueError(f"Unknown readout_mode: {readout_mode}")
         

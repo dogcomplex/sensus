@@ -43,56 +43,91 @@ def calculate_s_score_with_bootstrap(
     use_cpu_fallback: bool = False
 ) -> tuple[torch.Tensor, dict, torch.Tensor, torch.Tensor]:
     """
-    Calculates the S-score and uses a bootstrap test to determine its
-    statistical significance against the classical and Tsirelson bounds.
+    Calculates the S-score with a memory-efficient, parallelized bootstrap on the GPU.
     """
-    device = outputs_A.device
     if use_cpu_fallback:
-        device = torch.device('cpu')
-        outputs_A = outputs_A.to(device)
-        outputs_B = outputs_B.to(device)
-        settings = settings.to(device)
-        logging.info("Using CPU fallback for bootstrap calculation.")
+        # Transfer to CPU and perform a slower, sequential bootstrap
+        return _calculate_s_score_bootstrap_cpu(outputs_A, outputs_B, settings, n_boot, ci, seed)
 
+    device = outputs_A.device
     num_trials = len(outputs_A)
     
-    # --- Helper for a single sample ---
-    # This function is designed to be called sequentially to minimize memory.
-    def get_s_for_sample(indices):
-        s_A_sample = outputs_A[indices]
-        s_B_sample = outputs_B[indices]
-        settings_sample = settings[indices]
-        s_score, _ = calculate_chsh_score(s_A_sample, s_B_sample, settings_sample)
-        return s_score
-
     # --- Observed Score ---
     s_score_observed, correlations_observed = calculate_chsh_score(outputs_A, outputs_B, settings)
 
     # --- Bootstrap CI and p-values ---
     generator = torch.Generator(device=device).manual_seed(seed)
+    
+    # Generate all bootstrap indices at once
+    bootstrap_indices = torch.randint(0, num_trials, (n_boot, num_trials), generator=generator, device=device)
+    
+    # Gather the data for all bootstrap samples. This is memory-intensive, but
+    # should be manageable if the intermediate masks are handled carefully.
+    s_A_boot = outputs_A[bootstrap_indices]
+    s_B_boot = outputs_B[bootstrap_indices]
+    settings_boot = settings[bootstrap_indices]
+    
+    # Calculate products once
+    products = s_A_boot * s_B_boot
+    
     bootstrap_s_scores = torch.zeros(n_boot, device=device, dtype=torch.double)
-
-    # Use a fully sequential loop for MAXIMUM memory efficiency.
-    # This will be slower but will not crash.
-    for i in range(n_boot):
-        # Generate indices for just ONE bootstrap sample at a time.
-        bootstrap_indices = torch.randint(0, num_trials, (num_trials,), generator=generator, device=device)
+    
+    # Process each CHSH setting pair in a vectorized way to manage memory
+    setting_pairs = [(0, 0), (0, 1), (1, 0), (1, 1)]
+    for a_val, b_val in setting_pairs:
+        # Create mask for the current setting pair. This is the main memory bottleneck.
+        # By doing it inside the loop, the mask is released after each iteration.
+        mask = (settings_boot[..., 0] == a_val) & (settings_boot[..., 1] == b_val)
         
-        # Calculate the S-score for this single sample.
-        bootstrap_s_scores[i] = get_s_for_sample(bootstrap_indices)
+        # Calculate correlations for all bootstrap samples in parallel for this setting
+        safe_mask_sum = mask.sum(dim=1, dtype=torch.double).clamp(min=1)
+        masked_products_sum = (products * mask).sum(dim=1, dtype=torch.double)
+        correlations = masked_products_sum / safe_mask_sum
 
-    # P-value for violating classical bound S > 2.0
+        # Apply CHSH formula
+        if a_val == 1 and b_val == 1:
+            bootstrap_s_scores -= correlations
+        else:
+            bootstrap_s_scores += correlations
+
+    bootstrap_s_scores = torch.abs(bootstrap_s_scores)
+    
+    # P-value calculation and confidence intervals (as before)
     p_classical = (bootstrap_s_scores > 2.0).double().mean()
-    # P-value for violating Tsirelson bound S > 2.828427
     p_tsirelson = (bootstrap_s_scores > 2.828427).double().mean()
-
-    # The p-value we care about is how likely it is to get this score from a system
-    # whose TRUE score is the bound itself. A simpler and more common metric is just
-    # checking if the confidence interval excludes the bound.
-    q = torch.tensor([(1 - ci) / 2, (1 + ci) / 2], device=device, dtype=bootstrap_s_scores.dtype)
+    q = torch.tensor([(1 - ci) / 2, (1 + ci) / 2], device=device, dtype=torch.double)
     ci_bounds = torch.quantile(bootstrap_s_scores, q)
     
     return s_score_observed, correlations_observed, ci_bounds, p_classical, p_tsirelson
+
+def _calculate_s_score_bootstrap_cpu(outputs_A, outputs_B, settings, n_boot, ci, seed):
+    """Internal CPU-based sequential bootstrap for fallback."""
+    device = torch.device('cpu')
+    outputs_A = outputs_A.to(device)
+    outputs_B = outputs_B.to(device)
+    settings = settings.to(device)
+    logging.info("Using CPU fallback for bootstrap calculation.")
+
+    num_trials = len(outputs_A)
+    s_score_observed, correlations_observed = calculate_chsh_score(outputs_A, outputs_B, settings)
+
+    generator = torch.Generator(device=device).manual_seed(seed)
+    bootstrap_s_scores = torch.zeros(n_boot, device=device, dtype=torch.double)
+
+    for i in range(n_boot):
+        indices = torch.randint(0, num_trials, (num_trials,), generator=generator, device=device)
+        s_A_sample = outputs_A[indices]
+        s_B_sample = outputs_B[indices]
+        settings_sample = settings[indices]
+        score, _ = calculate_chsh_score(s_A_sample, s_B_sample, settings_sample)
+        bootstrap_s_scores[i] = score
+
+    p_classical = (bootstrap_s_scores > 2.0).double().mean()
+    p_tsirelson = (bootstrap_s_scores > 2.828427).double().mean()
+    q = torch.tensor([(1 - ci) / 2, (1 + ci) / 2], device=device, dtype=torch.double)
+    ci_bounds = torch.quantile(bootstrap_s_scores, q)
+    
+    return s_score_observed.to(outputs_A.device), correlations_observed, ci_bounds.to(outputs_A.device), p_classical.to(outputs_A.device), p_tsirelson.to(outputs_A.device)
 
 
 def calculate_teacher_loss_gpu(
