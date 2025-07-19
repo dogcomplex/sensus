@@ -32,14 +32,12 @@
     }
   },
   "optimizer": {
-    "generations_phase1": 50,
-    "generations_phase2": 100,
+    "generations": 150,
     "population_size": 36
   },
   "evaluation": {
     "num_avg": 36,
-    "use_cpu_fallback_for_metrics": false,
-    "post_hoc_batch_size": 2048
+    "use_cpu_fallback_for_metrics": false
   },
   "reward_shaping": {
     "enabled": true,

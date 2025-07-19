@@ -86,12 +86,12 @@ class ExperimentHarness:
         substrate_config = self.config['substrate_params'].copy()
         if self.anneal_substrate:
             # The last 4 parameters are sr_A, lr_A, sr_B, lr_B
-            # We clip them to a sensible range to prevent "dead" reservoirs.
+            # "CONSTRAINED CHAOS": Clip to a narrow, computationally rich range.
             substrate_hyperparams = solution_vector[controller_dim:]
-            substrate_config['sr_A'] = np.clip(substrate_hyperparams[0], 0.7, 1.5)
-            substrate_config['lr_A'] = np.clip(substrate_hyperparams[1], 0.2, 1.0)
-            substrate_config['sr_B'] = np.clip(substrate_hyperparams[2], 0.7, 1.5)
-            substrate_config['lr_B'] = np.clip(substrate_hyperparams[3], 0.2, 1.0)
+            substrate_config['sr_A'] = np.clip(substrate_hyperparams[0], 0.9, 1.2)
+            substrate_config['lr_A'] = np.clip(substrate_hyperparams[1], 0.1, 0.4)
+            substrate_config['sr_B'] = np.clip(substrate_hyperparams[2], 0.9, 1.2)
+            substrate_config['lr_B'] = np.clip(substrate_hyperparams[3], 0.1, 0.4)
 
         substrate = ClassicalSubstrate(**substrate_config, device=self.device).to(self.device)
         
@@ -118,12 +118,9 @@ class ExperimentHarness:
             
         return substrate, controller
 
-    def _run_simulation_pass(self, substrate, controller, readout_mode, readout_weights=None):
+    def _run_simulation_pass(self, substrate, controller):
         """
-        Runs a single full pass of the simulation. Its behavior is controlled by readout_mode.
-        - 'end_to_end': Standard run, returns final outcomes.
-        - 'post_hoc_collect': Runs sim, returns state history stored on CPU.
-        - 'post_hoc_apply': This mode is now handled inside evaluate_fitness.
+        Runs a single full pass of the simulation in 'end_to_end' mode.
         """
         batch_size = self.config['evaluation']['num_avg']
         T_total = self.config.get('T_total', 4000)
@@ -143,11 +140,6 @@ class ExperimentHarness:
         results_outputs_B = torch.empty(num_total_results, device=self.device, dtype=controller_dtype)
         results_settings = torch.empty(num_total_results, 2, device=self.device, dtype=torch.long)
         
-        # --- History Storage for Post-Hoc (on CPU to save VRAM) ---
-        if readout_mode == 'post_hoc_collect':
-            post_hoc_states = []
-            post_hoc_settings = []
-
         h_state = None
         with torch.no_grad():
             for t in range(T_total):
@@ -167,15 +159,8 @@ class ExperimentHarness:
                     start_idx = (t - washout_steps) * batch_size
                     end_idx = start_idx + batch_size
                     results_settings[start_idx:end_idx] = all_settings_gpu[t].expand(batch_size, 2)
-
-                    if readout_mode == 'end_to_end':
-                        results_outputs_A[start_idx:end_idx] = torch.sign(correction_logits[:, 0])
-                        results_outputs_B[start_idx:end_idx] = torch.sign(correction_logits[:, 1])
-                    
-                    elif readout_mode == 'post_hoc_collect':
-                        # Store states on CPU to avoid filling VRAM
-                        post_hoc_states.append(torch.cat([state_A, state_B], dim=-1).cpu())
-                        post_hoc_settings.append(all_settings_gpu[t].expand(batch_size, 2).cpu())
+                    results_outputs_A[start_idx:end_idx] = torch.sign(correction_logits[:, 0])
+                    results_outputs_B[start_idx:end_idx] = torch.sign(correction_logits[:, 1])
 
                 delayed_logits = delay_buffer.push(correction_logits)
                 substrate_dtype = next(substrate.reservoir_A.parameters()).dtype
@@ -183,57 +168,17 @@ class ExperimentHarness:
                 substrate_input_B = self._build_input(setting_B_bit, delayed_logits[:, 1].unsqueeze(-1).to(substrate_dtype))
                 substrate.step(substrate_input_A, substrate_input_B)
 
-        if readout_mode == 'post_hoc_collect':
-            # Concatenate the list of CPU tensors into a single large CPU tensor
-            return torch.cat(post_hoc_states, dim=0), torch.cat(post_hoc_settings, dim=0)
-        else:
-            return results_outputs_A, results_outputs_B, results_settings
+        return results_outputs_A, results_outputs_B, results_settings
 
 
-    def evaluate_fitness(self, solution_vector: np.ndarray, readout_mode: str = "end_to_end") -> tuple[float, dict]:
+    def evaluate_fitness(self, solution_vector: np.ndarray) -> tuple[float, dict]:
         """
         Performs one full, sequential fitness evaluation for a given solution vector.
+        The readout_mode is now fixed to 'end_to_end'.
         """
         substrate, controller = self._rebuild_components(solution_vector)
         
-        if readout_mode == 'end_to_end':
-            outputs_A, outputs_B, settings = self._run_simulation_pass(substrate, controller, 'end_to_end')
-        
-        elif readout_mode == 'post_hoc':
-            # --- Pass 1: Collect state history on CPU ---
-            state_history_cpu, settings_history_cpu = self._run_simulation_pass(substrate, controller, 'post_hoc_collect')
-
-            # --- Solve for readout weights on GPU ---
-            try:
-                # Move data to GPU for the linear algebra part
-                states_gpu = state_history_cpu.to(self.device).double()
-                settings_gpu = settings_history_cpu.to(self.device)
-
-                # Add bias term
-                states_with_bias = torch.cat([states_gpu, torch.ones(states_gpu.shape[0], 1, device=self.device, dtype=torch.double)], dim=1)
-                
-                # Create teacher signal
-                target_and = torch.bitwise_and(settings_gpu[:, 0], settings_gpu[:, 1]).double()
-                teacher_signal = (1.0 - 2.0 * target_and).unsqueeze(-1).expand(-1, 2)
-
-                # Solve with ridge regression
-                XtX = states_with_bias.T @ states_with_bias
-                XtY = states_with_bias.T @ teacher_signal
-                ridge_alpha = 1e-5
-                identity = torch.eye(XtX.shape[0], device=self.device, dtype=torch.double) * ridge_alpha
-                readout_weights = torch.linalg.solve(XtX + identity, XtY)
-
-                # --- Apply the learned readout ---
-                final_logits = states_with_bias @ readout_weights
-                outputs_A = torch.sign(final_logits[:, 0]).to(next(controller.parameters()).dtype)
-                outputs_B = torch.sign(final_logits[:, 1]).to(next(controller.parameters()).dtype)
-                settings = settings_gpu
-
-            except torch.linalg.LinAlgError:
-                return 0.0, {"error": "LinAlgError in post-hoc readout"}
-            
-        else:
-            raise ValueError(f"Unknown readout_mode: {readout_mode}")
+        outputs_A, outputs_B, settings = self._run_simulation_pass(substrate, controller)
         
         return self._compute_results(controller, substrate, outputs_A, outputs_B, settings.view(-1, 2))
 
