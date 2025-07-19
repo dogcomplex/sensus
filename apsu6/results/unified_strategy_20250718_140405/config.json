@@ -1,0 +1,52 @@
+{
+  "protocol": "Mannequin",
+  "seed": 42,
+  "controller_delay": 1.0,
+  "T_total": 4000,
+  "washout_steps": 100,
+  "randomness_file": "apsu6/data/chsh_settings.bin",
+  "device": "cuda",
+  "substrate_params": {
+    "N_A": 50,
+    "N_B": 50,
+    "sr_A": 0.95,
+    "sr_B": 0.95,
+    "lr_A": 0.3,
+    "lr_B": 0.3,
+    "seed_A": 52,
+    "seed_B": 53
+  },
+  "controller_params": {
+    "protocol": "Mannequin",
+    "architecture": "esn",
+    "N_A": 50,
+    "N_B": 50,
+    "K_controller": 16,
+    "R_speed": 1.0,
+    "signaling_bits": 0,
+    "internal_cell_config": {
+      "enabled": true,
+      "hidden_size": 9,
+      "sr": 1.1,
+      "lr": 0.5,
+      "input_scaling": 0.9,
+      "seed": 4242
+    }
+  },
+  "optimizer": {
+    "generations_phase1": 50,
+    "generations_phase2": 100,
+    "population_size": 36
+  },
+  "evaluation": {
+    "num_avg": 128,
+    "post_hoc_batch_size": 2048
+  },
+  "reward_shaping": {
+    "enabled": true,
+    "classical_bound": 2.0,
+    "tsirelson_bound": 2.828,
+    "classical_bonus": 1.0,
+    "quantum_bonus": 2.0
+  }
+}

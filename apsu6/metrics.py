@@ -45,43 +45,33 @@ def calculate_s_score_with_bootstrap(
     statistical significance against the classical and Tsirelson bounds.
     """
     device = outputs_A.device
+    num_trials = len(outputs_A)
     
-    def get_s_score_vectorized(indices_batch):
-        # indices_batch shape: (n_boot, n_trials)
-        s_A_boot = outputs_A[indices_batch]
-        s_B_boot = outputs_B[indices_batch]
-        settings_boot = settings[indices_batch]
-        
-        s_scores = torch.zeros(indices_batch.shape[0], device=device, dtype=torch.double)
-        
-        for a_val in (0, 1):
-            for b_val in (0, 1):
-                mask = (settings_boot[..., 0] == a_val) & (settings_boot[..., 1] == b_val)
-                # Ensure we handle cases where a setting pair is missing in a bootstrap sample
-                has_items = mask.any(dim=1)
-                safe_mask_sum = mask.sum(dim=1).clamp(min=1)
-                
-                products = s_A_boot * s_B_boot
-                masked_products = products * mask
-                
-                correlations = (masked_products.sum(dim=1) / safe_mask_sum) * has_items
-                
-                if a_val == 1 and b_val == 1:
-                    s_scores -= correlations
-                else:
-                    s_scores += correlations
-                    
-        return torch.abs(s_scores)
+    # --- Helper for a single sample ---
+    # This function is designed to be called sequentially to minimize memory.
+    def get_s_for_sample(indices):
+        s_A_sample = outputs_A[indices]
+        s_B_sample = outputs_B[indices]
+        settings_sample = settings[indices]
+        s_score, _ = calculate_chsh_score(s_A_sample, s_B_sample, settings_sample)
+        return s_score
 
-    # Calculate metric for the original data
-    observed_indices = torch.arange(len(outputs_A), device=device).unsqueeze(0)
+    # --- Observed Score ---
     s_score_observed, correlations_observed = calculate_chsh_score(outputs_A, outputs_B, settings)
 
-    # Bootstrap for confidence interval and p-values
+    # --- Bootstrap CI and p-values ---
     generator = torch.Generator(device=device).manual_seed(seed)
-    bootstrap_indices = torch.randint(0, len(outputs_A), (n_boot, len(outputs_A)), generator=generator, device=device)
-    bootstrap_s_scores = get_s_score_vectorized(bootstrap_indices)
-    
+    bootstrap_s_scores = torch.zeros(n_boot, device=device, dtype=torch.double)
+
+    # Use a fully sequential loop for MAXIMUM memory efficiency.
+    # This will be slower but will not crash.
+    for i in range(n_boot):
+        # Generate indices for just ONE bootstrap sample at a time.
+        bootstrap_indices = torch.randint(0, num_trials, (num_trials,), generator=generator, device=device)
+        
+        # Calculate the S-score for this single sample.
+        bootstrap_s_scores[i] = get_s_for_sample(bootstrap_indices)
+
     # P-value for violating classical bound S > 2.0
     p_classical = (bootstrap_s_scores > 2.0).double().mean()
     # P-value for violating Tsirelson bound S > 2.828427

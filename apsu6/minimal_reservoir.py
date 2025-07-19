@@ -4,10 +4,12 @@ import torch.nn as nn
 class MinimalESN(nn.Module):
     """
     A minimal, pure-PyTorch implementation of a Leaky-Integrated Echo State Network (ESN).
-    This version is designed to have its weights be fully trainable by an external optimizer.
+    This module serves as a non-trainable, fixed feature extractor, consistent with
+    the principles of Reservoir Computing.
     """
     def __init__(self, input_dim: int, hidden_dim: int, output_dim: int,
-                 leaky_rate: float = 0.5, device: torch.device = 'cpu', **kwargs):
+                 spectral_radius: float = 1.1, leaky_rate: float = 0.5,
+                 input_scaling: float = 0.9, device: torch.device = 'cpu'):
         """
         Initializes the ESN.
 
@@ -15,9 +17,10 @@ class MinimalESN(nn.Module):
             input_dim (int): The dimension of the input signal.
             hidden_dim (int): The number of neurons in the reservoir.
             output_dim (int): The dimension of the output signal from the readout.
+            spectral_radius (float): The spectral radius of the reservoir's weight matrix.
             leaky_rate (float): The leaking rate (alpha) for the neuron state updates.
+            input_scaling (float): Scaling factor for the input weights.
             device (torch.device): The computation device.
-            **kwargs: Catches unused arguments like spectral_radius and input_scaling for API compatibility.
         """
         super().__init__()
         self.input_dim = input_dim
@@ -26,11 +29,20 @@ class MinimalESN(nn.Module):
         self.leaky_rate = leaky_rate
         self.device = device
 
-        # --- Initialize weights as TRAINABLE parameters ---
-        # The optimizer will find the correct scaling and spectral radius.
-        self.w_in = nn.Parameter(torch.randn(hidden_dim, input_dim))
-        self.w_res = nn.Parameter(torch.randn(hidden_dim, hidden_dim))
-        self.w_out = nn.Parameter(torch.randn(output_dim, hidden_dim))
+        # --- Initialize weights as non-trainable parameters ---
+        # Input weights
+        self.w_in = nn.Parameter(torch.randn(hidden_dim, input_dim) * input_scaling, requires_grad=False)
+
+        # Reservoir weights, scaled by the desired spectral radius
+        w_res_raw = torch.randn(hidden_dim, hidden_dim)
+        current_radius = torch.max(torch.abs(torch.linalg.eigvals(w_res_raw))).item()
+        if current_radius == 0:
+            current_radius = 1e-8  # Avoid division by zero
+        w_res_scaled = w_res_raw * (spectral_radius / current_radius)
+        self.w_res = nn.Parameter(w_res_scaled, requires_grad=False)
+
+        # Readout weights
+        self.w_out = nn.Parameter(torch.randn(output_dim, hidden_dim), requires_grad=False)
 
         self.hidden_state = None
         self.to(self.device)

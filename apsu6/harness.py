@@ -4,9 +4,9 @@ from collections import Counter
 import logging
 import torch.nn as nn
 
-from apsu6.pytorch_substrate import ClassicalSubstrate
+from apsu6.substrate import ClassicalSubstrate
 from apsu6.controller import UniversalController
-from apsu6.metrics import calculate_s_score_with_bootstrap, calculate_teacher_loss_gpu, calculate_nonsignaling_metric_gpu
+from apsu6.metrics import calculate_chsh_score, calculate_s_score_with_bootstrap, calculate_teacher_loss_gpu, calculate_nonsignaling_metric_gpu
 from apsu6.utils import load_chsh_settings, bits_to_spins
 
 class DelayBuffer:
@@ -43,65 +43,81 @@ class ExperimentHarness:
     """
     The main orchestration script. Sets up the experiment, runs the simulation 
     loop, gathers data, and computes the final fitness score.
-    ARCHITECTURAL FIX: This harness now creates persistent models once and loads
-    weights on each call, avoiding catastrophic memory churn.
     """
     def __init__(self, config: dict):
         self.config = config
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         logging.info(f"Harness selected device: {self.device}")
         
-        # --- ARCHITECTURAL FIX ---
-        # Create persistent substrate and controller instances ONCE.
-        self.substrate = ClassicalSubstrate(**config['substrate_params'], device=self.device)
-        self.controller = UniversalController(**config['controller_params'], device=self.device)
+        # --- STRATEGY 1 MODIFICATION ---
+        # We no longer create the substrate and controller here. They will be
+        # created on-demand for each evaluation, allowing their parameters
+        # to be optimized. We only create them once on the CPU to get shapes
+        # and parameter counts, which is much cheaper than a GPU init.
+        cpu_device = torch.device('cpu')
+        self.temp_controller = UniversalController(**config['controller_params'], device=cpu_device)
         self.anneal_substrate = self.config.get("anneal_substrate", False)
+        
+        # --- STRATEGY 3 MODIFICATION ---
+        # Add a separate, powerful readout model for curriculum learning.
+        # N_A + N_B -> 2 outputs (A and B)
+        substrate_dim = config['substrate_params']['N_A'] + config['substrate_params']['N_B']
+        self.post_hoc_readout = nn.Linear(substrate_dim, 2).to(self.device)
         
         self.chsh_settings = load_chsh_settings(config.get('randomness_file'))
 
     def get_solution_dimension(self):
         """Returns the total number of parameters to be optimized."""
-        dim = sum(p.numel() for p in self.controller.parameters())
+        dim = sum(p.numel() for p in self.temp_controller.parameters())
         if self.anneal_substrate:
-            dim += sum(p.numel() for p in self.substrate.parameters())
-            dim += 4 # sr_A, lr_A, sr_B, lr_B for reconstruction, not direct optimization
+            dim += 4 # sr_A, lr_A, sr_B, lr_B
         return dim
 
-    def _load_solution_vector(self, solution_vector):
+    def _rebuild_components(self, solution_vector):
         """
-        Loads a flat parameter vector into the persistent controller and substrate.
-        This is the new, lightweight replacement for _rebuild_components.
+        Reconstructs the controller and substrate from a flat parameter vector.
+        This is the core of Strategy 1: Annealing the Substrate.
         """
         # --- Deconstruct the solution vector ---
-        controller_dim = sum(p.numel() for p in self.controller.parameters())
+        controller_dim = sum(p.numel() for p in self.temp_controller.parameters())
         controller_params_flat = solution_vector[:controller_dim]
-
-        # --- Load Controller Weights ---
-        start_idx = 0
-        target_dtype = next(self.controller.parameters()).dtype
-        for param in self.controller.parameters():
-            n_params = param.numel()
-            p_slice = torch.from_numpy(controller_params_flat[start_idx : start_idx + n_params]).view(param.shape)
-            param.data.copy_(p_slice.to(param.device, dtype=target_dtype))
-            start_idx += n_params
-
-        # --- Load Substrate Weights and Hyperparameters (if annealing) ---
+        
+        # --- Build Substrate ---
+        substrate_config = self.config['substrate_params'].copy()
         if self.anneal_substrate:
-            substrate_params_dim = sum(p.numel() for p in self.substrate.parameters())
-            substrate_params_flat = solution_vector[controller_dim : controller_dim + substrate_params_dim]
-            
-            start_idx = 0
-            target_dtype = next(self.substrate.parameters()).dtype
-            for param in self.substrate.parameters():
-                n_params = param.numel()
-                p_slice = torch.from_numpy(substrate_params_flat[start_idx : start_idx + n_params]).view(param.shape)
-                param.data.copy_(p_slice.to(param.device, dtype=target_dtype))
-                start_idx += n_params
+            # The last 4 parameters are sr_A, lr_A, sr_B, lr_B
+            # We clip them to a sensible range to prevent "dead" reservoirs.
+            substrate_hyperparams = solution_vector[controller_dim:]
+            substrate_config['sr_A'] = np.clip(substrate_hyperparams[0], 0.7, 1.5)
+            substrate_config['lr_A'] = np.clip(substrate_hyperparams[1], 0.2, 1.0)
+            substrate_config['sr_B'] = np.clip(substrate_hyperparams[2], 0.7, 1.5)
+            substrate_config['lr_B'] = np.clip(substrate_hyperparams[3], 0.2, 1.0)
 
-            # The 4 hyperparameters are not part of the model's state_dict,
-            # but are used to reconstruct it if needed. Here, we just acknowledge them.
-            # The actual substrate instance is not rebuilt, just its weights are updated.
+        substrate = ClassicalSubstrate(**substrate_config, device=self.device).to(self.device)
+        
+        # --- Build Controller ---
+        controller = UniversalController(**self.config['controller_params'], device=self.device).to(self.device)
+        
+        # Load weights into the new controller instance
+        controller_weights = {}
+        start_idx = 0
+        target_dtype = next(controller.parameters()).dtype
+        for name, param in controller.named_parameters():
+            n_params = param.numel()
+            p_slice = torch.from_numpy(controller_params_flat[start_idx : start_idx + n_params]).view(param.shape).to(dtype=target_dtype, device=self.device)
+            controller_weights[name] = p_slice
+            start_idx += n_params
+        controller.load_state_dict(controller_weights)
+        controller.eval()
+        controller.reset() # Reset the internal state (e.g., GRU hidden state)
+
+        # --- Handle half-precision ---
+        if self.config.get('half_precision', False) and self.device.type == 'cuda':
+            substrate.half()
+            controller.half()
             
+        return substrate, controller
+
     def evaluate_fitness(self, solution_vector: np.ndarray, sensor_noise_std: float = 0.0, num_avg: int = 1, readout_mode: str = "end_to_end") -> tuple[float, dict]:
         """
         Performs one full, sequential fitness evaluation for a given solution vector.
@@ -112,19 +128,9 @@ class ExperimentHarness:
             num_avg (int): Number of steps to average over for the fitness score.
             readout_mode (str): 'end_to_end' (default) or 'post_hoc'.
         """
-        # 1. Load weights into the persistent models. This is now a very cheap operation.
-        self._load_solution_vector(solution_vector)
+        # 1. Rebuild components based on the solution vector for this evaluation
+        substrate, controller = self._rebuild_components(solution_vector)
         
-        # Get references to the persistent models for clarity
-        substrate, controller = self.substrate, self.controller
-        controller.eval()
-        controller.reset() # Reset the internal state (e.g., GRU hidden state)
-
-        # --- Handle half-precision ---
-        if self.config.get('half_precision', False) and self.device.type == 'cuda':
-            substrate.half()
-            controller.half()
-            
         batch_size = num_avg
         T_total = self.config.get('T_total', 4000)
         washout_steps = self.config.get('washout_steps', 100)
@@ -145,22 +151,20 @@ class ExperimentHarness:
 
         # --- Reset stateful components ---
         substrate.reset(batch_size=batch_size)
+        controller.reset() # Also reset here before the loop starts
         delay_buffer.reset(batch_size=batch_size)
         
-        # Pre-allocate result tensors on the GPU ONLY if needed
-        if readout_mode == 'end_to_end':
-            num_scored_steps = T_total - washout_steps
-            num_total_results = num_scored_steps * batch_size
-            results_outputs_A = torch.empty(num_total_results, device=self.device, dtype=controller_dtype)
-            results_outputs_B = torch.empty(num_total_results, device=self.device, dtype=controller_dtype)
-            results_settings = torch.empty(num_total_results, 2, device=self.device, dtype=torch.long)
-        else: # For post_hoc, we just need placeholders for the final assignment
-            results_outputs_A, results_outputs_B, results_settings = None, None, None
+        # Pre-allocate result tensors on the GPU
+        num_scored_steps = T_total - washout_steps
+        num_total_results = num_scored_steps * batch_size
+        results_outputs_A = torch.empty(num_total_results, device=self.device, dtype=controller_dtype)
+        results_outputs_B = torch.empty(num_total_results, device=self.device, dtype=controller_dtype)
+        results_settings = torch.empty(num_total_results, 2, device=self.device, dtype=torch.long)
         
         # --- Memory-Efficient State Storage for Post-Hoc Readout ---
         if readout_mode == 'post_hoc':
             post_hoc_batch_size = self.config.get('post_hoc_batch_size', 1024)
-            substrate_dtype = next(substrate.parameters()).dtype
+            substrate_dtype = next(substrate.reservoir_A.parameters()).dtype
             # Use reservoir sampling to collect a random subset of states
             stored_states = torch.empty(post_hoc_batch_size, substrate.N_A + substrate.N_B, device=self.device, dtype=substrate_dtype)
             stored_settings = torch.empty(post_hoc_batch_size, 2, device=self.device, dtype=torch.long)
@@ -227,7 +231,7 @@ class ExperimentHarness:
                 delayed_logits = delay_buffer.push(correction_logits)
                 
                 # 7. Evolve substrate
-                substrate_dtype = next(substrate.parameters()).dtype
+                substrate_dtype = next(substrate.reservoir_A.parameters()).dtype
                 substrate_input_A = self._build_input(setting_A_bit, delayed_logits[:, 0].unsqueeze(-1).to(substrate_dtype))
                 substrate_input_B = self._build_input(setting_B_bit, delayed_logits[:, 1].unsqueeze(-1).to(substrate_dtype))
                 substrate.step(substrate_input_A, substrate_input_B)
@@ -237,50 +241,33 @@ class ExperimentHarness:
             # The stored data is already the correct batch size
             flat_states = stored_states
             flat_settings = stored_settings
+            
+            # Create teacher signal based on PR-Box rule
+            target_and = torch.bitwise_and(flat_settings[:, 0], flat_settings[:, 1])
+            # This is a simplified teacher. A real implementation might need more nuance.
+            # Let's use a dummy target for now, as the logic is complex.
+            # The key is to train a linear model on the states.
+            # For simplicity in this draft, we'll train to predict the settings.
+            target_A = (flat_settings[:, 0] * 2 - 1).float().unsqueeze(-1)
+            target_B = (flat_settings[:, 1] * 2 - 1).float().unsqueeze(-1)
+            targets = torch.cat([target_A, target_B], dim=-1)
 
-            # Create a "teacher" signal: the ideal PR-Box outputs for the given settings.
-            # Alice's output can be random, Bob's is derived from Alice's and the settings.
-            # A simpler, powerful teacher is to train the readout to predict the settings themselves.
-            target_A = (flat_settings[:, 0] * 2 - 1).float().unsqueeze(1) # Convert {0, 1} to {-1, 1}
-            target_B = (flat_settings[:, 1] * 2 - 1).float().unsqueeze(1)
-            targets = torch.cat([target_A, target_B], dim=1)
+            # Train the linear readout
+            optimizer = torch.optim.Adam(self.post_hoc_readout.parameters(), lr=0.01)
+            for _ in range(100): # Train for a few epochs
+                optimizer.zero_grad()
+                preds = self.post_hoc_readout(flat_states)
+                loss = nn.MSELoss()(preds, targets)
+                loss.backward()
+                optimizer.step()
 
-            # Analytically solve for the best possible linear readout using Ridge Regression.
-            # This is equivalent to W_out = (X.T @ X + lambda*I)^-1 @ X.T @ Y
-            # Using torch.linalg.lstsq is more stable and efficient.
-            try:
-                lambda_ridge = 1e-4
-                # Solve (flat_states.T @ flat_states + lambda * I) W = flat_states.T @ targets
-                # The solution to this is the least squares solution to a modified system.
-                # PyTorch's lstsq solves AX = B for X.
-                # A = flat_states, B = targets
-                solution = torch.linalg.lstsq(flat_states, targets)
-                W_out = solution.solution
-
-                # Use this optimal readout to get the best possible outputs
-                final_predicted_logits = flat_states @ W_out
-                final_outputs_A = torch.sign(final_predicted_logits[:, 0])
-                final_outputs_B = torch.sign(final_predicted_logits[:, 1])
-                final_settings = flat_settings
-                
-                # Replace the main result tensors with the ones from the post-hoc evaluation
-                results_outputs_A = final_outputs_A
-                results_outputs_B = final_outputs_B
-                results_settings = final_settings
-            except torch.cuda.OutOfMemoryError:
-                 logging.error("OOM error during post-hoc lstsq. The system is likely unstable. Returning worst fitness.")
-                 return 4.0, {} # Return worst possible fitness
-            except Exception as e:
-                logging.error(f"Error during post-hoc lstsq: {e}. Returning worst fitness.")
-                return 4.0, {} # Return worst possible fitness
-
+            # Now, use the trained readout to generate the final outputs
+            with torch.no_grad():
+                final_logits = self.post_hoc_readout(flat_states)
+                results_outputs_A = torch.sign(final_logits[:, 0])
+                results_outputs_B = torch.sign(final_logits[:, 1])
 
         # 8. Scoring
-        if readout_mode == 'post_hoc' and results_outputs_A is None:
-            # Handle case where lstsq failed
-            s_score = -4.0
-            diagnostics = {"S_score": s_score, "error": "lstsq_failed"}
-            return s_score, diagnostics
         if readout_mode == 'post_hoc':
             return self._compute_results(controller, substrate, results_outputs_A, results_outputs_B, flat_settings)
         else:
