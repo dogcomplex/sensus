@@ -37,7 +37,8 @@
     "population_size": 36
   },
   "evaluation": {
-    "num_avg": 128,
+    "num_avg": 36,
+    "use_cpu_fallback_for_metrics": false,
     "post_hoc_batch_size": 2048
   },
   "reward_shaping": {

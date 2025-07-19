@@ -10,6 +10,7 @@ from pathlib import Path
 from tqdm import tqdm
 import torch.multiprocessing as mp
 from functools import partial
+import gc
 
 from apsu6.harness import ExperimentHarness
 
@@ -35,8 +36,7 @@ def evaluate_fitness_parallel(solution_vector, readout_mode, config):
     global harness
     s_score, diagnostics = harness.evaluate_fitness(
         solution_vector, 
-        readout_mode=readout_mode,
-        num_avg=config['evaluation']['num_avg']
+        readout_mode=readout_mode
     )
     
     fitness = -s_score # Basic fitness
@@ -73,6 +73,13 @@ def run_optimization_phase(phase_name, es_instance, generations, pool, config, r
             
         pbar.set_postfix({"Best S": f"{history['best_s']:.4f}"})
         pbar.update(1)
+
+        # Aggressively clean up memory after each generation
+        del results
+        del fitnesses
+        del s_scores
+        del diagnostics_list
+        gc.collect()
         
     pbar.close()
     logging.info(f"--- {phase_name} Complete ---")

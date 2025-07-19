@@ -1,5 +1,6 @@
 import numpy as np
 import torch
+import logging
 
 def calculate_chsh_score(
     outputs_A: torch.Tensor, 
@@ -38,13 +39,21 @@ def calculate_s_score_with_bootstrap(
     settings: torch.Tensor,
     n_boot: int = 1000,
     ci: float = 0.95,
-    seed: int = 42
+    seed: int = 42,
+    use_cpu_fallback: bool = False
 ) -> tuple[torch.Tensor, dict, torch.Tensor, torch.Tensor]:
     """
     Calculates the S-score and uses a bootstrap test to determine its
     statistical significance against the classical and Tsirelson bounds.
     """
     device = outputs_A.device
+    if use_cpu_fallback:
+        device = torch.device('cpu')
+        outputs_A = outputs_A.to(device)
+        outputs_B = outputs_B.to(device)
+        settings = settings.to(device)
+        logging.info("Using CPU fallback for bootstrap calculation.")
+
     num_trials = len(outputs_A)
     
     # --- Helper for a single sample ---
