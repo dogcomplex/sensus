@@ -35,8 +35,7 @@ def init_worker(config):
 def evaluate_fitness_parallel(solution_vector, config):
     global harness
     s_score, diagnostics = harness.evaluate_fitness(
-        solution_vector, 
-        readout_mode='end_to_end'
+        solution_vector
     )
     
     fitness = -s_score # Basic fitness

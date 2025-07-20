@@ -31,66 +31,53 @@ def main():
         print(f"Error: Could not find config.json in {results_path}")
         return
     
-    # --- Load Solutions ---
-    solution_p1_path = results_path / "best_solution_phase1.npy"
-    solution_final_path = results_path / "best_solution_final.npy"
-
-    if not solution_p1_path.exists() or not solution_final_path.exists():
-        print(f"Error: Could not find 'best_solution_phase1.npy' and/or 'best_solution_final.npy' in {results_path}")
+    # --- Load Solution ---
+    solution_path = results_path / "best_solution_final.npy"
+    if not solution_path.exists():
+        print(f"Error: Could not find 'best_solution_final.npy' in {results_path}")
         return
 
-    print(f"\n--- Loading Phase 1 Solution from {solution_p1_path} ---")
-    solution_p1 = np.load(solution_p1_path, allow_pickle=True)
-    
-    print(f"--- Loading Final Solution from {solution_final_path} ---")
-    loaded_obj_final = np.load(solution_final_path, allow_pickle=True)
-
-    # Handle the bug where the entire CMA object was saved instead of the solution vector.
-    if loaded_obj_final.ndim == 0 and 'cma' in str(type(loaded_obj_final.item())):
-        print("INFO: Detected corrupted final solution file. Extracting xbest from saved CMA object.")
-        cma_es_object = loaded_obj_final.item()
-        solution_final = cma_es_object.result.xbest
-    else:
-        solution_final = loaded_obj_final
+    print(f"\n--- Loading Final Solution from {solution_path} ---")
+    best_solution = np.load(solution_path, allow_pickle=True)
 
     # --- Analysis ---
     
-    # 1. Extract and display the discovered substrate parameters from Phase 1
-    # We need a temporary harness to get the controller dimension
-    temp_harness_for_dims = ExperimentHarness(config)
-    controller_dim = sum(p.numel() for p in temp_harness_for_dims.temp_controller.parameters())
-    del temp_harness_for_dims
+    # 1. Extract and display the discovered substrate parameters
+    if config.get("anneal_substrate", False):
+        temp_harness_for_dims = ExperimentHarness(config)
+        controller_dim = sum(p.numel() for p in temp_harness_for_dims.temp_controller.parameters())
+        del temp_harness_for_dims
 
-    print("\n--- Discovered Substrate Hyperparameters (from Phase 1) ---")
-    substrate_hyperparams = solution_p1[controller_dim:]
-    sr_a = np.clip(substrate_hyperparams[0], 0.7, 1.5)
-    lr_a = np.clip(substrate_hyperparams[1], 0.2, 1.0)
-    sr_b = np.clip(substrate_hyperparams[2], 0.7, 1.5)
-    lr_b = np.clip(substrate_hyperparams[3], 0.2, 1.0)
-    print(f"  - sr_A: {sr_a:.6f}")
-    print(f"  - lr_A: {lr_a:.6f}")
-    print(f"  - sr_B: {sr_b:.6f}")
-    print(f"  - lr_B: {lr_b:.6f}")
+        print("\n--- Discovered Substrate Hyperparameters ---")
+        substrate_hyperparams = best_solution[controller_dim:]
+        # Use the config-driven clip ranges for accurate reporting
+        sr_clip = config['substrate_params'].get('sr_clip_range', [0.7, 1.5])
+        lr_clip = config['substrate_params'].get('lr_clip_range', [0.1, 1.0])
+        sr_a = np.clip(substrate_hyperparams[0], sr_clip[0], sr_clip[1])
+        lr_a = np.clip(substrate_hyperparams[1], lr_clip[0], lr_clip[1])
+        sr_b = np.clip(substrate_hyperparams[2], sr_clip[0], sr_clip[1])
+        lr_b = np.clip(substrate_hyperparams[3], lr_clip[0], lr_clip[1])
+        print(f"  - sr_A: {sr_a:.6f}")
+        print(f"  - lr_A: {lr_a:.6f}")
+        print(f"  - sr_B: {sr_b:.6f}")
+        print(f"  - lr_B: {lr_b:.6f}")
 
+        # Lock in the discovered parameters for the re-evaluation run
+        config['substrate_params']['sr_A'] = sr_a
+        config['substrate_params']['lr_A'] = lr_a
+        config['substrate_params']['sr_B'] = sr_b
+        config['substrate_params']['lr_B'] = lr_b
+    
     # 2. Re-evaluate the FINAL solution with high precision
     print("\n--- Re-evaluating Final Solution (end_to_end) ---")
     
-    # Prepare the config for the final evaluation
-    # Lock in the discovered substrate parameters
-    config['substrate_params']['sr_A'] = sr_a
-    config['substrate_params']['lr_A'] = lr_a
-    config['substrate_params']['sr_B'] = sr_b
-    config['substrate_params']['lr_B'] = lr_b
     config['anneal_substrate'] = False # VERY IMPORTANT: we are no longer annealing
-    
-    # Use a high num_avg for an accurate final score and disable CPU fallback for precision
     config['evaluation']['num_avg'] = 256
     config['evaluation']['use_cpu_fallback_for_metrics'] = False
     
     harness = ExperimentHarness(config)
     
-    # The final solution vector only contains controller weights
-    s_score, diagnostics = harness.evaluate_fitness(solution_final, readout_mode='end_to_end')
+    s_score, diagnostics = harness.evaluate_fitness(best_solution)
 
     print("\n--- Analysis Complete ---")
     print(f"Definitive S-Score: {s_score:.6f}")

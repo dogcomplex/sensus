@@ -85,13 +85,16 @@ class ExperimentHarness:
         # --- Build Substrate ---
         substrate_config = self.config['substrate_params'].copy()
         if self.anneal_substrate:
-            # The last 4 parameters are sr_A, lr_A, sr_B, lr_B
-            # "CONSTRAINED CHAOS": Clip to a narrow, computationally rich range.
+            # "CONSTRAINED CHAOS": Clipping ranges are now driven by the config.
+            # Provide wide defaults for backward compatibility with old configs.
+            sr_clip = self.config['substrate_params'].get('sr_clip_range', [0.7, 1.5])
+            lr_clip = self.config['substrate_params'].get('lr_clip_range', [0.1, 1.0])
+
             substrate_hyperparams = solution_vector[controller_dim:]
-            substrate_config['sr_A'] = np.clip(substrate_hyperparams[0], 0.9, 1.2)
-            substrate_config['lr_A'] = np.clip(substrate_hyperparams[1], 0.1, 0.4)
-            substrate_config['sr_B'] = np.clip(substrate_hyperparams[2], 0.9, 1.2)
-            substrate_config['lr_B'] = np.clip(substrate_hyperparams[3], 0.1, 0.4)
+            substrate_config['sr_A'] = np.clip(substrate_hyperparams[0], sr_clip[0], sr_clip[1])
+            substrate_config['lr_A'] = np.clip(substrate_hyperparams[1], lr_clip[0], lr_clip[1])
+            substrate_config['sr_B'] = np.clip(substrate_hyperparams[2], sr_clip[0], sr_clip[1])
+            substrate_config['lr_B'] = np.clip(substrate_hyperparams[3], lr_clip[0], lr_clip[1])
 
         substrate = ClassicalSubstrate(**substrate_config, device=self.device).to(self.device)
         

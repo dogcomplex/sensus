@@ -1,0 +1,28 @@
+{
+  "S_score": 2.110441732991668,
+  "S_score_ci": [
+    2.096723632347236,
+    2.123809692085074
+  ],
+  "p_classical": 1.0,
+  "p_tsirelson": 0.0,
+  "pr_box_teacher_loss": 0.0,
+  "correlations": {
+    "(0, 0)": 1.0,
+    "(0, 1)": 0.9958932238193018,
+    "(1, 0)": 0.5195071868583162,
+    "(1, 1)": 0.4049586776859504
+  },
+  "non_signaling_metric_A": 0.057274267077445984,
+  "non_signaling_metric_A_ci": [
+    0.05058121308684349,
+    0.06393728405237198
+  ],
+  "non_signaling_metric_B": 0.0,
+  "non_signaling_metric_B_ci": [
+    0.0,
+    0.0
+  ],
+  "R_effective": 1.0,
+  "K_effective": 33.35
+}

@@ -9,22 +9,30 @@
   "substrate_params": {
     "N_A": 50,
     "N_B": 50,
-    "sr_A": 0.95, "sr_B": 0.95,
-    "lr_A": 0.3, "lr_B": 0.3,
+    "sr_A": 0.95,
+    "sr_B": 0.95,
+    "lr_A": 0.3,
+    "lr_B": 0.3,
     "seed_A": 52,
     "seed_B": 53,
-    "sr_clip_range": [0.9, 1.2],
-    "lr_clip_range": [0.1, 0.4]
+    "sr_clip_range": [
+      0.9,
+      1.2
+    ],
+    "lr_clip_range": [
+      0.1,
+      0.4
+    ]
   },
   "controller_params": {
     "protocol": "Mannequin",
-    "architecture": "cross_product",
+    "architecture": "esn",
     "N_A": 50,
     "N_B": 50,
     "K_controller": 16,
     "R_speed": 1.0,
     "signaling_bits": 0,
-    "internal_cell_config": { 
+    "internal_cell_config": {
       "enabled": true,
       "hidden_size": 9,
       "sr": 1.1,
@@ -48,4 +56,4 @@
     "classical_bonus": 1.0,
     "quantum_bonus": 2.0
   }
-} 
+}
